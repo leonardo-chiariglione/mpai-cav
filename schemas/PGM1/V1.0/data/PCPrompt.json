@@ -1,7 +1,7 @@
 { "$schema":                    "https://json-schema.org/draft/2020-12/schema",
   "$id":                        "https://schemas.mpai.community/PGM1/V1.0/data/PCPrompt.json",
   "title":                      "PC Prompt V1.0",
-  "description":                "The structured prompt that Prompt Creation submits to Basic Knowledge to open the Model Context Protocol session. It carries the representation of the scene context, of the Intent of the User, of the resolved referents, of the constraints of the Goal and of the expressive configuration of the A-User and, when A-User Control so requires, the Action context that Basic Knowledge needs to produce Process Actions and Action Objects.",
+  "description":                "The structured prompt that Prompt Creation submits to Basic Knowledge to open the Model Context Protocol session. It carries the representation of the scene context, of the Intent of the User, of the resolved referents, of the constraints of the Goal and of the expressive configuration of the A-User and, when A-User Control so requires, the Action context that Basic Knowledge needs to produce Actions and Process Actions.",
   "type":                       "object",
   "additionalProperties":       false,
   "required":                   [ "Header", "MInstance", "UEnvironment", "SessionID", "PCPromptID", "PCPromptTime", "DialogID", "Prompt" ],
@@ -37,10 +37,8 @@
       "Locale":                 { "type": "string" },
       "Constraints":            { "type": "array", "items": { "type": "string" } } } },
 
-    "ActionContext":            { "type": "object", "additionalProperties": false, "description": "The context that Basic Knowledge needs to produce Process Actions and Action Objects.", "properties": {
+    "ActionContext":            { "type": "object", "additionalProperties": false, "description": "The context that Basic Knowledge needs to produce Actions and Process Actions.", "properties": {
       "Repertoire":             { "type": "array", "items": { "type": "string" }, "description": "The Process Actions that may be used." },
-      "Vocabularies":           { "type": "array", "items": { "type": "string" },
-                                  "description": "The vocabularies in which the actions of the Portable Avatar may be expressed (the identifiers named by the Qualifier of the Action Objects)." },
 
       "MaxSteps":               { "type": "integer", "minimum": 0 },
       "MLocations":             { "type": "array", "items": { "type": "string" } },

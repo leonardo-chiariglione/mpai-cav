@@ -7,7 +7,7 @@
   "Header": "PGM-AUF-V1.0",
   "APIProfile": "Basic",
   "OnDegraded": "Continue",
-  "Description": "The A-User Formation (PGM-AUF) AIM forms the Portable Avatar that utters the A-User's response. It combines the deliberated communicative content (the Final Response produced by Basic Knowledge: the text, the Action Objects and the Process Actions) with the A-User State produced by Personality Alignment. The Portable Avatar expresses the A-User's Personal Status across speech, face, and body. A-User Formation is driven by the AUC-AUF Request of A-User Control. Its function is that of Response and Scene Rendering (PAF-RSR) of MPAI-PAF, to which it adds the Request and the Response of the A-User Control AIM and the taking apart of the Final Response: the Process Actions are given to A-User Control unchanged, and the Action Objects become the Animation Objects of the face and the body.",
+  "Description": "The A-User Formation (PGM-AUF) AIM forms the Portable Avatar that utters the A-User's response. It combines the deliberated communicative content (the Final Response produced by Basic Knowledge: the text, the Actions and the Process Actions) with the A-User State produced by Personality Alignment. The Portable Avatar expresses the A-User's Personal Status across speech, face, and body. A-User Formation is driven by the AUC-AUF Request of A-User Control. Its function is that of Response and Scene Rendering (PAF-RSR) of MPAI-PAF, to which it adds the Request and the Response of the A-User Control AIM and the taking apart of the Final Response: the Process Actions are given to A-User Control unchanged, and the Actions become the Animation Objects of the face and the body.",
   "InternalTypes": [],
   "ExternalPorts": [
     {

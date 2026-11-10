@@ -2,14 +2,14 @@
   "Header":           "PGM-FRD-V1.0",
 
   "APIProfile":       "Basic",
-  "Description":      "The Final Response Demultiplexing (PGM-FRD) AIM is a Sub-AIM of A-User Formation (PGM-AUF). It takes apart the Final Response produced by Basic Knowledge: the Text, which goes to Text-To-Speech and to Portable Avatar Multiplexing; the Action Objects, the actions of the Persona of the A-User that have no effect on the M-Instance, which go to Animation Object Generation; and the Process Actions, to be performed in the M-Instance, which A-User Formation gives to A-User Control unchanged. It is driven by the AUC-AUF Request and reports with an AUC-AUF Response.",
+  "Description":      "The Final Response Demultiplexing (PGM-FRD) AIM is a Sub-AIM of A-User Formation (PGM-AUF). It takes apart the Final Response produced by Basic Knowledge: the Text, which goes to Text-To-Speech and to Portable Avatar Multiplexing; the Actions, which go with the text and go to Animation Object Generation; and the Process Actions, more remote from the text, which A-User Formation gives to A-User Control unchanged. It is driven by the AUC-AUF Request and reports with an AUC-AUF Response.",
 
   "InternalTypes":   [ ],
 
   "ExternalPorts":   [{"Name": "FinalResponse", "Direction": "Input", "DataType": "PGM-FRS-V1.0", "Technology": "Software", "Protocol": "", "IsRemote": false},
                       {"Name": "AUCAUFRequest", "Direction": "Input", "DataType": "PGM-UCF-V1.0", "Technology": "Software", "Protocol": "", "IsRemote": false},
                       {"Name": "Text", "Direction": "Output", "DataType": "OSD-BTO-V1.5", "Technology": "Software", "Protocol": "", "IsRemote": false},
-                      {"Name": "ActionObject", "Direction": "Output", "DataType": "PGM-ACO-V1.0", "Technology": "Software", "Protocol": "", "IsRemote": false},
+                      {"Name": "Actions", "Direction": "Output", "DataType": "MMM-ACT-V2.2", "Technology": "Software", "Protocol": "", "IsRemote": false},
                       {"Name": "ProcessActions", "Direction": "Output", "DataType": "MMM-PAT-V2.2", "Technology": "Software", "Protocol": "", "IsRemote": false},
                       {"Name": "AUCAUFResponse", "Direction": "Output", "DataType": "PGM-UCF-V1.0", "Technology": "Software", "Protocol": "", "IsRemote": false}],
 

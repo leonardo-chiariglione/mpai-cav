@@ -46,10 +46,8 @@
         "Locale":                 { "type": "string" },
         "Constraints":            { "type": "array", "items": { "type": "string" } } } },
 
-      "ActionContext":            { "type": "object", "additionalProperties": false, "description": "The context that Basic Knowledge needs to produce Process Actions and Action Objects.", "properties": {
+      "ActionContext":            { "type": "object", "additionalProperties": false, "description": "The context that Basic Knowledge needs to produce Actions and Process Actions.", "properties": {
         "Repertoire":             { "type": "array", "items": { "type": "string" }, "description": "The Process Actions that may be used." },
-        "Vocabularies":           { "type": "array", "items": { "type": "string" },
-                                    "description": "The vocabularies in which the actions of the Portable Avatar may be expressed (the identifiers named by the Qualifier of the Action Objects)." },
 
         "MaxSteps":               { "type": "integer", "minimum": 0 },
         "MLocations":             { "type": "array", "items": { "type": "string" } },

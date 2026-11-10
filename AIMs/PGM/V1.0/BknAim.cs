@@ -124,19 +124,9 @@ public sealed class BknAim : PgmAim
                     ["Header"] = "MMM-3CP-V2.2", ["MUActuatePAID"] = NewId("pa" + ++n), ["Time"] = Time(),
                     ["MUActuatePARQ"] = new JsonObject { ["RQ1"] = new JsonObject { ["Complement"] = "Nil", ["ItemID"] = target } }
                 };
-        // The gestures of the Persona have no effect on the M-Instance: they are Action Objects, not Process Actions.
+        // What goes with the text is an Action of MMM-TEC V2.2, not a Process Action: when the model wants the Persona to gesture, the Action is MM-Animate.
         if (personaActions.Count > 0)
-        {
-            var actionObjects = new JsonArray();
-            foreach (var gesture in personaActions)
-                actionObjects.Add(new JsonObject
-                {
-                    ["Header"] = "PGM-ACO-V1.0", ["ActionObjectID"] = NewId("aco"), ["SubjectID"] = _persona,
-                    ["ActionObjectData"] = new JsonArray(new JsonObject { ["Data"] = gesture }),
-                    ["ActionQualifier"] = new JsonObject { ["Header"] = "TFA-ACQ-V1.5", ["ActionQualifierID"] = NewId("acq"), ["Formats"] = new JsonObject { ["ContentFormat"] = "GestureName" } }
-                });
-            fr["ActionObjects"] = actionObjects;
-        }
+            fr["Actions"] = new JsonArray(new JsonObject { ["Header"] = "MMM-ACT-V2.2", ["Action"] = "MM-Animate" });
         if (pas.Count > 0)
             fr["ProcessActions"] = new JsonObject { ["Header"] = "MMM-PAT-V2.2", ["MEnvironmentTime"] = Time(), ["ProcessActions"] = pas };
 

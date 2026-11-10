@@ -7,7 +7,7 @@
   "Header": "PGM-AOG-V1.0",
   "APIProfile": "Basic",
   "OnDegraded": "Continue",
-  "Description": "The Animation Object Generation (PGM-AOG) AIM is a Sub-AIM of A-User Formation (PGM-AUF). It generates the animation of the Persona of the A-User: from an Action Object, an action of the Persona with no effect on the M-Instance, it produces a Face Animation Object (Port Number 1) or a Body Animation Object (Port Number 2), Animation Objects (PAF-AMO) whose Animation Qualifier names the content format of the animation, which it gives to Entity Face Description and Entity Body Description. It is driven by the AUC-AUF Request and reports with an AUC-AUF Response.",
+  "Description": "The Animation Object Generation (PGM-AOG) AIM is a Sub-AIM of A-User Formation (PGM-AUF). It generates the animation of the Persona of the A-User: from an Action of MMM-TEC V2.2 that goes with the text (for instance MM-Animate) it produces a Face Animation Object (Port Number 1) or a Body Animation Object (Port Number 2), Animation Objects (PAF-AMO) whose Animation Qualifier names the content format of the animation, which it gives to Entity Face Description and Entity Body Description. It is driven by the AUC-AUF Request and reports with an AUC-AUF Response.",
   "InternalTypes": [],
   "ExternalPorts": [
     {
@@ -19,9 +19,9 @@
       "IsRemote": false
     },
     {
-      "Name": "ActionObject",
+      "Name": "Actions",
       "Direction": "Input",
-      "DataType": "PGM-ACO-V1.0",
+      "DataType": "MMM-ACT-V2.2",
       "Technology": "Software",
       "Protocol": "",
       "IsRemote": false

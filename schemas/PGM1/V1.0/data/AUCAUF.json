@@ -1,7 +1,7 @@
 { "$schema":                     "https://json-schema.org/draft/2020-12/schema",
   "$id":                         "https://schemas.mpai.community/PGM1/V1.0/data/AUCAUF.json",
   "title":                       "AUC-AUF V1.0",
-  "description":                 "The Data Type exchanged between A-User Control (AUC) and A-User Formation (AUF). It has two modes, told apart by Mode: Request (RQ), sent by AUC to AUF, and Response (RS), sent by AUF to AUC. A-User Formation receives the Final Response of Basic Knowledge, which holds all the outputs of Basic Knowledge: the Text, the Action Objects and the Process Actions. It gives the Process Actions to AUC unchanged and generates, from the Action Objects, the Animation Objects for the rendering of the Portable Avatar. A-User Formation also forms the Portable Avatar and gives it to AUC. The Request controls the formation and each animation; the Response reports the outcome of each step and the progress of the animations. A-User Formation sends nothing to the M-Instance and the Portable Avatar leaves the A-User only if AUC authorises it. Every Request is answered by a Response.",
+  "description":                 "The Data Type exchanged between A-User Control (AUC) and A-User Formation (AUF). It has two modes, told apart by Mode: Request (RQ), sent by AUC to AUF, and Response (RS), sent by AUF to AUC. A-User Formation receives the Final Response of Basic Knowledge, which holds all the outputs of Basic Knowledge: the Text, the Actions and the Process Actions. It gives the Process Actions to AUC unchanged and generates, from the Actions, the Animation Objects for the rendering of the Portable Avatar. A-User Formation also forms the Portable Avatar and gives it to AUC. The Request controls the formation and each animation; the Response reports the outcome of each step and the progress of the animations. A-User Formation sends nothing to the M-Instance and the Portable Avatar leaves the A-User only if AUC authorises it. Every Request is answered by a Response.",
   "type":                        "object",
   "additionalProperties":        false,
   "required":                    [ "Header", "Mode", "MInstance", "UEnvironment", "SessionID", "AUCAUFID", "AUCAUFTime" ],
@@ -31,8 +31,8 @@
       "ExpressiveDelivery":      { "type": "string", "enum": [ "enabled", "disabled" ] },
       "SpatialOutput":           { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SpatialAttitude.json" } } },
 
-    "ActionControl":             { "type": "array", "description": "Request only. For an Action Object that A-User Formation is turning into Animation Objects: proceed with the animation or stop it.", "items": { "type": "object", "additionalProperties": false, "required": [ "ActionObjectID", "Control" ], "properties": {
-      "ActionObjectID":          { "type": "string" },
+    "ActionControl":             { "type": "array", "description": "Request only. For an Action that A-User Formation is turning into Animation Objects: proceed with the animation or stop it.", "items": { "type": "object", "additionalProperties": false, "required": [ "Action", "Control" ], "properties": {
+      "Action":          { "$ref": "https://schemas.mpai.community/MMM4/V2.2/data/Actions.json#/properties/Action" },
       "Control":                 { "type": "string", "enum": [ "proceed", "stop" ] } } } },
 
     "Storage":                   { "type": "object", "additionalProperties": false, "description": "Request only. What A-User Formation may read from and write to the Private Storage of the Module, under the rules set by AUC. The Avatar Model and the Speech Model are read from there.", "properties": {
@@ -73,8 +73,8 @@
         "Outcome":               { "type": "string", "enum": [ "success", "failure", "not_requested" ] },
         "Reason":                { "type": "string", "enum": [ "none", "model_unavailable", "asset_missing", "synthesis_error", "unsupported_qualifier", "input_invalid" ] } } } } },
 
-    "ActionStatus":              { "type": "array", "description": "Response only. Progress of the animations generated from the Action Objects.", "items": { "type": "object", "additionalProperties": false, "required": [ "ActionObjectID", "Status" ], "properties": {
-      "ActionObjectID":          { "type": "string" },
+    "ActionStatus":              { "type": "array", "description": "Response only. Progress of the animations generated from the Actions.", "items": { "type": "object", "additionalProperties": false, "required": [ "Action", "Status" ], "properties": {
+      "Action":          { "$ref": "https://schemas.mpai.community/MMM4/V2.2/data/Actions.json#/properties/Action" },
       "Status":                  { "type": "string", "description": "For instance proceeding, completed, stopped, failed." } } } },
 
     "PortableAvatarID":          { "type": "string", "description": "Response only. Identifier of the Portable Avatar produced and given to A-User Control for authorisation." },

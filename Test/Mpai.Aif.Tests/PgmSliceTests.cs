@@ -104,7 +104,7 @@ public class PgmSliceTests
 
         // The Module gives the Portable Avatar (speech, face, body and model together) to the Controller; the User Agent separates it for its Units.
         var avatar = rig.At("PAF-PAV-V1.6").Single();
-        Assert.Contains("nod", avatar.ToJsonString());
+        Assert.Contains("MM-Animate", avatar.ToJsonString());
 
         // The test stub of the M-Instance answers the Process Action Request.
         var response = (JsonObject)request.DeepClone();
@@ -138,14 +138,9 @@ public class PgmSliceTests
         Assert.Empty(rig.At("OSD-BSO-V1.5"));
     }
 
-    private static JsonObject ActionObject(string gesture) => new()
-    {
-        ["Header"] = "PGM-ACO-V1.0", ["ActionObjectID"] = "ao-" + gesture, ["SubjectID"] = "a-user-persona",
-        ["ActionObjectData"] = new JsonArray(new JsonObject { ["Data"] = gesture }),
-        ["ActionQualifier"] = new JsonObject { ["Header"] = "TFA-ACQ-V1.5", ["ActionQualifierID"] = "acq-1", ["Formats"] = new JsonObject { ["ContentFormat"] = "GestureName" } }
-    };
+    private static JsonObject Action(string keyword) => new() { ["Header"] = "MMM-ACT-V2.2", ["Action"] = keyword };
 
-    // Final Response Demultiplexing takes the Final Response apart: the Text, the Action Object of the Persona and the Process Actions, which it gives on unchanged.
+    // Final Response Demultiplexing takes the Final Response apart: the Text, the Action that goes with it and the Process Actions, which it gives on unchanged.
     [Fact]
     public async Task FinalResponseDemultiplexingTakesTheFinalResponseApart()
     {
@@ -154,7 +149,7 @@ public class PgmSliceTests
         {
             ["Header"] = "PGM-FRS-V1.0", ["MInstance"] = "m", ["UEnvironment"] = "u", ["SessionID"] = "s", ["FinalResponseID"] = "f", ["FinalResponseTime"] = PgmAim.Time(),
             ["Text"] = PgmAim.Text("hello"),
-            ["ActionObjects"] = new JsonArray(ActionObject("nod")),
+            ["Actions"] = new JsonArray(Action("MM-Animate")),
             ["ProcessActions"] = new JsonObject
             {
                 ["Header"] = "MMM-PAT-V2.2",
@@ -169,24 +164,24 @@ public class PgmSliceTests
             }
         };
         var result = await frd.ProcessAsync(new Message { Ports = new Dictionary<string, string> { [frd.InputKey("PGM-FRS-V1.0")] = final.ToJsonString() } });
-        Assert.Equal("nod", (string?)JsonNode.Parse(result.Ports[frd.OutputKey("PGM-ACO-V1.0")])!["ActionObjectData"]![0]!["Data"]);
+        Assert.Equal("MM-Animate", (string?)JsonNode.Parse(result.Ports[frd.OutputKey("MMM-ACT-V2.2")])!["Action"]);
         Assert.Equal(["MM-Move"], JsonNode.Parse(result.Ports[frd.OutputKey("MMM-PAT-V2.2")])!["ProcessActions"]!.AsObject().Select(kv => kv.Key).ToArray());
         Assert.True(result.Ports.ContainsKey(frd.OutputKey("OSD-BTO-V1.5")));
         foreach (var (key, json) in result.Ports) Assert.Equal("valid", PgmRig.Check(JsonNode.Parse(json)!));
     }
 
-    // Animation Object Generation: an Action Object of the face becomes a Face Animation Object (Port 1), one of the body a Body Animation Object (Port 2).
+    // Animation Object Generation: the Action MM-Animate becomes a Face Animation Object (Port 1) and a Body Animation Object (Port 2); another Action gives none.
     [Fact]
-    public async Task AnimationObjectGenerationAnimatesTheFaceOrTheBody()
+    public async Task AnimationObjectGenerationAnimatesFromTheAction()
     {
         var aog = (AogAim)Make("1PGM-AOG-V1.0-I01");
-        var face = await aog.ProcessAsync(new Message { Ports = new Dictionary<string, string> { [aog.InputKey("PGM-ACO-V1.0")] = ActionObject("nod").ToJsonString() } });
-        Assert.True(face.Ports.ContainsKey(aog.OutputKey("PAF-AMO-V1.6", 1)));
-        Assert.False(face.Ports.ContainsKey(aog.OutputKey("PAF-AMO-V1.6", 2)));
-        var body = await aog.ProcessAsync(new Message { Ports = new Dictionary<string, string> { [aog.InputKey("PGM-ACO-V1.0")] = ActionObject("wave").ToJsonString() } });
-        Assert.True(body.Ports.ContainsKey(aog.OutputKey("PAF-AMO-V1.6", 2)));
-        Assert.False(body.Ports.ContainsKey(aog.OutputKey("PAF-AMO-V1.6", 1)));
-        foreach (var (key, json) in face.Ports.Concat(body.Ports)) Assert.Equal("valid", PgmRig.Check(JsonNode.Parse(json)!));
+        var animated = await aog.ProcessAsync(new Message { Ports = new Dictionary<string, string> { [aog.InputKey("MMM-ACT-V2.2")] = Action("MM-Animate").ToJsonString() } });
+        Assert.True(animated.Ports.ContainsKey(aog.OutputKey("PAF-AMO-V1.6", 1)));
+        Assert.True(animated.Ports.ContainsKey(aog.OutputKey("PAF-AMO-V1.6", 2)));
+        foreach (var (key, json) in animated.Ports) Assert.Equal("valid", PgmRig.Check(JsonNode.Parse(json)!));
+        var other = await aog.ProcessAsync(new Message { Ports = new Dictionary<string, string> { [aog.InputKey("MMM-ACT-V2.2")] = Action("MM-Send").ToJsonString() } });
+        Assert.False(other.Ports.ContainsKey(aog.OutputKey("PAF-AMO-V1.6", 1)));
+        Assert.False(other.Ports.ContainsKey(aog.OutputKey("PAF-AMO-V1.6", 2)));
     }
 
     // The slice with a real language model (Ollama, the model of PGM_LLM_MODEL, default llama3.2:3b): several runs, timed.
