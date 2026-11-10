@@ -12,10 +12,10 @@
   "InternalTypes":        [ ],
 
   "ExternalPorts":        [{"Name": "UntrainedModel",   "Direction": "Input",  "DataType": "AIP-MLO-V1.0", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
-                           {"Name": "TrainingDataset",  "Direction": "Input",  "DataType": "NNW-DST-V1.2",                     "Technology": "Software", "Protocol": "", "IsRemote": false},
-                           {"Name": "Payload",          "Direction": "Input",  "DataType": "NNW-PLD-V1.2",                     "Technology": "Software", "Protocol": "", "IsRemote": false},
+                           {"Name": "TrainingDataset",  "Direction": "Input",  "DataType": "NNW-DST-V2.0",                     "Technology": "Software", "Protocol": "", "IsRemote": false},
+                           {"Name": "Payload",          "Direction": "Input",  "DataType": "NNW-PLD-V2.0",                     "Technology": "Software", "Protocol": "", "IsRemote": false},
                            {"Name": "Key",              "Direction": "Input",  "DataType": "NNW-KEY-V2.0",                     "Technology": "Software", "Protocol": "", "IsRemote": false},
-                           {"Name": "Locator",          "Direction": "Input",  "DataType": "NNW-WLC-V1.2", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
+                           {"Name": "Locator",          "Direction": "Input",  "DataType": "NNW-WLC-V2.0", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
                            {"Name": "WatermarkedModel", "Direction": "Output", "DataType": "AIP-MLO-V1.0",                     "Technology": "Software", "Protocol": "", "IsRemote": false}],
 
   "SubAIMs":              [],

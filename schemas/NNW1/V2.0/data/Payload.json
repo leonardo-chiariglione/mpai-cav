@@ -5,7 +5,6 @@
   "type":                  "object",
   "additionalProperties":  false,
   "required":              [ "Header", "PayloadID", "PayloadData" ],
-
   "properties":            {
 
     "Header":              { "type": "string", "const": "NNW-PLD-V2.0" },

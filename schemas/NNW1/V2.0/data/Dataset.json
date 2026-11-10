@@ -5,7 +5,6 @@
   "type":                  "object",
   "additionalProperties":  false,
   "required":              [ "Header", "DatasetID", "DatasetData" ],
-
   "properties":            {
 
     "Header":              { "type": "string", "const": "NNW-DST-V2.0" },

@@ -108,7 +108,7 @@ public static class ModelWatermark
         return w;
     }
 
-    // Puts the payload (bits, true = 1) in the weights; returns the marked file and the Locator (NNW-WLC-V1.2) that says where and how, never the key.
+    // Puts the payload (bits, true = 1) in the weights; returns the marked file and the Locator (NNW-WLC-V2.0) that says where and how, never the key.
     public static (byte[] Onnx, JsonObject Locator) Insert(byte[] onnx, string key, string keyReference, bool[] payload)
     {
         var targets = Targets(onnx);
@@ -126,7 +126,7 @@ public static class ModelWatermark
         foreach (var t in targets) for (var i = 0; i < t.Length / 4; i++) BitConverter.GetBytes(w[at] + a * delta[at++]).CopyTo(marked, t.Offset + 4 * i);
         var locator = new JsonObject
         {
-            ["Header"] = "NNW-WLC-V1.2", ["LocatorID"] = "wlc-" + Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(keyReference)))[..8].ToLowerInvariant(),
+            ["Header"] = "NNW-WLC-V2.0", ["LocatorID"] = "wlc-" + Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(keyReference)))[..8].ToLowerInvariant(),
             ["Method"] = Method, ["Targets"] = new JsonArray(targets.Select(t => (JsonNode)t.Name).ToArray()), ["KeyReference"] = keyReference
         };
         return (marked, locator);
