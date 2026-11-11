@@ -49,6 +49,11 @@ public sealed class ExternalTrust
     public string SignPayloads(string json, IReadOnlyList<PayloadDescriptor> payloads, string? binding = null) =>
         ExternalSigning.Sign(json, anchor, key, authority, now(), payloads.Select(p => (p.Reference, p.Length, p.Hash)).ToList(), binding);
 
+    // BOUTS (Communication 9.1): the key of this Controller's anchor signs the Bouts it gives; the key of the anchor of the Controller at the other end
+    // of a link, which the Trust Protocol checked, verifies the Bouts it gives.
+    public ECDsa Key => key;
+    public ECDsa? PeerKey(string from) => protocol.AnchorOf(from) is { } other ? TrustAnchorKey.KeyOf(other) : null;
+
     // Whether the Controller a link admitted is still trusted: its anchor and its credential are valid now.
     public string? StillTrusted(string from) => protocol.StillTrusted(from);
 

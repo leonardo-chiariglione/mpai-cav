@@ -61,6 +61,12 @@ public interface IAimPorts
     ValueTask<(AifError Error, PortMessage? Message)> ExternalOutputReadAsync(int controllerId, string aimName, string dataType, int portNumber, int timeoutMs) => ValueTask.FromResult<(AifError, PortMessage?)>((AifError.NotFound, null));
     ValueTask<AifError> ExternalInputWriteAsync(int controllerId, string aimName, string dataType, int portNumber, string json, int timeoutMs) => ValueTask.FromResult(AifError.NotFound);
 
+    // MPAI_AIFM_External_Bout_Open, _Get and _Close (Basic API 5.5 to 5.7): what the AIM writes to an External Output Port given in a Bout to the
+    // Controllers that accept one; NOT_AUTHORISED where the Controller at the other end does not, and the Messages then go as full instances.
+    (AifError Error, int BoutID) ExternalBoutOpen(int controllerId, string aimName, string dataType, int portNumber, string signingMode, int chainInterval) => (AifError.NotFound, 0);
+    ValueTask<(AifError Error, string? Bout)> ExternalBoutGetAsync(int controllerId, string aimName, string dataType, int portNumber) => ValueTask.FromResult<(AifError, string?)>((AifError.NotFound, null));
+    ValueTask<AifError> ExternalBoutCloseAsync(int controllerId, string aimName, string dataType, int portNumber) => ValueTask.FromResult(AifError.NotFound);
+
     // PAYLOADS BY REFERENCE (M3215 3.6): placed for the Channel of an Output Port,
     // the reference returned going in the Object's DataURI; fetched and released
     // by a reader at the far end of that Channel.

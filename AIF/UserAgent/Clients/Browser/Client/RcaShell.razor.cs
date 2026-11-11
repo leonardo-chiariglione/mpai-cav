@@ -160,7 +160,7 @@ public partial class RcaShell : ComponentBase
 
             // AN APP RUNS UNDER A CONTROLLER OF ITS OWN, kept for when it is chosen again.
             if (!_controllers.TryGetValue(appId, out var north))
-                _controllers[appId] = north = new RemoteControllerApiAsync(Http);
+                _controllers[appId] = north = new RemoteControllerApiAsync(Http) { NewKey = () => Mas.WebCryptoKey.CreateAsync(Js), KeyFromSpki = spki => Mas.WebCryptoKey.FromSpkiAsync(Js, spki) };
 
             AppTitle = app?.Name ?? (appId == "MAS" ? "" : appId);
             stopEnabled = true;
@@ -242,7 +242,7 @@ public partial class RcaShell : ComponentBase
     {
         try
         {
-            var north = new RemoteControllerApiAsync(Http);
+            var north = new RemoteControllerApiAsync(Http) { NewKey = () => Mas.WebCryptoKey.CreateAsync(Js), KeyFromSpki = spki => Mas.WebCryptoKey.FromSpkiAsync(Js, spki) };
             if (await north.StartFlowAsync(MasModule) != AifError.OK) return;
             var said = await north.AdvanceAsync(MasModule, new List<ControllerApi.Datum>
             {
@@ -266,7 +266,7 @@ public partial class RcaShell : ComponentBase
     {
         try
         {
-            var north = new RemoteControllerApiAsync(Http);
+            var north = new RemoteControllerApiAsync(Http) { NewKey = () => Mas.WebCryptoKey.CreateAsync(Js), KeyFromSpki = spki => Mas.WebCryptoKey.FromSpkiAsync(Js, spki) };
             if (await north.StartFlowAsync(MasModule) != AifError.OK) return null;
             var said = await north.AdvanceAsync(MasModule, new List<ControllerApi.Datum> { new ControllerApi.Datum("OSD-BSO-V1.5", 1, MpaiJson.ToJson(speech)) });
             await north.StopFlowAsync(MasModule);

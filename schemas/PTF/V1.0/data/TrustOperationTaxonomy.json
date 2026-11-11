@@ -22,6 +22,9 @@
                                       "VerifyPayload",
                                       "AcceptLink",
                                       "CloseLink",
+                                      "AcceptBout",
+                                      "CloseBout",
+                                      "VerifyChain",
                                       "AdmitController",
                                       "RefuseController" ],
                             "description": "Type of trust-related operation." } } }

@@ -59,6 +59,8 @@ public static class BoundaryPorts
                 pn.ValueKind == JsonValueKind.Number)
                 number = pn.GetInt32();
 
+            // Whether the Port may be given as a Bout (MAS-AID-V1.1; AIF AIM Metadata): omitted, false.
+            var bout = port.TryGetProperty("Bout", out var bo) && bo.ValueKind == System.Text.Json.JsonValueKind.True;
             var optional = port.TryGetProperty("IsOptional", out var io) &&
                            io.ValueKind == JsonValueKind.True;
 
@@ -68,7 +70,8 @@ public static class BoundaryPorts
                 DataType   = types[0],
                 DataTypes  = types,
                 PortNumber = number,
-                IsOptional = optional
+                IsOptional = optional,
+                Bout       = bout
             });
         }
 

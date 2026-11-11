@@ -18,6 +18,8 @@
   <!-- Data Types only. No Controller, no AIMs, no application. -->
   <ItemGroup>
     <ProjectReference Include="..\..\..\AIF\PortData\Mpai.Aif.PortData.csproj" />
+    <!-- Bouts on the data plane (MPAI-MAS V1.1, API 3.3) and the Instance Credential of the RCA (API 2.1). -->
+    <ProjectReference Include="..\..\..\AIF\Communication\Bout\Mpai.Aif.Bout.csproj" />
   </ItemGroup>
 
 </Project>

@@ -1,0 +1,29 @@
+{ "$schema":               "https://json-schema.org/draft/2020-12/schema",
+  "$id":                   "https://schemas.mpai.community/AIF/V3.0/data/Bout.json",
+  "title":                 "Bout V3.0",
+  "description":           "What the instances of a flow of one Data Type on one Port have in common, given once as a Zstandard dictionary (RFC 8878, section 5) whose Dictionary_ID is the BoutID. Each instance of the flow travels as a Zstandard frame compressed with it.",
+  "type":                  "object",
+  "additionalProperties":  false,
+  "required":              [ "Header", "BoutID", "DataType", "PortNumber", "Method", "Dictionary", "SigningMode", "MaxInstanceLength", "DataXMData" ],
+  "properties":            {
+
+    "Header":              { "type": "string", "const": "AIF-BOU-V3.0" },
+    "MInstanceID":         { "type": "string" },
+    "UEnvironmentID":      { "type": "string" },
+    "BoutID":              { "type": "integer", "minimum": 32768, "maximum": 2147483647, "description": "Identifier of the Bout and Dictionary_ID of its dictionary and of every frame compressed with it; never reused by the Controller, or the User Agent, that gives it." },
+    "BoutTime":            { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json", "description": "Time the Bout was given." },
+
+    "DataType":            { "type": "string", "pattern": "^[A-Z0-9]{3,4}-[A-Z0-9]{3}-V[0-9]{1,2}\\.[0-9]{1,2}$", "description": "Header of the Data Type of the instances of the flow." },
+    "PortNumber":          { "type": "integer", "minimum": 1, "description": "Port Number of the Port of that Data Type that the flow is on." },
+    "Method":              { "type": "string", "const": "Zstandard", "description": "The compression method: Zstandard, IETF RFC 8878." },
+    "Dictionary":          { "type": "string", "pattern": "^([0-9A-F]{2})+$", "description": "The Zstandard dictionary (RFC 8878, section 5), in Hexadecimal ASCII: its Dictionary_ID is the BoutID; its content is the canonical form of an instance of the Data Type." },
+    "SigningMode":         { "type": "string", "enum": [ "EachInstance", "Chain" ], "description": "EachInstance: every instance is signed. Chain: every instance carries its AuditChainHash; every ChainInterval-th instance is signed." },
+    "ChainInterval":       { "type": "integer", "minimum": 1, "description": "In Chain mode, the number N: the instances whose Sequence is a multiple of N are signed." },
+    "RepeatInterval":      { "type": "integer", "minimum": 0, "description": "Milliseconds between repetitions of the Bout; absent or 0: not repeated, given on request." },
+    "MaxInstanceLength":   { "type": "integer", "minimum": 1, "description": "The largest size, in bytes, of the canonical form of an instance: a frame whose content size exceeds it is refused before it is decompressed." },
+
+    "DataXMData":          { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json", "description": "The Data Exchange Metadata of the Bout: its Source, its Binding <Data Type>#<Port Number>@<stamp of its writer>/<BoutID>, its Signature and KeyID, made by the Controller that writes it." },
+    "DescrMetadata":       { "type": "string", "maxLength": 2048 } },
+
+  "if":                    { "properties": { "SigningMode": { "const": "Chain" } } },
+  "then":                  { "required": [ "ChainInterval" ] } }

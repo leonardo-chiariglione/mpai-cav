@@ -49,6 +49,9 @@ public sealed class RuntimePort
     public string? Transport { get; init; }
     public IReadOnlyList<string>? AcceptedTransports { get; init; }
 
+    // Whether the Controller gives and accepts the Messages of the Port as a Bout (AIM Metadata, Bout; Communication 9.1). Omitted: false.
+    public bool Bout { get; init; }
+
     // 1-based ordinal among this AIM's ports of the SAME Direction and
     // DataType, as declared in the AMD. Null when the AMD omitted it, which
     // per AIMMetadata V3.0 means 1.

@@ -842,6 +842,26 @@ public sealed partial class ContinuousExecutor
             return (AifError.OK, new PortMessage { DataType = dataType, PortNumber = portNumber, Json = json, Payloads = PayloadStore.ReferencesIn(json), From = from, FromStamp = stamp });
         }
 
+        public (AifError Error, int BoutID) ExternalBoutOpen(int controllerId, string aimName, string dataType, int portNumber, string signingMode, int chainInterval)
+        {
+            if (!DeclaresExternal) return (AifError.NotAuthorised, 0);
+            if (executor.External is not { } external) return (AifError.NotFound, 0);
+            var outcome = external.OpenBout(dataType, portNumber, signingMode, chainInterval, out var boutId, controllerId > 0 ? controllerId : null);
+            return (Of(outcome), boutId);
+        }
+
+        public async ValueTask<(AifError Error, string? Bout)> ExternalBoutGetAsync(int controllerId, string aimName, string dataType, int portNumber)
+        {
+            if (!DeclaresExternal) return (AifError.NotAuthorised, null);
+            if (executor.External is not { } external) return (AifError.NotFound, null);
+            var bout = await external.GetBoutAsync(dataType, portNumber, controllerId > 0 ? controllerId : null);
+            return bout is null ? (AifError.NotFound, null) : (AifError.OK, bout.ToJsonString());
+        }
+
+        public async ValueTask<AifError> ExternalBoutCloseAsync(int controllerId, string aimName, string dataType, int portNumber) =>
+            !DeclaresExternal ? AifError.NotAuthorised : executor.External is not { } external ? AifError.NotFound
+            : await external.CloseBoutAsync(dataType, portNumber) == ExternalOutcome.Ok ? AifError.OK : AifError.NotFound;
+
         public async ValueTask<AifError> ExternalInputWriteAsync(int controllerId, string aimName, string dataType, int portNumber, string json, int timeoutMs) =>
             !DeclaresExternal ? AifError.NotAuthorised : executor.External is not { } external ? AifError.NotFound : Of(await external.WriteAsync(controllerId, aimName, dataType, portNumber, json, timeoutMs));
 

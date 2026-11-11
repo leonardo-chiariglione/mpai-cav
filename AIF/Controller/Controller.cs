@@ -159,7 +159,8 @@ public sealed class Controller
                     AcceptedTransports =
                         port.TryGetProperty("AcceptedTransports", out var accepted) && accepted.ValueKind == JsonValueKind.Array
                             ? accepted.EnumerateArray().Select(a => a.GetString() ?? "").ToList()
-                            : null
+                            : null,
+                    Bout = port.TryGetProperty("Bout", out var bout) && bout.ValueKind == JsonValueKind.True
                 });
             }
         }

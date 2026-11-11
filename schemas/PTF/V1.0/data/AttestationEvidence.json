@@ -16,7 +16,7 @@
       "Type":                   { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/SecurityEvidenceTaxonomy.json#/definitions/EvidenceType",
                                   "description": "Evidence type identifier from the Security Evidence Taxonomy." },
 
-      "Value":                  { "type": "string", "description": "Opaque evidence payload encoded as base64url." },
+      "Value":                  { "type": "string", "pattern": "^([0-9A-F]{2})+$", "description": "Opaque evidence payload in Hexadecimal ASCII encoding (Data Conventions)." },
       "Verifier":               { "type": "string", "description": "ID of the component that produced or verified the evidence." },
       "HashAlgorithm":          { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/SecurityAlgorithmTaxonomy.json#/properties/Hash",
                                   "description": "Optional hash algorithm identifier from the Security Algorithm Taxonomy." },

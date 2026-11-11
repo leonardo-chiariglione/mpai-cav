@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- BOUTS (MPAI-AIF V3.0, Communication 9.1; MPAI-PTF V1.0, Verification Pipeline 11): a flow of one Data Type on one Port, what its instances have in
+       common given once as a Zstandard dictionary, each instance one Zstandard frame, protected as MPAI-PTF specifies. -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <RootNamespace>AIF.Bout</RootNamespace>
+    <AssemblyName>Mpai.Aif.Bout</AssemblyName>
+  </PropertyGroup>
+
+  <!-- Zstandard (IETF RFC 8878), managed: a port of the reference library, which also builds a dictionary with a chosen Dictionary_ID. -->
+  <ItemGroup>
+    <PackageReference Include="ZstdSharp.Port" Version="0.8.6" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Trust\AIF.Trust.csproj" />
+  </ItemGroup>
+
+</Project>

@@ -14,7 +14,7 @@ namespace Mpai.Aif.Api;
 // typed key "DataType#PortNumber": ControllerApi neither knows nor uses any port
 // NAME. Outcomes are the standard AifError, surfaced faithfully; no application
 // semantics, no content, no state (memory lives in the Module).
-public sealed class ControllerApi : IControllerApi, IDisposable
+public sealed partial class ControllerApi : IControllerApi, IDisposable
 {
     // THE FRAMEWORK OFFERS THE PLACE; THIS KNOWS WHAT TO LOOK FOR. AIF.Controller
     // routes Data Types and payloads and does not know what an MPAI Object is.
@@ -383,7 +383,8 @@ public sealed class ControllerApi : IControllerApi, IDisposable
             {
                 ControllerId = anchor.AnchorId, ModuleType = anchor.AnchorId, Discovery = discovery, Admission = trust.Admission, Host = host,
                 DirectedReplies = parsed.Directed, CorrelateBy = parsed.Correlate ?? [], AddressedBy = parsed.Address ?? [],
-                StillTrusted = trust.StillTrusted, Decided = trust.Record
+                StillTrusted = trust.StillTrusted, Decided = trust.Record,
+                BoutKey = trust.Key, PeerBoutKey = from => trust.PeerKey(from) is { } k ? (AIF.Bout.BoutKey)k : null
             }, trust.Sign, trust.Verify, trust.SignPayloads);
             lock (_tables) _authorities[moduleName] = service;
             return AifError.OK;
@@ -439,7 +440,8 @@ public sealed class ControllerApi : IControllerApi, IDisposable
             {
                 ControllerId = member.Trust.ControllerId, ModuleType = AuthorityIdOf(authority), Discovery = member.Discovery, Admission = member.Trust.Admission,
                 DirectedReplies = false, HoldUntilLinked = true,    // what its Module gives waits until a Controller of the service is linked
-                StillTrusted = member.Trust.StillTrusted, Decided = member.Trust.Record
+                StillTrusted = member.Trust.StillTrusted, Decided = member.Trust.Record,
+                BoutKey = member.Trust.Key, PeerBoutKey = from => member.Trust.PeerKey(from) is { } k ? (AIF.Bout.BoutKey)k : null
             }, member.Trust.Sign, member.Trust.Verify, member.Trust.SignPayloads);
             // Joined is admitted and reachable: the Controller waits, a while, for the Controller of the Authority to be linked.
             var linking = System.Diagnostics.Stopwatch.StartNew();
@@ -888,6 +890,8 @@ public sealed class ControllerApi : IControllerApi, IDisposable
 
     public void Dispose()
     {
+        // MPAI_AIFU_Controller_Destroy: the Instance Credentials issued to User Agents are revoked, and the Bouts they give closed (Basic API 3.1.2).
+        RevokeBoutCredentials();
         List<AIF.Channels.ExternalHub> hubs;
         lock (_tables)
         {

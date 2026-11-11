@@ -8,6 +8,8 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\Controller\AIF.Controller.csproj" />
+    <!-- Bouts of the Controller API called by the User Agent (Basic API 3.1.3, 3.10). -->
+    <ProjectReference Include="..\Communication\Bout\Mpai.Aif.Bout.csproj" />
     <ProjectReference Include="..\..\Store\AIF.Store.csproj" />
     <ProjectReference Include="..\PortData\Mpai.Aif.PortData.csproj" />
     <ProjectReference Include="..\..\AIMs\Core\Mpai.Core.csproj" />

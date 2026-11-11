@@ -23,9 +23,10 @@
       "Version":           { "type": "string", "pattern": "^[A-Za-z0-9._-]{1,32}$" },
       "ChannelId":         { "type": "string", "format": "uuid" },
       "Binding":           { "type": "string",
-                             "description": "What the Data Exchange is bound to, in the signed object: for a Message between Controllers, <Data Type>#<Port Number>@<stamp of its writer>, the Port it is for and the time it was written. Being signed, neither can be changed in transit." } } },
+                             "description": "What the Data Exchange is bound to, in the signed object: for a Message between Controllers, <Data Type>#<Port Number>@<stamp of its writer>, the Port it is for and the time it was written. For a Bout and its Bout Instances (AIF), <Data Type>#<Port Number>@<stamp of its writer>/<BoutID>. Being signed, neither can be changed in transit." } } },
 
-    "Integrity":           { "type": "object", "required": [ "Hash" ], "additionalProperties": false, "dependentRequired": { "Signature": [ "KeyID" ] }, "properties": {
+    "Integrity":           { "type": "object", "anyOf": [ { "required": [ "Hash" ] }, { "required": [ "Signature" ] } ], "additionalProperties": false, "dependentRequired": { "Signature": [ "KeyID" ] },
+                             "description": "The Hash, the Signature, or both: the Hash is optional where the object is signed.", "properties": {
       "Hash":              { "type": "object", "required": [ "Algorithm", "Value" ], "additionalProperties": false, "properties": {
         "Algorithm":       { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/SecurityAlgorithmTaxonomy.json#/properties/Hash" },
         "Value":           { "type": "string", "pattern": "^[A-Fa-f0-9]{64}$" } } },

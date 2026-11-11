@@ -28,7 +28,7 @@ public static class PtfEvidence
             ["EvidenceItems"] = new JsonArray(items.Select(i => (JsonNode)new JsonObject
             {
                 ["Type"] = i.Type,
-                ["Value"] = Base64Url(i.What),
+                ["Value"] = Hex(i.What),
                 ["Verifier"] = verifier,
                 ["HashAlgorithm"] = PtfIdentity.HashAlgorithm,
                 ["HashValue"] = i.Hash
@@ -39,19 +39,16 @@ public static class PtfEvidence
 
     public static IReadOnlyList<Item> Items(JsonObject evidence) =>
         (evidence["EvidenceItems"] as JsonArray ?? [])
-            .Select(i => new Item((string?)i?["Type"] ?? "", FromBase64Url((string?)i?["Value"] ?? ""), (string?)i?["HashValue"] ?? ""))
+            .Select(i => new Item((string?)i?["Type"] ?? "", FromHex((string?)i?["Value"] ?? ""), (string?)i?["HashValue"] ?? ""))
             .ToList();
 
-    // The payload of an item, base64url as its schema says ("Opaque evidence payload
-    // encoded as base64url"): here the name of what was measured.
-    private static string Base64Url(string s) =>
-        Convert.ToBase64String(Encoding.UTF8.GetBytes(s)).TrimEnd('=').Replace('+', '-').Replace('/', '_');
+    // The payload of an item, in Hexadecimal ASCII as PTF Data Conventions require for binary values (sections 1 and 3; the author corrected
+    // section 2, which said Base64URL, 2026-11-11): here the name of what was measured.
+    private static string Hex(string s) => Convert.ToHexString(Encoding.UTF8.GetBytes(s));
 
-    private static string FromBase64Url(string s)
+    private static string FromHex(string s)
     {
-        var b = s.Replace('-', '+').Replace('_', '/');
-        b += new string('=', (4 - b.Length % 4) % 4);
-        try { return Encoding.UTF8.GetString(Convert.FromBase64String(b)); }
+        try { return Encoding.UTF8.GetString(Convert.FromHexString(s)); }
         catch (FormatException) { return ""; }
     }
 }

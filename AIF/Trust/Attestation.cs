@@ -61,13 +61,13 @@ public static class Attestation
         {
             new JsonObject
             {
-                ["Type"] = ReportType, ["Value"] = Base64Url(PtfCanonical.Bytes(report)), ["Verifier"] = partyId,
+                ["Type"] = ReportType, ["Value"] = Hex(PtfCanonical.Bytes(report)), ["Verifier"] = partyId,
                 ["HashAlgorithm"] = PtfIdentity.HashAlgorithm, ["HashValue"] = Convert.ToHexString(SHA256.HashData(quote.Attest))
             }
         };
         items.AddRange(log.Select(m => (JsonNode)new JsonObject
         {
-            ["Type"] = MeasurementType, ["Value"] = Base64Url(Encoding.UTF8.GetBytes($"{m.Register} {m.What}")), ["Verifier"] = partyId,
+            ["Type"] = MeasurementType, ["Value"] = Hex(Encoding.UTF8.GetBytes($"{m.Register} {m.What}")), ["Verifier"] = partyId,
             ["HashAlgorithm"] = PtfIdentity.HashAlgorithm, ["HashValue"] = m.Sha256
         }));
         var evidence = new JsonObject
@@ -97,7 +97,7 @@ public static class Attestation
         byte[] attest, signature, certificate;
         try
         {
-            report = JsonNode.Parse(FromBase64Url((string)reportItem["Value"]!))!.AsObject();
+            report = JsonNode.Parse(FromHex((string)reportItem["Value"]!))!.AsObject();
             attest = Convert.FromHexString((string)report["Quote"]!);
             signature = Convert.FromHexString((string)report["Signature"]!);
             certificate = Convert.FromHexString((string)report["AttestationKeyCertificate"]!);
@@ -123,7 +123,7 @@ public static class Attestation
         var log = new List<Measurement>();
         foreach (var item in items.Where(i => (string?)i?["Type"] == MeasurementType))
         {
-            var text = Encoding.UTF8.GetString(FromBase64Url((string?)item!["Value"] ?? ""));
+            var text = Encoding.UTF8.GetString(FromHex((string?)item!["Value"] ?? ""));
             var space = text.IndexOf(' ');
             if (space < 0 || !int.TryParse(text[..space], out var register)) return "a measurement of its log cannot be read";
             log.Add(new Measurement(register, text[(space + 1)..], (string?)item["HashValue"] ?? ""));
@@ -189,12 +189,9 @@ public static class Attestation
         return chain.Build(certificate);
     }
 
-    private static string Base64Url(byte[] data) => Convert.ToBase64String(data).TrimEnd('=').Replace('+', '-').Replace('/', '_');
-    private static byte[] FromBase64Url(string s)
-    {
-        var b = s.Replace('-', '+').Replace('_', '/');
-        return Convert.FromBase64String(b.PadRight(b.Length + (4 - b.Length % 4) % 4, '='));
-    }
+    // Binary values in Hexadecimal ASCII, as PTF Data Conventions require (sections 1 and 3; section 2, which said Base64URL, corrected 2026-11-11).
+    private static string Hex(byte[] data) => Convert.ToHexString(data);
+    private static byte[] FromHex(string s) => Convert.FromHexString(s);
 }
 
 // THE SIMULATED MANUFACTURER of roots of trust (M3223 3.5): a certification authority

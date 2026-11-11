@@ -4,4 +4,8 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
   </PropertyGroup>
+  <!-- Bouts on the External Ports (Communication 9.1). -->
+  <ItemGroup>
+    <ProjectReference Include="..\Bout\Mpai.Aif.Bout.csproj" />
+  </ItemGroup>
 </Project>

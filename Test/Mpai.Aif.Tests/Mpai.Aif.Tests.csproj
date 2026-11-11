@@ -26,6 +26,8 @@
     <ProjectReference Include="..\..\AIF\ControllerApi\Mpai.Aif.Api.csproj" />
     <ProjectReference Include="..\..\AIF\Metadata\AIF.Metadata.csproj" />
     <ProjectReference Include="..\..\AIF\Trust\AIF.Trust.csproj" />
+    <ProjectReference Include="..\..\AIF\Communication\Bout\Mpai.Aif.Bout.csproj" />
+    <ProjectReference Include="..\..\Apps\MAS\Server\Mpai.Mas.Server.csproj" />
     <ProjectReference Include="..\..\AIF\UserAgent\Wdl\Mpai.Wdl.csproj" />
     <ProjectReference Include="..\..\AIF\UserAgent\Rca\Mpai.Rca.csproj" />
     <ProjectReference Include="..\..\AIF\UserAgent\Remote\Mpai.Mas.Client.csproj" />

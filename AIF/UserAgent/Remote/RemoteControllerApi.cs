@@ -40,6 +40,24 @@ public sealed class RemoteControllerApi : IControllerApi, IDisposable
     private string prefix = "/MPAI/AIFU";
     private string? controllerId;
 
+    // BOUTS (MPAI-MAS V1.1, API 3.3). The key of the SCI, from the Trust Anchor its creation returned, verifies the Bouts it gives on output Ports; the
+    // key of this client, with the Instance Credential the SCI issued for its Cryptographic Instance Identity, signs the Bouts it gives on input Ports.
+    private System.Security.Cryptography.ECDsa? sciKey;
+    private readonly System.Security.Cryptography.ECDsa clientKey = System.Security.Cryptography.ECDsa.Create(System.Security.Cryptography.ECCurve.NamedCurves.nistP256);
+    private readonly string clientInstance = "urn:mpai:mas:rca:" + MasClientIdentity.Id;
+    private readonly Dictionary<string, AIF.Bout.BoutReceiver> outputBouts = new(StringComparer.Ordinal);
+    private readonly Dictionary<string, AIF.Bout.BoutGiver> inputBouts = new(StringComparer.Ordinal);
+
+    // True before the first request: the client asks for an Instance Credential when it creates the SCI, so that it can give Bouts on input Ports.
+    public bool GivesBouts { get; set; }
+
+    // The Instance Credential the SCI issued, where it was asked for.
+    public JsonObject? Credential { get; private set; }
+
+    // How many Bout Instances this client has sent, and received and verified.
+    public int BoutInstancesSent { get; private set; }
+    public int BoutInstancesReceived { get; private set; }
+
     // Module name -> Module Instance id, for the Modules started so far.
     private readonly Dictionary<string, string> modules =
         new(StringComparer.Ordinal);
@@ -60,6 +78,8 @@ public sealed class RemoteControllerApi : IControllerApi, IDisposable
 
         codecs = PortDataCodecs.Default();
         http.DefaultRequestHeaders.Add("MPAI-Client", MasClientIdentity.Id);
+        http.DefaultRequestHeaders.Accept.ParseAdd("application/json");
+        http.DefaultRequestHeaders.Accept.ParseAdd("application/zstd");
 
         if (!string.IsNullOrWhiteSpace(bearerToken))
             http.DefaultRequestHeaders.Authorization =
@@ -74,7 +94,11 @@ public sealed class RemoteControllerApi : IControllerApi, IDisposable
     {
         if (controllerId is not null) return controllerId;
 
-        var response = http.PostAsync($"{prefix.TrimStart('/')}/Controller", null)
+        HttpContent? proof = null;
+        if (GivesBouts)
+            proof = new StringContent(new JsonObject { ["Proof"] = AIF.Bout.BoutCredentials.Proof(clientKey, clientInstance, DateTimeOffset.UtcNow) }.ToJsonString(),
+                                      System.Text.Encoding.UTF8, "application/json");
+        var response = http.PostAsync($"{prefix.TrimStart('/')}/Controller", proof)
                            .GetAwaiter().GetResult();
         response.EnsureSuccessStatusCode();
 
@@ -88,6 +112,8 @@ public sealed class RemoteControllerApi : IControllerApi, IDisposable
 
         controllerId = (string?)json["id"]
                        ?? throw new FormatException("Controller response has no id.");
+        if (json["anchor"] is JsonObject anchor) sciKey = AIF.Trust.TrustAnchorKey.KeyOf(anchor);
+        Credential = json["credential"] as JsonObject;
 
         return controllerId;
     }
@@ -158,8 +184,7 @@ public sealed class RemoteControllerApi : IControllerApi, IDisposable
 
             var wire = Codecs.ToWire(datum.DataType, datum.Json);
 
-            var content = new ByteArrayContent(wire);
-            content.Headers.ContentType = new MediaTypeHeaderValue("MPAI/port-data");
+            var content = InputContent(mid, datum.DataType, datum.PortNumber, wire);
 
             var posted = http.PostAsync(
                 $"{Root}/{mid}/Input/{Segment(datum.DataType, datum.PortNumber)}",
@@ -200,7 +225,7 @@ public sealed class RemoteControllerApi : IControllerApi, IDisposable
 
                 if (!response.IsSuccessStatusCode) continue;
 
-                var wire = response.Content.ReadAsByteArrayAsync().GetAwaiter().GetResult();
+                if (OutputBytes(response, mid, dataType, portNumber) is not { } wire) continue;
                 outputs.Add(new ControllerApi.Datum(
                     dataType, portNumber, Codecs.ToInternal(dataType, wire)));
             }
@@ -220,8 +245,7 @@ public sealed class RemoteControllerApi : IControllerApi, IDisposable
         if (!modules.TryGetValue(moduleName, out var mid)) return AifError.NotStarted;
         if (!codecsKnow(dataType)) return AifError.Failed;
 
-        var content = new ByteArrayContent(Codecs.ToWire(dataType, json));
-        content.Headers.ContentType = new MediaTypeHeaderValue("MPAI/port-data");
+        var content = InputContent(mid, dataType, portNumber, Codecs.ToWire(dataType, json));
         try
         {
             using var limit = Limit(timeoutMs);
@@ -245,7 +269,7 @@ public sealed class RemoteControllerApi : IControllerApi, IDisposable
                                .GetAwaiter().GetResult();
             if (response.StatusCode == System.Net.HttpStatusCode.NotFound) return new ControllerApi.Read(AifError.NotProduced, null);
             if (!response.IsSuccessStatusCode) return new ControllerApi.Read(AifError.Failed, null);
-            var wire = response.Content.ReadAsByteArrayAsync().GetAwaiter().GetResult();
+            if (OutputBytes(response, mid, dataType, portNumber) is not { } wire) return new ControllerApi.Read(AifError.NotProduced, null);
             return new ControllerApi.Read(AifError.OK, Codecs.ToInternal(dataType, wire));
         }
         catch (OperationCanceledException) { return new ControllerApi.Read(AifError.Timeout, null); }
@@ -254,6 +278,110 @@ public sealed class RemoteControllerApi : IControllerApi, IDisposable
     // MPAI-MAS's Pause and Resume change a label on the Service and hold nothing,
     // so the client refuses them rather than pretend, until MPAI-MAS is aligned
     // to AIF V3.0 (M3206 Phase 15).
+    // ------------------------------------------------------------------ Bouts on output Ports (MPAI-MAS V1.1, API 3.3.1 to 3.3.3)
+    public AifError OutputBoutOpen(string moduleName, string dataType, int portNumber, string signingMode = AIF.Bout.BoutSecurity.EachInstance, int chainInterval = 1)
+    {
+        if (!modules.TryGetValue(moduleName, out var mid)) return AifError.NotStarted;
+        if (sciKey is null) return AifError.NotTrusted;
+        var body = new JsonObject { ["SigningMode"] = signingMode };
+        if (signingMode == AIF.Bout.BoutSecurity.Chain) body["ChainInterval"] = chainInterval;
+        using var request = new HttpRequestMessage(HttpMethod.Post, $"{Root}/{mid}/Output/{Segment(dataType, portNumber)}/Bout")
+        { Content = new StringContent(body.ToJsonString(), System.Text.Encoding.UTF8, "application/json") };
+        request.Headers.Accept.ParseAdd("application/zstd");
+        var response = http.Send(request);
+        if (!response.IsSuccessStatusCode) return AifError.NotAuthorised;
+        var key = BoutKey(mid, dataType, portNumber);
+        var receiver = NewReceiver(dataType, portNumber);
+        outputBouts[key] = receiver;
+        if ((int)response.StatusCode == 201 && JsonNode.Parse(response.Content.ReadAsStringAsync().GetAwaiter().GetResult()) is JsonObject bout && !receiver.Accept(bout).Ok)
+            return AifError.NotTrusted;
+        return AifError.OK;
+    }
+
+    public AifError OutputBoutClose(string moduleName, string dataType, int portNumber)
+    {
+        if (!modules.TryGetValue(moduleName, out var mid)) return AifError.NotStarted;
+        var key = BoutKey(mid, dataType, portNumber);
+        var response = http.DeleteAsync($"{Root}/{mid}/Output/{Segment(dataType, portNumber)}/Bout").GetAwaiter().GetResult();
+        if (outputBouts.Remove(key, out var receiver) && response.IsSuccessStatusCode &&
+            JsonNode.Parse(response.Content.ReadAsStringAsync().GetAwaiter().GetResult()) is JsonObject closing)
+            receiver.Close(closing);
+        return response.IsSuccessStatusCode ? AifError.OK : AifError.NotFound;
+    }
+
+    // ------------------------------------------------------------------ Bouts on input Ports (MPAI-MAS V1.1, API 3.3.4 and 3.3.5)
+    // The Bout is made from first, signed with the key of the Instance Credential, and given; the following InputWrite calls of the Port send Bout
+    // Instances.
+    public AifError InputBoutGive(string moduleName, string dataType, int portNumber, string firstJson, string signingMode = AIF.Bout.BoutSecurity.EachInstance, int chainInterval = 1)
+    {
+        if (!modules.TryGetValue(moduleName, out var mid)) return AifError.NotStarted;
+        if (Credential is null) return AifError.NotTrusted;
+        var giver = new AIF.Bout.BoutGiver(new AIF.Bout.BoutGiver.Options
+        {
+            DataType = dataType, PortNumber = portNumber, BoutId = 32768 + System.Security.Cryptography.RandomNumberGenerator.GetInt32(1 << 30),
+            SigningMode = signingMode, ChainInterval = chainInterval, Key = clientKey, KeyId = clientInstance, Issuer = clientInstance, SourceAimId = clientInstance
+        });
+        var wire = Codecs.ToWire(dataType, firstJson);
+        var bout = giver.Open(JsonNode.Parse(wire)!.AsObject());
+        var response = http.PostAsync($"{Root}/{mid}/Input/{Segment(dataType, portNumber)}/Bout",
+                                      new StringContent(bout.ToJsonString(), System.Text.Encoding.UTF8, "application/json")).GetAwaiter().GetResult();
+        if (!response.IsSuccessStatusCode) return response.StatusCode == System.Net.HttpStatusCode.Unauthorized ? AifError.NotTrusted : AifError.NotAuthorised;
+        inputBouts[BoutKey(mid, dataType, portNumber)] = giver;
+        return AifError.OK;
+    }
+
+    public AifError InputBoutEnd(string moduleName, string dataType, int portNumber)
+    {
+        if (!modules.TryGetValue(moduleName, out var mid)) return AifError.NotStarted;
+        if (!inputBouts.Remove(BoutKey(mid, dataType, portNumber), out var giver)) return AifError.NotFound;
+        var response = http.PostAsync($"{Root}/{mid}/Input/{Segment(dataType, portNumber)}/Bout/Close",
+                                      new StringContent(giver.Close().ToJsonString(), System.Text.Encoding.UTF8, "application/json")).GetAwaiter().GetResult();
+        return response.IsSuccessStatusCode ? AifError.OK : AifError.Failed;
+    }
+
+    private static string BoutKey(string mid, string dataType, int portNumber) => $"{mid}/{dataType}#{portNumber}";
+
+    private AIF.Bout.BoutReceiver NewReceiver(string dataType, int portNumber)
+    {
+        var sci = controllerId!;
+        var key = sciKey!;
+        return new AIF.Bout.BoutReceiver(new AIF.Bout.BoutReceiver.Options { DataType = dataType, PortNumber = portNumber, KeyFor = id => id == sci ? key : null });
+    }
+
+    // The body of an input: a JSON object, or, where this client gives a Bout on the Port, a Bout Instance.
+    private HttpContent InputContent(string mid, string dataType, int portNumber, byte[] wire)
+    {
+        if (inputBouts.TryGetValue(BoutKey(mid, dataType, portNumber), out var giver))
+        {
+            var frame = new ByteArrayContent(giver.Instance(JsonNode.Parse(wire)!.AsObject()));
+            frame.Headers.ContentType = new MediaTypeHeaderValue("application/zstd");
+            BoutInstancesSent++;
+            return frame;
+        }
+        var content = new ByteArrayContent(wire);
+        content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
+        return content;
+    }
+
+    // The JSON of an output, from a JSON object or a Bout Instance (checked as MPAI-AIF specifies, and decompressed); null where it is held - a
+    // Chain segment not yet verified - or refused.
+    private byte[]? OutputBytes(HttpResponseMessage response, string mid, string dataType, int portNumber)
+    {
+        var bytes = response.Content.ReadAsByteArrayAsync().GetAwaiter().GetResult();
+        if (response.Content.Headers.ContentType?.MediaType != "application/zstd") return bytes;
+        if (!outputBouts.TryGetValue(BoutKey(mid, dataType, portNumber), out var receiver)) return null;
+        if (receiver.Bout is null)
+        {
+            var got = http.GetAsync($"{Root}/{mid}/Output/{Segment(dataType, portNumber)}/Bout").GetAwaiter().GetResult();
+            if (!got.IsSuccessStatusCode || JsonNode.Parse(got.Content.ReadAsStringAsync().GetAwaiter().GetResult()) is not JsonObject bout || !receiver.Accept(bout).Ok)
+                return null;
+        }
+        var received = receiver.Receive(bytes);
+        if (!received.Ok || received.Delivered.Count == 0) return null;
+        BoutInstancesReceived += received.Delivered.Count;
+        return System.Text.Encoding.UTF8.GetBytes(received.Delivered[^1].ToJsonString());
+    }
+
     public AifError Pause(string moduleName) => AifError.Failed;
 
     public AifError Resume(string moduleName) => AifError.Failed;
@@ -273,7 +401,7 @@ public sealed class RemoteControllerApi : IControllerApi, IDisposable
         timeoutMs < 0 ? new CancellationTokenSource() : new CancellationTokenSource(Math.Max(timeoutMs, 1));
 
     private static string Segment(string dataType, int portNumber) =>
-        portNumber == 1 ? dataType : dataType + ":" + portNumber;
+        dataType + "/" + portNumber.ToString(System.Globalization.CultureInfo.InvariantCulture);   // two path segments (MPAI-MAS V1.1, API 1)
 
     private PortDataCodecs Codecs => codecs;
 

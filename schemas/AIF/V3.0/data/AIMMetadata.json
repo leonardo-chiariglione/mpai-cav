@@ -222,6 +222,7 @@
       "Transport":        { "$ref": "#/$defs/Transport", "description": "On an Output Port: the transport of the Channel it writes. Omitted means Controller. Distinct from Protocol, which names a network protocol." },
       "AcceptedTransports": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "$ref": "#/$defs/Transport" },
                             "description": "On an Input Port: the transports it accepts. Where the Output Port feeding it states another, the Module does not load. Omitted: every transport." },
+      "Bout":             { "type": "boolean", "description": "On a boundary Port of the Module or an External Port: whether the Controller gives and accepts the Messages of the Port as a Bout (Communication 9.1). Omitted means false: the Messages are given as full instances. Inside a Module there are no Bouts." },
       "IsOptional":       { "description": "True where the Port need not be supplied for the AIM to run; omitted means required (implicitly false).",
                             "anyOf": [ { "type": "boolean" }, { "$dynamicRef": "#placeholder" } ] },
       "RecordType":       { "type": "string", "deprecated": true, "description": "Deprecated compatibility alias for DataType. Where both are present DataType prevails. To be removed in a later Version." },

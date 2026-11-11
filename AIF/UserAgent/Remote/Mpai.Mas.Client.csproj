@@ -9,5 +9,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\PortData\Mpai.Aif.PortData.csproj" />
     <ProjectReference Include="..\..\ControllerApi\Mpai.Aif.Api.csproj" />
+    <!-- Bouts on the data plane of MPAI-MAS V1.1 (API 3.3), and the Instance Credential of the RCA (API 2.1). -->
+    <ProjectReference Include="..\..\Communication\Bout\Mpai.Aif.Bout.csproj" />
   </ItemGroup>
 </Project>

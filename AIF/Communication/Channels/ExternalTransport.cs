@@ -107,10 +107,15 @@ public interface IExternalPorts
     Task<ExternalOutcome> ProbeAsync(int controllerId, string aimName, string dataType, int portNumber, int timeoutMs);
     Task<(ExternalOutcome Outcome, string? Json, DateTimeOffset Stamp, string From)> ReadAsync(int controllerId, string aimName, string dataType, int portNumber, int timeoutMs);
     Task<ExternalOutcome> WriteAsync(int controllerId, string aimName, string dataType, int portNumber, string json, int timeoutMs);
+
+    // Bouts (Basic API 5.5 to 5.7). Where the transport gives none, refused: the Messages go as full instances.
+    ExternalOutcome OpenBout(string dataType, int portNumber, string signingMode, int chainInterval, out int boutId, int? controllerId = null) { boutId = 0; return ExternalOutcome.Refused; }
+    Task<JsonObject?> GetBoutAsync(string dataType, int portNumber, int? controllerId = null) => Task.FromResult<JsonObject?>(null);
+    Task<ExternalOutcome> CloseBoutAsync(string dataType, int portNumber) => Task.FromResult(ExternalOutcome.NotProduced);
 }
 
 // THE HUB OF ONE MODULE: its announcement, its links, its External Ports.
-public sealed class ExternalHub : IAsyncDisposable, IExternalPorts
+public sealed partial class ExternalHub : IAsyncDisposable, IExternalPorts
 {
     public sealed record Options
     {
@@ -166,6 +171,11 @@ public sealed class ExternalHub : IAsyncDisposable, IExternalPorts
         // linked as it is given (push) or waits to be read by an AIM of theirs (Basic API 5.3).
         public string? ModuleMetadata { get; init; }
         public bool Pump { get; init; } = true;
+
+        // BOUTS (Communication 9.1): the key of this Controller's anchor, which signs the Bouts it gives; and the key of the anchor of the Controller
+        // at the other end of a link, which verifies the Bouts it gives. Without them no Bout is given or accepted.
+        public AIF.Bout.BoutKey? BoutKey { get; init; }
+        public Func<string, AIF.Bout.BoutKey?>? PeerBoutKey { get; init; }
     }
 
     // What the hub gives its Module (writes to an External Input Port), and the
@@ -306,6 +316,8 @@ public sealed class ExternalHub : IAsyncDisposable, IExternalPorts
         var timeoutMs = (int?)frame["TimeoutMs"] ?? 0;
         switch ((string?)frame["Kind"])
         {
+            case "BoutGet":
+                return ServeBout(from, frame);
             case "ExtProbe":
                 return Replied(ServeProbe is null ? ExternalOutcome.NoSuchPort : await ServeProbe(aim, dataType, portNumber, timeoutMs));
             case "ExtRead":
@@ -624,6 +636,7 @@ public sealed class ExternalHub : IAsyncDisposable, IExternalPorts
     private Func<JsonObject, Task> Receive(string from) => async frame =>
     {
         if ((string?)frame["Kind"] == "Meta") { controllerMetadata[from] = (string?)frame["Metadata"] ?? ""; return; }
+        if (await ReceiveBoutFrameAsync(from, frame)) return;
         if ((string?)frame["Kind"] != "External") return;
         Interlocked.Increment(ref received);
         var stampText = (string)frame["Stamp"]!;
@@ -677,6 +690,7 @@ public sealed class ExternalHub : IAsyncDisposable, IExternalPorts
             try { next = await (apart ? ReadOutputApart! : ReadOutput!)(dataType, portNumber, 200); }
             catch (Exception) when (stop.IsCancellationRequested) { break; }
             if (next is not { } m) continue;
+            if (!apart && await SendInBoutAsync(dataType, portNumber, m.Json, m.Stamp)) continue;
             if (apart) { await SendWithPayloadsAsync(dataType, portNumber, m.Json, m.Stamp); continue; }
             await SendAsync(dataType, portNumber, Sign?.Invoke(m.Json, BindingOf(dataType, portNumber, StampText(m.Stamp))) ?? m.Json, m.Stamp);
         }

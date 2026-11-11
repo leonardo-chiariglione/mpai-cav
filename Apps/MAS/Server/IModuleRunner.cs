@@ -25,6 +25,9 @@ public sealed class BoundaryPort
 
     public bool IsOptional { get; init; }
 
+    // Whether the Port may be given as a Bout (MPAI-MAS V1.1, AIM Description; MPAI-AIF, Communication 9.1).
+    public bool Bout { get; init; }
+
     public bool Accepts(string dataType)
     {
         if (string.Equals(DataType, dataType, StringComparison.Ordinal)) return true;
@@ -38,9 +41,8 @@ public sealed class BoundaryPort
     // The boundary key the executor routes on.
     public string Key => DataType + "#" + PortNumber;
 
-    // The URL segment for this Port, naming the Data Type actually being sent.
-    public string SegmentFor(string dataType) =>
-        PortNumber == 1 ? dataType : dataType + ":" + PortNumber;
+    // The two path segments for this Port, naming the Data Type actually being sent.
+    public string SegmentFor(string dataType) => PortSegment.Path(dataType, PortNumber);
 }
 
 // What the MAS server needs from whatever runs Modules.
@@ -99,51 +101,41 @@ public sealed class RunResult
     public string? Error { get; init; }
 }
 
-// Turns a {pid} URL segment into the Port it addresses.
+// Turns the two path segments that name a boundary Port into the Port they address (MPAI-MAS V1.1, API 1).
 //
-// The MAS specification fixes every route but leaves {pid} undefined, saying
-// only that the body matches "the declared type of the involved ports". So {pid}
-// carries (DataType, PortNumber), separated by a COLON: "#" cannot appear in a
-// URL path at all - it begins a fragment and never reaches a server - while a
-// colon is legal in a path segment. An omitted PortNumber means 1, literally,
-// not "the only Port of that type".
+// {DataType} is the Data Type in canonical form, its Header, <Standard>-<Acronym>-V<Major>.<Minor>; {PortNumber} is a decimal integer from 1 with no
+// leading zero, always present. Neither needs percent-encoding, and "#", which begins a fragment, is never in a URL.
 //
-//     Input/OSD-BTO-V1.5        -> PortNumber 1
-//     Input/OSD-BTO-V1.5:2      -> PortNumber 2
+//     Input/OSD-BTO-V1.5/1      -> Port 1
+//     Input/OSD-BTO-V1.5/2      -> Port 2
 //
-// MMC-AMQ-V2.5 is why this is needed on the first Module an RCA touches rather
-// than someday: it declares two Speech inputs, PortNumber 1 for the question and
-// 2 for the reply, and two Text inputs the same way.
+// MMC-AMQ-V2.5 is why the Port Number matters on the first Module an RCA touches: it declares two Speech inputs, Port 1 for the question and 2 for
+// the reply, and two Text inputs the same way.
 public static class PortSegment
 {
+    private static readonly System.Text.RegularExpressions.Regex CanonicalDataType =
+        new(@"^[A-Z0-9]{3,4}-[A-Z0-9]{3}-V[0-9]{1,2}\.[0-9]{1,2}$", System.Text.RegularExpressions.RegexOptions.CultureInvariant);
+
+    private static readonly System.Text.RegularExpressions.Regex CanonicalPortNumber =
+        new(@"^[1-9][0-9]{0,8}$", System.Text.RegularExpressions.RegexOptions.CultureInvariant);
+
+    // The two segments of a Port, as a client writes them.
+    public static string Path(string dataType, int portNumber) => dataType + "/" + portNumber.ToString(System.Globalization.CultureInfo.InvariantCulture);
+
     public static bool TryParse(
-        string segment,
+        string typeSegment,
+        string numberSegment,
         out string dataType,
         out int portNumber)
     {
         dataType   = string.Empty;
-        portNumber = 1;
+        portNumber = 0;
 
-        if (string.IsNullOrWhiteSpace(segment)) return false;
+        if (!CanonicalDataType.IsMatch(typeSegment ?? string.Empty)) return false;
+        if (!CanonicalPortNumber.IsMatch(numberSegment ?? string.Empty)) return false;
 
-        // A Data Type identifier contains no colon of its own, so the LAST colon
-        // separates the PortNumber when one is present.
-        var colon = segment.LastIndexOf(':');
-
-        if (colon < 0)
-        {
-            dataType = segment;
-            return true;
-        }
-
-        var type   = segment.Substring(0, colon);
-        var number = segment.Substring(colon + 1);
-
-        if (type.Length == 0) return false;
-        if (!int.TryParse(number, out var n) || n < 1) return false;
-
-        dataType   = type;
-        portNumber = n;
+        dataType   = typeSegment!;
+        portNumber = int.Parse(numberSegment!, System.Globalization.CultureInfo.InvariantCulture);
         return true;
     }
 
