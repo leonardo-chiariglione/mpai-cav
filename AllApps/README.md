@@ -12,7 +12,7 @@ Each standard is a folder; the Apps of a standard are the files in it, named as 
 | `MMC` | `ACR`, `MAC`, `MCA`, `MTS`, `AMC`, `AMQ`, `NPR` | the standalone programs: access registration, access control, conversation with the avatar, translation, affective conversation, picture questions, newspaper reading |
 | `CAV` | `CAV`, `HCI` | the connected autonomous vehicle; the passenger conversation with it |
 | `ABV` | `ABV server (this PC only)`, `ABV server (open to the network)` | the avatar videoconference |
-| `MMM` | `MMM demo`, `MMM world`, `MMM meeting` | the metaverse meeting: the demo, a conference with people outside this network, personal links |
+| `MMM` | `MMM demo`, `MMM world`, `MMM meeting`, `Stop the MMM meeting` | the metaverse meeting: the demo, a conference with people outside this network, personal links |
 | `AIH` | `HSP demo` | the first slice of AIH-HSP, narrated |
 | `AIF` | `Store service`, `Store app` | the repository of AIMs; submit an AIM |
 | `MAS` | `MAS App desktop client`, `MAS App browser server`, `Stop the MAS App and the Service`, `MAS App local apps` | The MAS App, the MAS launcher: you choose an App in its window; `MAS App local apps` lets its icons start the standalone MMC Apps |
