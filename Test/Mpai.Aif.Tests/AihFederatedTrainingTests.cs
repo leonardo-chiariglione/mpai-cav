@@ -70,7 +70,7 @@ public class AihFederatedTrainingTests : IDisposable
         using var back = new FrontEndTrainer(Network, new FileSharedStorage(Path.Combine(folder, "back-end-start"), "be", "be"));
         var k = 0;
         foreach (var (img, f) in Cases(Neutral, 200, 1)) back.KeepCase("n" + k++, img, f);
-        return back.Train(null, epochs: 80);
+        return back.Train(null, epochs: 80, networkEpochs: 20);                // the network and the final layer (the demo trains 40 passes)
     }
 
     [Fact]
@@ -107,7 +107,11 @@ public class AihFederatedTrainingTests : IDisposable
             var model = fe.Export();
             Assert.Equal("AIP-MLO-V1.0", model["Header"]!.GetValue<string>());
             Assert.Equal(fe.FeatureCount + 1, FrontEndTrainer.Weights(model).Length);
-            Assert.True(model.ToJsonString().Length < 2000, "what leaves is a small model, not images");
+            // what leaves is the model - the final layer, the number of cases and the network (since 2026-11-12 the network is trained, so it travels) - not images
+            var items = model["MLModelData"]!.AsArray();
+            Assert.Equal(3, items.Count);
+            Assert.Equal(File.ReadAllBytes(Network).Length, FrontEndTrainer.NetworkOf(model)!.Length);
+            Assert.Equal("100", items[1]!["Data"]!.GetValue<string>());
             Assert.Equal(100, fe.Cases);                         // the images are still there, and nowhere else
             exported.Add(model);
         }

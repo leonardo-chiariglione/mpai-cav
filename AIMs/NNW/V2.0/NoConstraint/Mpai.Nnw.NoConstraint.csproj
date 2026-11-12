@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- MPAI-NNW V2.0: the NoConstraint watermarking method (IMT; see NoConstraint.cs and M3304) and the AIMs that use it: Post-Training Watermark Insertion (NNW-PWI) and Watermark Extraction (NNW-WEX). -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\..\AIF\Controller\AIF.Controller.csproj" />
+    <ProjectReference Include="..\..\..\Onnx\Mpai.Onnx.csproj" />
+  </ItemGroup>
+</Project>

@@ -8,51 +8,55 @@ using System.Text;
 using System.Text.Json.Nodes;
 
 using AIF.SharedStorage;
-using Microsoft.ML.OnnxRuntime;
-using Microsoft.ML.OnnxRuntime.Tensors;
 
 namespace Mpai.Aih.Hfl;
 
 // THE TRAINING IN THE END USER'S HEALTH FRONT END (federated learning, step 1).
 //
-// A Front End trains only the FINAL LAYER of the NN Model of its End User: a logistic regression (one weight per feature and a bias) on the features that a FROZEN
-// network (an ONNX file, opened by Mpai.Onnx) gives for each image. The network under it never changes. The images are the End User's own past cases (the replay):
-// they are kept in the End User's storage (the Secure Data Vault) under "cases/" and are never given to anyone. Each version of the model is kept in the same
-// storage as an NN Model (AIP-MLO-V1.0, 32-bit floats, little endian, in the first Data item: the weights, then the bias, as HFL averages them) under "nnmodel/";
-// only a model leaves the Front End (Export), never an image.
+// A Front End trains the NETWORK of the NN Model of its End User and its FINAL LAYER together: the network (an ONNX file, run and trained by Network) gives features
+// for each image, and the final layer is a logistic regression on them (one weight per feature and a bias). The images are the End User's own past cases (the
+// replay): they are kept in the End User's storage (the Secure Data Vault) under "cases/" and are never given to anyone. Each version of the model is kept in the same
+// storage as an NN Model (AIP-MLO-V1.0) under "nnmodel/"; only a model leaves the Front End (Export), never an image.
+//
+// THE NN MODEL (AIP-MLO-V1.0) holds three Data items: the first, the weights of the final layer (32-bit floats, little endian, the weights then the bias); the second,
+// the number of cases it learned from (decimal text, see HflAimProcessor.Cases); the third, the network, an ONNX file. A model with the first item only (a final layer
+// alone) is trained on the network the trainer was made with.
+//
+// Until 2026-11-12 the network was FROZEN (fixed random weights) and only the final layer was trained. The network is now trained, as the watermark of the Back End
+// (NoConstraint) assumes: the training goes on over the marked weights.
 public sealed class FrontEndTrainer : IDisposable
 {
     public const int ImageSide = 64;
+    public const int NetworkEpochs = 5;                                               // passes over the cases in which the network is trained with the final layer
     private const string CasePrefix = "cases/", ModelPrefix = "nnmodel/";
 
-    private readonly InferenceSession _network;
+    private readonly byte[] _baseNetwork;
     private readonly ISharedStorage _vault;
     private int _version;
-    private readonly string _networkPath;
 
     public int FeatureCount { get; }
     public int Cases => _vault.MPAI_AIFM_SharedStorage_List(CasePrefix).Count;
     public int Version => _version;
 
-    public FrontEndTrainer(string frozenNetworkPath, ISharedStorage endUserStorage)
+    public FrontEndTrainer(string networkPath, ISharedStorage endUserStorage)
     {
-        _networkPath = frozenNetworkPath;
-        _network = Mpai.Onnx.OnnxSessions.Create(frozenNetworkPath);
+        _baseNetwork = System.IO.File.ReadAllBytes(networkPath);
+        FeatureCount = new Network(_baseNetwork, ImageSide).FeatureCount;
         _vault = endUserStorage;
-        FeatureCount = _network.OutputMetadata.First().Value.Dimensions.Last();
         _version = _vault.MPAI_AIFM_SharedStorage_List(ModelPrefix).Count;
     }
 
-    public void Dispose() => _network.Dispose();
+    public void Dispose() { }
 
-    // The frozen network on one image (ImageSide x ImageSide, grey, 0..1).
+    // The network the trainer was made with, on one image (ImageSide x ImageSide, grey, 0..1).
     public float[] Features(float[] image)
     {
         if (image.Length != ImageSide * ImageSide) throw new ArgumentException($"an image holds {ImageSide * ImageSide} values.");
-        var input = new DenseTensor<float>(image, new[] { 1, 1, ImageSide, ImageSide });
-        using var results = _network.Run(new[] { NamedOnnxValue.CreateFromTensor(_network.InputMetadata.First().Key, input) });
-        return results.First().AsEnumerable<float>().ToArray();
+        return new Network(_baseNetwork, ImageSide).Features(Standardise(image));
     }
+
+    // The network of a model: its own (third Data item) or, for a final layer alone, the trainer's.
+    private Network NetworkFor(JsonObject? model) => new(NetworkOf(model ?? new JsonObject()) ?? _baseNetwork, ImageSide);
 
     // Keeps a past case of the End User (the image and its label) in the End User's storage.
     public void KeepCase(string caseId, float[] image, bool finding)
@@ -63,25 +67,31 @@ public sealed class FrontEndTrainer : IDisposable
         _vault.MPAI_AIFM_SharedStorage_Put(CasePrefix + Uri.EscapeDataString(caseId), bytes);
     }
 
-    // The replay: all the past cases of the End User, as features and labels (in the order of the keys, so the training is repeatable).
-    private List<(float[] X, float Y)> Replay() =>
+    // The replay: all the past cases of the End User, as images and labels (in the order of the keys, so the training is repeatable).
+    private List<(float[] Image, float Y)> Replay() =>
         _vault.MPAI_AIFM_SharedStorage_List(CasePrefix).OrderBy(k => k, StringComparer.Ordinal).Select(k =>
         {
             var b = _vault.MPAI_AIFM_SharedStorage_Get(k);
             var image = new float[(b.Length - 1) / 4];
             Buffer.BlockCopy(b, 1, image, 0, b.Length - 1);
-            return (Features(image), (float)b[0]);
+            return (Standardise(image), (float)b[0]);
         }).ToList();
 
-    // Trains the final layer, starting from the NN Model given (null: from zero), on the End User's own cases; keeps the new version; returns it.
-    public JsonObject Train(JsonObject? start, int epochs = 300, float learningRate = 0.01f)
+    // Trains the model given (null: a final layer from zero, on the trainer's network) on the End User's own cases; keeps the new version; returns it.
+    // First the network and the final layer are trained together for networkEpochs passes (Adam, batches of 10, in a fixed order); then the final layer is fitted on the
+    // features of the trained network (epochs, full batch). networkEpochs = 0 leaves the network as it is.
+    public JsonObject Train(JsonObject? start, int epochs = 300, float learningRate = 0.01f, int networkEpochs = NetworkEpochs, float networkRate = 0.0002f)
     {
         var w = start is null ? new float[FeatureCount + 1] : Weights(start);
         if (w.Length != FeatureCount + 1) throw new FormatException($"the NN Model holds {w.Length} values, the final layer needs {FeatureCount + 1}.");
-        var data = Replay();
-        if (data.Count == 0) throw new InvalidOperationException("the End User has no case to learn from.");
+        var cases = Replay();
+        if (cases.Count == 0) throw new InvalidOperationException("the End User has no case to learn from.");
+        var net = NetworkFor(start);
+        if (networkEpochs > 0) TrainTogether(net, w, cases, networkEpochs, networkRate, learningRate);
+        var data = cases.Select(c => (net.Features(c.Image), c.Y)).ToList();
         FitHead(w, data, epochs, learningRate);
-        return Keep(w, $"final layer trained by one Health Front End on {data.Count} of its End User's own cases; the network under it is frozen", start?["MLModelObjectID"]?.GetValue<string>(), data.Count);
+        var what = networkEpochs > 0 ? "network and final layer" : "final layer (the network unchanged)";
+        return Keep(w, net.ToOnnx(), $"{what} trained by one Health Front End on {data.Count} of its End User's own cases", start?["MLModelObjectID"]?.GetValue<string>(), data.Count);
     }
 
     // The NN Models kept, oldest first.
@@ -92,30 +102,24 @@ public sealed class FrontEndTrainer : IDisposable
     // What leaves the Front End: the latest NN Model. Never an image.
     public JsonObject Export() => Versions().LastOrDefault() ?? throw new InvalidOperationException("no NN Model has been trained.");
 
-    // What a Front End returns to the Back End when the whole model is wanted (the Back End looks for its watermark in the frozen network): the latest NN Model with the
-    // frozen network's file as a THIRD Data item (the first holds the weights of the final layer, the second the number of cases).
-    public JsonObject ExportWithNetwork()
-    {
-        var model = Export().DeepClone().AsObject();
-        ((JsonArray)model["MLModelData"]!).Add(new JsonObject { ["Data"] = Convert.ToBase64String(System.IO.File.ReadAllBytes(_networkPath)) });
-        return model;
-    }
+    // The latest NN Model, which carries its network (kept for the callers of the time when the network was frozen and travelled apart).
+    public JsonObject ExportWithNetwork() => Export();
 
-    // The frozen network's file in a returned model (null where it carries none).
+    // The network's file in a model (null where it carries none: a final layer alone).
     public static byte[]? NetworkOf(JsonObject model)
     {
         var items = (model["MLModelData"] as JsonArray)?.OfType<JsonObject>().Select(o => o["Data"]?.GetValue<string>()).Where(d => !string.IsNullOrEmpty(d)).ToList() ?? [];
         return items.Count >= 3 ? Convert.FromBase64String(items[2]!) : null;
     }
 
-    // Score of a NN Model on images with labels: the fraction right and the mean log loss.
+    // Score of a NN Model on images with labels: the fraction right and the mean log loss (on the model's own network, or on the trainer's for a final layer alone).
     public (double Accuracy, double LogLoss) Score(JsonObject model, IEnumerable<(float[] Image, bool Finding)> cases)
     {
-        var w = Weights(model);
+        var w = Weights(model); var net = NetworkFor(model);
         double right = 0, loss = 0; var n = 0;
         foreach (var (image, finding) in cases)
         {
-            var p = Sigmoid(Dot(w, Features(image)));
+            var p = Sigmoid(Dot(w, net.Features(Standardise(image))));
             if ((p >= 0.5) == finding) right++;
             loss -= Math.Log(Math.Max(1e-7, finding ? p : 1 - p)); n++;
         }
@@ -132,32 +136,83 @@ public sealed class FrontEndTrainer : IDisposable
         return weights;
     }
 
-    public static JsonObject ModelObject(string id, float[] w, string description, int? cases = null) => new()
+    public static JsonObject ModelObject(string id, float[] w, string description, int? cases = null, byte[]? network = null) => new()
     {
         ["Header"] = "AIP-MLO-V1.0", ["MLModelObjectID"] = id,
-        ["MLModelData"] = Data(w, cases),
+        ["MLModelData"] = Data(w, network is null ? cases : cases ?? 1, network),
         ["DescrMetadata"] = description
     };
 
     // The weights in the first Data item; the number of cases the model learned from, as decimal text, in the second (see HflAimProcessor.Cases).
-    private static JsonArray Data(float[] w, int? cases)
+    private static JsonArray Data(float[] w, int? cases, byte[]? network)
     {
         var data = new JsonArray(new JsonObject { ["Data"] = Convert.ToBase64String(w.SelectMany(BitConverter.GetBytes).ToArray()) });
         if (cases is int n) data.Add(new JsonObject { ["Data"] = n.ToString(System.Globalization.CultureInfo.InvariantCulture) });
+        if (network is not null) data.Add(new JsonObject { ["Data"] = Convert.ToBase64String(network) });
         return data;
     }
 
-    private JsonObject Keep(float[] w, string description, string? from, int? cases = null)
+    private JsonObject Keep(float[] w, byte[] network, string description, string? from, int? cases = null)
     {
         _version++;
         var id = $"{(from ?? "start")}>v{_version}";
-        var model = ModelObject(id, w, description, cases);
+        var model = ModelObject(id, w, description, cases, network);
         _vault.MPAI_AIFM_SharedStorage_Put(ModelPrefix + _version.ToString("D6"), Encoding.UTF8.GetBytes(model.ToJsonString()));
         return model;
     }
 
+    // THE IMAGE AS THE NETWORK SEES IT: standardised (its mean taken away, divided by its spread), so that the brightness and the contrast of a device do not count.
+    public static float[] Standardise(float[] image)
+    {
+        var mean = image.Average(v => (double)v); var sd = Math.Sqrt(image.Sum(v => (v - mean) * (v - mean)) / image.Length);
+        var k = sd > 1e-6 ? 1 / sd : 1;
+        return image.Select(v => (float)((v - mean) * k)).ToArray();
+    }
+
     private static double Dot(float[] w, float[] x) { double s = w[^1]; for (var i = 0; i < x.Length; i++) s += w[i] * x[i]; return s; }
     private static double Sigmoid(double z) => 1.0 / (1.0 + Math.Exp(-z));
+
+    // The network and the final layer together: Adam on the logistic loss, batches of 10 in the order of the cases; the network at networkRate, the final layer at headRate.
+    private static void TrainTogether(Network net, float[] w, List<(float[] Image, float Y)> cases, int epochs, float networkRate, float headRate)
+    {
+        var parameters = net.Parameters().ToList();
+        var m = parameters.Select(p => new double[p.Values.Length]).ToList(); var v = parameters.Select(p => new double[p.Values.Length]).ToList();
+        var hm = new double[w.Length]; var hv = new double[w.Length]; var hg = new double[w.Length];
+        const int batch = 10; var t = 0; var f = w.Length - 1;
+        for (var e = 0; e < epochs; e++)
+            for (var at = 0; at < cases.Count; at += batch)
+            {
+                net.ClearGradients(); Array.Clear(hg);
+                var n = Math.Min(batch, cases.Count - at);
+                for (var c = at; c < at + n; c++)
+                {
+                    var acts = net.Run(cases[c].Image); var x = acts[^1];
+                    var err = (float)((Sigmoid(Dot(w, x)) - cases[c].Y) / n);
+                    var dx = new float[f];
+                    for (var i = 0; i < f; i++) { hg[i] += err * x[i]; dx[i] = err * w[i]; }
+                    hg[f] += err;
+                    net.Backward(acts, dx);
+                }
+                t++;
+                double c1 = 1 - Math.Pow(0.9, t), c2 = 1 - Math.Pow(0.999, t);
+                for (var i = 0; i <= f; i++)
+                {
+                    var g = hg[i] + (i < f ? 1e-3 * w[i] : 0);
+                    hm[i] = 0.9 * hm[i] + 0.1 * g; hv[i] = 0.999 * hv[i] + 0.001 * g * g;
+                    w[i] -= (float)(headRate * (hm[i] / c1) / (Math.Sqrt(hv[i] / c2) + 1e-8));
+                }
+                for (var p = 0; p < parameters.Count; p++)
+                {
+                    var (values, grads) = parameters[p]; var pm = m[p]; var pv = v[p];
+                    for (var i = 0; i < values.Length; i++)
+                    {
+                        double g = grads[i];
+                        pm[i] = 0.9 * pm[i] + 0.1 * g; pv[i] = 0.999 * pv[i] + 0.001 * g * g;
+                        values[i] -= (float)(networkRate * (pm[i] / c1) / (Math.Sqrt(pv[i] / c2) + 1e-8));
+                    }
+                }
+            }
+    }
 
     // Adam on the logistic loss, full batch, with a small L2 term (not on the bias).
     private static void FitHead(float[] w, List<(float[] X, float Y)> data, int epochs, float lr)

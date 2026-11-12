@@ -44,7 +44,7 @@ public class AihFederatedRoundTests : IDisposable
         {
             using var fe = new FrontEndTrainer(Network, new FileSharedStorage(Path.Combine(folder, "fe" + u), "fe" + u, "fe" + u));
             var k = 0; foreach (var (img, f) in AihFederatedTrainingTests.Cases(AihFederatedTrainingTests.EndUsers[u], 100, 100 + u)) fe.KeepCase($"c{k++:D3}", img, f);
-            updates.Add(fe.Train(start));
+            updates.Add(fe.Train(start, epochs: 0));                       // local training of the network and the final layer together, as in the demo
         }
         return (start, updates.ToArray(), judge);
     }
@@ -55,7 +55,7 @@ public class AihFederatedRoundTests : IDisposable
         return new RoundPolicy
         {
             WeightCount = startWeights.Length, MaxDistance = maxDistance,
-            Evaluate = w => judge.Score(FrontEndTrainer.ModelObject("e", w, "evaluation"), check)
+            Evaluate = m => judge.Score(m, check)
         };
     }
 
@@ -69,8 +69,8 @@ public class AihFederatedRoundTests : IDisposable
     {
         var (start, updates, judge) = Honest();
         using var _ = judge;
-        var s = FrontEndTrainer.Weights(start);
-        var limit = updates.Max(u => Distance(FrontEndTrainer.Weights(u), s)) * 1.5;
+        var s = HflAimProcessor.Vector(start);                            // all the weights: the final layer and the network
+        var limit = updates.Max(u => Distance(HflAimProcessor.Vector(u), s)) * 1.5;
         var hfl = new HflAimProcessor("hfl", Ports) { Policy = PolicyFor(judge, s, limit) };
         hfl.StartFrom(start);
         await Requests(hfl, 3);
@@ -79,7 +79,7 @@ public class AihFederatedRoundTests : IDisposable
         Assert.True(Averaged(last), string.Join("; ", hfl.Refusals));
         Assert.Empty(hfl.Refusals);
         Assert.NotEqual(s, hfl.Current);                                  // the new model replaced the old one
-        var mean = FrontEndTrainer.Weights(JsonNode.Parse(last.Ports[Ports.Output("AIP-MLO-V1.0")])!.AsObject());
+        var mean = HflAimProcessor.Vector(JsonNode.Parse(last.Ports[Ports.Output("AIP-MLO-V1.0")])!.AsObject());
         Assert.Equal(mean, hfl.Current);
     }
 
@@ -88,9 +88,9 @@ public class AihFederatedRoundTests : IDisposable
     {
         var (start, updates, judge) = Honest();
         using var _ = judge;
-        var s = FrontEndTrainer.Weights(start);
-        var limit = updates.Max(u => Distance(FrontEndTrainer.Weights(u), s)) * 1.5;
-        var extreme = FrontEndTrainer.ModelObject("evil", s.Select(v => v + 50f).ToArray(), "extreme");
+        var s = HflAimProcessor.Vector(start);
+        var limit = updates.Max(u => Distance(HflAimProcessor.Vector(u), s)) * 1.5;
+        var extreme = FrontEndTrainer.ModelObject("evil", FrontEndTrainer.Weights(start).Select(v => v + 50f).ToArray(), "extreme", 1, FrontEndTrainer.NetworkOf(start));
         var wrongSize = FrontEndTrainer.ModelObject("short", new float[5], "wrong size");
         var hfl = new HflAimProcessor("hfl", Ports) { Policy = PolicyFor(judge, s, limit) };
         hfl.StartFrom(start);
@@ -102,8 +102,8 @@ public class AihFederatedRoundTests : IDisposable
         Assert.All(hfl.Refusals, r => Assert.Equal("update", r.What));
         Assert.Contains(hfl.Refusals, r => r.Reason.Contains("moved"));
         Assert.Contains(hfl.Refusals, r => r.Reason.Contains("5 values"));
-        var mean = FrontEndTrainer.Weights(JsonNode.Parse(last.Ports[Ports.Output("AIP-MLO-V1.0")])!.AsObject());
-        var expected = FrontEndTrainer.Weights(updates[0]).Zip(FrontEndTrainer.Weights(updates[1]), (a, b) => (a + b) / 2).ToArray();
+        var mean = HflAimProcessor.Vector(JsonNode.Parse(last.Ports[Ports.Output("AIP-MLO-V1.0")])!.AsObject());
+        var expected = HflAimProcessor.Vector(updates[0]).Zip(HflAimProcessor.Vector(updates[1]), (a, b) => (a + b) / 2).ToArray();
         for (var i = 0; i < mean.Length; i++) Assert.Equal(expected[i], mean[i], 4);
     }
 
@@ -112,9 +112,9 @@ public class AihFederatedRoundTests : IDisposable
     {
         var (start, updates, judge) = Honest();
         using var _ = judge;
-        var s = FrontEndTrainer.Weights(start);
-        // Updates that pass the checks of size and distance (no distance limit here) but together make a model that is worse on the fixed set: the old model upside down.
-        var flipped = FrontEndTrainer.ModelObject("flip", s.Select(v => -v).ToArray(), "flipped");
+        var s = HflAimProcessor.Vector(start);
+        // Updates that pass the checks of size and distance (no distance limit here) but together make a model that is worse on the fixed set: the old model's final layer upside down.
+        var flipped = FrontEndTrainer.ModelObject("flip", FrontEndTrainer.Weights(start).Select(v => -v).ToArray(), "flipped", 1, FrontEndTrainer.NetworkOf(start));
         var hfl = new HflAimProcessor("hfl", Ports) { Policy = PolicyFor(judge, s, null) };
         hfl.StartFrom(start);
         await Requests(hfl, 2);

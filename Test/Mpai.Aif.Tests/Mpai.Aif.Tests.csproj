@@ -62,6 +62,7 @@
     <ProjectReference Include="..\..\AIMs\AIH\V1.1\Provider\Mpai.Aih.csproj" />
     <ProjectReference Include="..\..\AIMs\AIH\V1.1\Chain\Mpai.Aih.Chain.csproj" />
     <ProjectReference Include="..\..\Apps\AIH\HSP\Mpai.Aih.Hsp.csproj" />
+    <ProjectReference Include="..\..\AIMs\NNW\V2.0\NoConstraint\Mpai.Nnw.NoConstraint.csproj" />
     <ProjectReference Include="..\..\AIMs\CAE1\V2.5\Common\Mpai.Cae.Usc.Common.csproj" />
     <ProjectReference Include="..\..\AIMs\CAE1\V2.5\SMC\Mpai.Cae.Usc.Smc.csproj" />
     <ProjectReference Include="..\..\AIMs\CAE1\V2.5\SRA\Mpai.Cae.Usc.Sra.csproj" />

@@ -17,6 +17,7 @@
     <ProjectReference Include="..\..\..\..\AIMs\AIH\V1.1\Chain\Mpai.Aih.Chain.csproj" />
     <ProjectReference Include="..\..\..\..\AIMs\AIH\V1.1\HFL\Mpai.Aih.Hfl.csproj" />
     <ProjectReference Include="..\..\..\..\AIMs\AIH\V1.1\Nnm\Mpai.Aih.Nnm.csproj" />
+    <ProjectReference Include="..\..\..\..\AIMs\NNW\V2.0\NoConstraint\Mpai.Nnw.NoConstraint.csproj" />
     <ProjectReference Include="..\..\..\..\AIF\Controller\AIF.Controller.csproj" />
     <ProjectReference Include="..\..\..\..\AIF\Metadata\AIF.Metadata.csproj" />
   </ItemGroup>
