@@ -164,7 +164,26 @@ public sealed class BoutReceiver
         JsonObject x;
         try { x = JsonNode.Parse(content) as JsonObject ?? throw new FormatException(); }
         catch (Exception e) when (e is System.Text.Json.JsonException or FormatException) { return Refuse(SchemaViolation, "the instance is not JSON"); }
-        if (!PtfCanonical.Bytes(x).AsSpan().SequenceEqual(content)) return Refuse(SchemaViolation, "the instance is not in canonical form");
+        // The canonical form is not rebuilt for every instance: the signed bytes and the bytes of H are cut out of the received bytes (BoutSecurity.Cut),
+        // and only an instance whose Signature or Hash then fails is rebuilt, so that one not in canonical form is refused here, as (c) has it.
+        bool Canonical() => PtfCanonical.Bytes(x).AsSpan().SequenceEqual(content);
+        var cut = BoutSecurity.Cut(content);
+        if (cut is null && !Canonical()) return Refuse(SchemaViolation, "the instance is not in canonical form");
+        var signed = BoutSecurity.Integrity(x)?["Signature"] is not null;
+        var h = cut is not null ? SHA256.HashData(cut.Hashed) : BoutSecurity.H(x);
+        var signedBytes = cut?.Signed ?? BoutSecurity.SignedBytes(x);
+        bool? verified = null;
+        async ValueTask<bool> Verified()
+        {
+            if (verified is { } v) return v;
+            byte[]? value = null;
+            if ((string?)BoutSecurity.Integrity(x)?["Signature"] is { } hex) try { value = Convert.FromHexString(hex); } catch (FormatException) { }
+            return (verified = value is not null && await key.VerifyAsync(signedBytes, value)).Value;
+        }
+        var stated = (string?)BoutSecurity.Integrity(x)?["Hash"]?["Value"];
+        var hashFails = stated is not null && !string.Equals(stated, Convert.ToHexString(h), StringComparison.OrdinalIgnoreCase);
+        if (cut is not null && (hashFails || (signed ? !await Verified() : stated is null)) && !Canonical())
+            return Refuse(SchemaViolation, "the instance is not in canonical form");
         if (o.Validate is { } validate && !validate(x)) return Refuse(SchemaViolation, "the instance does not validate against its Data Type");
 
         // (d) the Binding names this Port and the BoutID; the stamp is fresh; the Sequence larger than any accepted
@@ -177,14 +196,12 @@ public sealed class BoutReceiver
 
         // (e) the Signature, or the chain and the signature that ends its segment
         if (BoutSecurity.KeyIdOf(x) != keyId) return Refuse(SignatureFailure, "the instance names another key");
-        var signed = BoutSecurity.Integrity(x)?["Signature"] is not null;
-        var h = BoutSecurity.H(x);
-        if ((string?)BoutSecurity.Integrity(x)?["Hash"]?["Value"] is { } stated && !string.Equals(stated, Convert.ToHexString(h), StringComparison.OrdinalIgnoreCase))
+        if (hashFails)
             return RefuseSegment(HashMismatch, "the Hash of the instance does not match");
 
         if (mode == BoutSecurity.EachInstance)
         {
-            if (!signed || !await BoutSecurity.VerifyAsync(x, key)) return Refuse(SignatureFailure, "the Signature of the instance does not verify");
+            if (!signed || !await Verified()) return Refuse(SignatureFailure, "the Signature of the instance does not verify");
             return new Received(null, null, [x]);
         }
 
@@ -194,7 +211,7 @@ public sealed class BoutReceiver
         {
             // An instance of the segment is missing: the segment is refused. A signed instance that verifies starts the chain again from its value.
             var reason = broken ? "the segment is broken" : "an instance of the segment is missing";
-            if (signed && await BoutSecurity.VerifyAsync(x, key) && (string?)BoutSecurity.Security(x)?["AuditChainHash"] is { } restart)
+            if (signed && await Verified() && (string?)BoutSecurity.Security(x)?["AuditChainHash"] is { } restart)
             {
                 chainBase = Convert.FromHexString(restart); baseSequence = sequence; broken = false;
                 var dropped = pending.Count + 1; pending.Clear();
@@ -217,7 +234,7 @@ public sealed class BoutReceiver
             pending.Add((sequence, x, a));
             return new Received(null, null, [], Held: true);
         }
-        if (!await BoutSecurity.VerifyAsync(x, key))
+        if (!await Verified())
         {
             broken = true;
             return RefuseSegment(SignatureFailure, "the signature that ends the segment does not verify");

@@ -62,6 +62,40 @@ public sealed class BoutTests
         for (var k = 1; k <= 7; k++) Assert.Equal(Canon("B-chain", k), PtfCanonical.Bytes(delivered[k - 1]));
     }
 
+    // The signed bytes and the bytes of H cut out of the received bytes are those the canonical form rebuilds, on every published instance.
+    [Fact]
+    public void PublishedVectors_CutBytes_AreTheRebuiltBytes()
+    {
+        foreach (var (set, count) in new[] { ("A-each-instance", 5), ("B-chain", 7) })
+            for (var k = 1; k <= count; k++)
+            {
+                var content = Canon(set, k);
+                var x = JsonNode.Parse(content)!.AsObject();
+                var cut = BoutSecurity.Cut(content);
+                Assert.NotNull(cut);
+                Assert.Equal(BoutSecurity.SignedBytes(x), cut!.Signed);
+                Assert.Equal(BoutSecurity.H(x), SHA256.HashData(cut.Hashed));
+            }
+    }
+
+    // An instance not in canonical form is refused at (c), as before; a changed instance at (e).
+    [Fact]
+    public void PublishedVectors_NotCanonicalOrChanged_AreRefused()
+    {
+        byte[] Frame2(byte[] content) => BoutZstd.Compress(Convert.FromHexString((string)BoutOf("A-each-instance")["Dictionary"]!), content);
+        var r = VectorReceiver("A-each-instance");
+        Assert.True(r.Accept(BoutOf("A-each-instance")).Ok);
+        var content = Canon("A-each-instance", 1);
+        var spaced = System.Text.Encoding.UTF8.GetBytes(JsonNode.Parse(content)!.ToJsonString(new System.Text.Json.JsonSerializerOptions { WriteIndented = true }));
+        Assert.Equal(BoutReceiver.SchemaViolation, r.Receive(Frame2(spaced)).ErrorCode);
+        var sigSpaced = System.Text.Encoding.UTF8.GetBytes(System.Text.Encoding.UTF8.GetString(content).Replace("\"Signature\":", "\"Signature\" :"));
+        Assert.Equal(BoutReceiver.SchemaViolation, r.Receive(Frame2(sigSpaced)).ErrorCode);
+        Assert.True(r.Receive(Frame("A-each-instance", 1)).Ok);                  // the two refused at (c) did not move the Sequence on
+        var x = JsonNode.Parse(Canon("A-each-instance", 2))!.AsObject();
+        x["Position"]!["CartPosition"]![0] = 1.5;
+        Assert.Equal(BoutReceiver.SignatureFailure, r.Receive(Frame2(PtfCanonical.Bytes(x))).ErrorCode);
+    }
+
     [Fact]
     public void PublishedVectors_TamperedBoutSignature_IsRefused()
     {

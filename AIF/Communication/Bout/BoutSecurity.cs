@@ -95,6 +95,81 @@ public static class BoutSecurity
         return key.Verify(PtfCanonical.Bytes(unsigned), value);
     }
 
+    // THE SIGNED AND THE HASHED BYTES CUT OUT OF THE RECEIVED BYTES. An instance arrives in its canonical form, so the canonical form of the instance
+    // without its Signature - the bytes the Signature is over - is the received bytes without the Signature member and its comma; and the bytes H is
+    // over are the received bytes without Signature, Hash and AuditChainHash. Cutting them out costs a scan; rebuilding them costs a canonical form
+    // each. Null where the members are not where and as the canonical form has them (a duplicate, whitespace, a member not in its canonical form):
+    // the caller then rebuilds them. If the received bytes are not the canonical form, the cut bytes are not the bytes signed or hashed, and the
+    // Signature or the Hash does not verify.
+    public sealed record CutBytes(byte[] Signed, byte[] Hashed);
+
+    private static readonly string[][] CutPaths =
+    [
+        ["DataXMData", "Security", "Integrity", "Signature"],
+        ["DataXMData", "Security", "Integrity", "Hash"],
+        ["DataXMData", "Security", "AuditChainHash"]
+    ];
+
+    public static CutBytes? Cut(byte[] content)
+    {
+        var spans = new (int Start, int End)?[CutPaths.Length];
+        var names = new string?[8];
+        try
+        {
+            var reader = new System.Text.Json.Utf8JsonReader(content);
+            while (reader.Read())
+            {
+                if (reader.TokenType != System.Text.Json.JsonTokenType.PropertyName) continue;
+                var depth = reader.CurrentDepth;
+                if (depth >= names.Length) { reader.Skip(); continue; }
+                names[depth] = reader.GetString();
+                for (var k = 0; k < CutPaths.Length; k++)
+                {
+                    var path = CutPaths[k];
+                    if (depth != path.Length) continue;
+                    var match = true;
+                    for (var d = 0; d < path.Length && match; d++) match = names[d + 1] == path[d];
+                    if (!match) continue;
+                    if (spans[k] is not null) return null;                                     // a duplicate
+                    var start = (int)reader.TokenStartIndex;
+                    reader.Skip();
+                    spans[k] = (start, (int)reader.BytesConsumed);
+                    // The member as the canonical form writes it: "Name":<canonical value>.
+                    var name = System.Text.Encoding.UTF8.GetBytes("\"" + path[^1] + "\":");
+                    var member = content.AsSpan(start, (int)reader.BytesConsumed - start);
+                    if (!member.StartsWith(name)) return null;
+                    var value = member[name.Length..];
+                    if (!PtfCanonical.Bytes(JsonNode.Parse(value)).AsSpan().SequenceEqual(value)) return null;
+                    break;
+                }
+            }
+        }
+        catch (Exception e) when (e is System.Text.Json.JsonException or InvalidOperationException) { return null; }
+
+        // Each member with its comma: the one before it, or - where it is the first member - the one after it, or none where it is the only one.
+        (int, int)? WithComma((int Start, int End)? span)
+        {
+            if (span is not { } m) return null;
+            if (content[m.Start - 1] == (byte)',') return (m.Start - 1, m.End);
+            if (content[m.Start - 1] == (byte)'{' && m.End < content.Length && content[m.End] == (byte)',') return (m.Start, m.End + 1);
+            if (content[m.Start - 1] == (byte)'{' && m.End < content.Length && content[m.End] == (byte)'}') return (m.Start, m.End);
+            return (-1, -1);
+        }
+        var cuts = spans.Select(WithComma).ToArray();
+        if (cuts.Any(c => c is (-1, -1))) return null;
+        byte[]? Without(IEnumerable<(int, int)?> remove)
+        {
+            var r = remove.OfType<(int Start, int End)>().OrderBy(c => c.Start).ToList();
+            for (var i = 1; i < r.Count; i++) if (r[i].Start < r[i - 1].End) return null;        // touching cuts: rebuilt instead
+            var outBytes = new List<byte>(content.Length);
+            var at = 0;
+            foreach (var (start, end) in r) { outBytes.AddRange(content.AsSpan(at, start - at).ToArray()); at = end; }
+            outBytes.AddRange(content.AsSpan(at).ToArray());
+            return [.. outBytes];
+        }
+        return Without([cuts[0]]) is { } signed && Without(cuts) is { } hashed ? new CutBytes(signed, hashed) : null;
+    }
+
     public static string Stamp(DateTimeOffset t) => t.ToString("o", CultureInfo.InvariantCulture);
 
     public static string Binding(string dataType, int portNumber, DateTimeOffset stamp, int boutId) =>
