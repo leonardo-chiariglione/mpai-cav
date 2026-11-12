@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- THE VIRTUAL VENUE OF XRV-LTP ON MMM-TEC: the device the User Agent binds to the VE Data In and VE Data Out of the Module. The virtual stage is an M-Location of an
+       M-Instance of MMM-TEC V2.2 (D:\AI\MMM); the show is a collection of Processes in it (performers, participants, whatever animates Items); the device is the Process that animates the Items of the virtual venue, and acts on the stage only by Process Actions over the MMM-API. -->
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>Mpai.Xrv.VirtualVenue</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\..\AIF\UserAgent\Ua\Mpai.Ua.csproj" />
+    <ProjectReference Include="..\..\..\..\MMM\Client\Mpai.Mmm.Client.csproj" />
+  </ItemGroup>
+
+</Project>

@@ -40,6 +40,7 @@ public sealed class MInstance
         public double Size { get; set; }             // a Location's side, metres
         public string? Model { get; set; }           // the 3D Model that renders it (a GLB file)
         public bool Streaming { get; set; }          // a Speech Object whose data is still arriving, as a stream
+        public JsonObject? LightSource { get; set; } // the Light Source (CVE-LTS-V1.0) a Property Change gave it: its Type, Colour and Intensity
     }
 
     public sealed class Process
@@ -412,6 +413,7 @@ public sealed class MInstance
                     if (i.DataType == "MMM-LOC") o["Size"] = i.Size;
                     if (i.Model is not null) o["Model"] = i.Model;
                     if (i.Animation is not null) o["Animation"] = i.Animation;
+                    if (i.LightSource?["Intensity"] is JsonValue intensity) o["Intensity"] = intensity.DeepClone();    // a light: how strong, in Watt
                     if (i.DataType == ScreenHeader) o["Streaming"] = i.Streaming;
                     // A Speech Object says when it is heard: its own time (Unix milliseconds). Its data is read as an Item, once, by whoever may hear it.
                     if (i.DataType == "OSD-BSO-V1.5")
@@ -610,6 +612,12 @@ public sealed class MInstance
             items[c.Nil!] = new Item { ID = c.Nil!, DataType = ScreenHeader, Body = screen, Owner = source, Streaming = true };
             created = true;
         }
+        // A 3D Model Object the Request carries is made where it is added, its Process's own: an object of a virtual stage, placed by the show.
+        if (!items.ContainsKey(c.Nil!) && with.FirstOrDefault(i => Header(i) == "OSD-3DO-V1.5" && (string?)i["3DModelObjectID"] == c.Nil) is { } model)
+        {
+            items[c.Nil!] = new Item { ID = c.Nil!, DataType = "OSD-3DO-V1.5", Body = model, Owner = source };
+            created = true;
+        }
         if (!items.TryGetValue(c.Nil!, out var it)) return Fail(404, service, "IncID", $"no Item {c.Nil}");
         if (!items.ContainsKey(c.At!)) return Fail(404, service, "IncID", $"no M-Location {c.At}");
         if (it.Owner != source && !Allowed(source, "MM-Add", c.Nil, c.At)) return Fail(403, service, "InsRights", $"{c.Nil} is not {source}'s");
@@ -688,12 +696,16 @@ public sealed class MInstance
         return Ok(200, service, new Complements { With = GrantAll(with, source) });
     }
 
-    // LCSrvc. Property Change makes an Item its Process owns perceptible.
+    // LCSrvc. Property Change makes an Item its Process owns perceptible and, when the Request carries a Light Source (CVE-LTS-V1.0, RQ7 of MMM-PCP-V2.2), gives
+    // the Item that Light Source: its Type, Colour and Intensity. A Light Source of another Item is refused.
     private Outcome PropertyChange(string service, string source, Complements c, List<JsonObject> with)
     {
         if (Need(service, c.Nil, "Nil") is { } f1) return f1;
         if (!items.TryGetValue(c.Nil!, out var it)) return Fail(404, service, "IncID", $"no Item {c.Nil}");
         if (it.Owner != source) return Fail(403, service, "InsRights", $"{c.Nil} is not {source}'s");
+        var light = with.FirstOrDefault(i => Header(i) == "CVE-LTS-V1.0");
+        if (light is not null && (string?)light["LightSourceID"] != c.Nil) return Fail(422, service, "FaultyPA", $"the Light Source is {(string?)light["LightSourceID"]}'s, not {c.Nil}'s");
+        if (light is not null) it.LightSource = light;
         it.Perceptible = true;
         return Ok(200, service, new Complements { With = GrantAll(with, source) });
     }

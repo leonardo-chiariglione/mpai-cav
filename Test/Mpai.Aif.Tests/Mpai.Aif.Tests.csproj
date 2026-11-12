@@ -88,7 +88,11 @@
     <ProjectReference Include="..\..\AIMs\XRV1\V1.0\PFI\Mpai.Xrv.Pfi.csproj" />
     <ProjectReference Include="..\..\AIMs\XRV1\V1.0\PTI\Mpai.Xrv.Pti.csproj" />
     <ProjectReference Include="..\..\AIMs\XRV1\V1.0\OSI\Mpai.Xrv.Osi.csproj" />
+    <ProjectReference Include="..\..\AIMs\XRV1\V1.0\END\Mpai.Xrv.End.csproj" />
+    <ProjectReference Include="..\..\AIMs\XRV1\V1.0\REG\Mpai.Xrv.Reg.csproj" />
+    <ProjectReference Include="..\..\AIMs\XRV1\V1.0\VEG\Mpai.Xrv.Veg.csproj" />
     <ProjectReference Include="..\..\AIMs\XRV1\V1.0\Provider\Mpai.Xrv.csproj" />
+    <ProjectReference Include="..\..\Apps\XRV\LTP\VirtualVenue\Mpai.Xrv.VirtualVenue.csproj" />
   </ItemGroup>
 
   <ItemGroup>

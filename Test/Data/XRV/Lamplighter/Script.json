@@ -1,0 +1,203 @@
+{
+  "Header": "XRV-SCR-V1.0",
+  "MInstanceID": "MI1",
+  "UEnvironmentID": "UE1",
+  "ScriptID": "Lamplighter-Script",
+  "ScriptTime": {
+    "Header": "OSD-STM-V1.5",
+    "SimpleTimeID": "script-t",
+    "SimpleTimeData": [
+      {
+        "FlagsByte": 3,
+        "StartTime": 0,
+        "EndTime": 0,
+        "AccuracyMode": "single",
+        "AccuracyPlusMinus": 0,
+        "TimeType": true,
+        "TimeUnit": "01"
+      }
+    ]
+  },
+  "ShowHeader": "The Lamplighter",
+  "TitleOfProduction": "The Lamplighter",
+  "ShowDescription": "Two Cues, machine-driven, no operator. C1 (Mixed): Anna on the real stage and a guest on the virtual stage - real lamps up, virtual lamp at 30%. C2 (Virtual): Bot, the virtual double of Anna, comes onto the virtual stage - real lamps off, virtual lamp full; the show ends.",
+  "Characters": [
+    {
+      "Name": "Anna",
+      "Nickname": "A",
+      "CharacterID": {
+        "Real": "Anna",
+        "Virtual": "Bot"
+      },
+      "Mnemonic": "ANN"
+    }
+  ],
+  "TheatricalSetList": [
+    {
+      "TheatricalSet": [
+        {
+          "Name": "Stage",
+          "SetID": {
+            "Real": "Stage",
+            "Virtual": "VStage"
+          },
+          "Mnemonic": "STG"
+        }
+      ],
+      "Objects": [
+        {
+          "Name": "Lamp 1",
+          "ObjectID": {
+            "Real": "FX1",
+            "Virtual": "VLamp1"
+          },
+          "ObjectType": "Static",
+          "Mnemonic": "L1"
+        },
+        {
+          "Name": "Lamp 2",
+          "ObjectID": {
+            "Real": "FX2"
+          },
+          "ObjectType": "Static",
+          "Mnemonic": "L2"
+        }
+      ]
+    }
+  ],
+  "Participants": [
+    {
+      "MetaName": "Guest",
+      "Nickname": "G",
+      "Mnemonic": "GST"
+    }
+  ],
+  "CueList": [
+    {
+      "Cue": [
+        {
+          "MixedCue": {
+            "MECueID": "C1",
+            "MEGroups": [
+              {
+                "RECueConditions": {
+                  "REPerformanceStatus": {
+                    "Header": "XRV-RFS-V1.0",
+                    "REPerformanceStatusID": "C1-target-re",
+                    "UEnvironmentID": "UE1",
+                    "REPerformanceStatusTime": {
+                      "Header": "OSD-STM-V1.5",
+                      "SimpleTimeID": "C1-target-re-t",
+                      "SimpleTimeData": [
+                        {
+                          "FlagsByte": 3,
+                          "StartTime": 0,
+                          "EndTime": 0,
+                          "AccuracyMode": "single",
+                          "AccuracyPlusMinus": 0,
+                          "TimeType": true,
+                          "TimeUnit": "01"
+                        }
+                      ]
+                    },
+                    "REPerformanceStatusData": {
+                      "IndividualStatuses": [
+                        {
+                          "REPerformerID": "Anna"
+                        }
+                      ]
+                    }
+                  }
+                },
+                "VECueConditions": {
+                  "VEParticipantStatus": {
+                    "Header": "XRV-VTS-V1.0",
+                    "VEParticipantStatusID": "C1-target-ve",
+                    "UEnvironmentID": "UE1",
+                    "VEParticipantStatusTime": {
+                      "Header": "OSD-STM-V1.5",
+                      "SimpleTimeID": "C1-target-ve-t",
+                      "SimpleTimeData": [
+                        {
+                          "FlagsByte": 3,
+                          "StartTime": 0,
+                          "EndTime": 0,
+                          "AccuracyMode": "single",
+                          "AccuracyPlusMinus": 0,
+                          "TimeType": true,
+                          "TimeUnit": "01"
+                        }
+                      ]
+                    },
+                    "VEParticipantStatusData": {
+                      "IndividualStatuses": [
+                        {
+                          "VEParticipantID": "Guest1"
+                        }
+                      ]
+                    }
+                  }
+                },
+                "REActions": [
+                  "RE-LIGHTS-UP"
+                ],
+                "VEActions": [
+                  "VE-LAMP-DIM"
+                ],
+                "NextCue": "C2"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "Cue": [
+        {
+          "VirtualCue": {
+            "VECueID": "C2",
+            "VEGroups": [
+              {
+                "VECueConditions": {
+                  "VEPerformanceStatus": {
+                    "Header": "XRV-VFS-V1.0",
+                    "VEPerformanceStatusID": "C2-target",
+                    "UEnvironmentID": "UE1",
+                    "VEPerformanceStatusTime": {
+                      "Header": "OSD-STM-V1.5",
+                      "SimpleTimeID": "C2-target-t",
+                      "SimpleTimeData": [
+                        {
+                          "FlagsByte": 3,
+                          "StartTime": 0,
+                          "EndTime": 0,
+                          "AccuracyMode": "single",
+                          "AccuracyPlusMinus": 0,
+                          "TimeType": true,
+                          "TimeUnit": "01"
+                        }
+                      ]
+                    },
+                    "VEPerformanceStatusData": {
+                      "IndividualStatuses": [
+                        {
+                          "VEPerformerID": "Bot"
+                        }
+                      ]
+                    }
+                  }
+                },
+                "REActions": [
+                  "RE-LIGHTS-OFF"
+                ],
+                "VEActions": [
+                  "VE-LAMP-ON"
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

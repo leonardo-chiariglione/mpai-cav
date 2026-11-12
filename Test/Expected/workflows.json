@@ -23,5 +23,6 @@
   "Apps/MMC/MAC/OSD-MAC.orch": "Module 1OSD-MAC-V1.5-I01: 7 offers, 4 asks; every Port declared",
   "Apps/MMC/MCA/MMC-MCA.orch": "Module 1MMC-MCA-V2.5-I01: 5 offers, 2 asks; every Port declared",
   "Apps/MMC/MTS/MMC-MTS.orch": "Module 1MMC-MTS-V2.5-I01: 5 offers, 2 asks; every Port declared",
-  "Apps/MMC/NPR/MMC-NPR.orch": "Module 1MMC-NPR-V2.5-I01: 3 offers, 1 asks; every Port declared"
+  "Apps/MMC/NPR/MMC-NPR.orch": "Module 1MMC-NPR-V2.5-I01: 3 offers, 1 asks; every Port declared",
+  "Apps/XRV/LTP/XRV-LTP.orch": "Module 1XRV-LTP-V1.0-I01: 8 offers, 3 asks; every Port declared"
 }

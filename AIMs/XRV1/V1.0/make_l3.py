@@ -1,4 +1,4 @@
-"""Writes the L3 AIM Instance Metadata of the four AIMs of XRV-LTP V1.0 that are software (ACG, PFI, PTI, OSI) into D:\\AI\\AIMs\\AMDs, each an instance of its L2
+"""Writes the L3 AIM Instance Metadata of the seven Basic AIMs of XRV-LTP V1.0 (ACG, PFI, PTI, OSI, END, REG, VEG) into D:\\AI\\AIMs\\AMDs, each an instance of its L2
 (D:\\AI\\schemas\\XRV1\\V1.0\\AIMs): the same Direction and Port Number, the same optional flags, Depth and Overflow; only what the Implementation supports.
 Run: python -I make_l3.py
 """
@@ -13,6 +13,9 @@ AIMS = {
     "PFI": ("PerformanceStatusInterpretation.json", "Pfi", "performance-status-interpretation"),
     "PTI": ("ParticipantStatusInterpretation.json", "Pti", "participant-status-interpretation"),
     "OSI": ("OperatorStatusInterpretation.json", "Osi", "operator-status-interpretation"),
+    "END": ("EnvironmentDescription.json", "End", "environment-description"),
+    "REG": ("REExperienceGeneration.json", "Reg", "re-experience-generation"),
+    "VEG": ("VEExperienceGeneration.json", "Veg", "ve-experience-generation"),
 }
 
 

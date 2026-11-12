@@ -1,0 +1,14 @@
+{
+    "Name": "Live Theatrical Performance",
+    "Description": "Run a show in a real and a virtual venue at once: the Script decides, Cue by Cue, what the lights, the sound and the virtual stage do, as the performers, the audience and the operators act.",
+    "Icon": "icon.svg",
+    "Version": "1.0",
+    "Standard": "MPAI-XRV V1.0",
+    "UseCase": "LTP",
+    "Module": "1XRV-LTP-V1.0-I01",
+    "Keywords": ["theatre", "show", "live performance", "lighting", "virtual venue", "cue"],
+    "Categories": ["Performance"],
+    "Languages": ["en"],
+    "Asks": ["the Script of the show", "the Action Table", "the Script-Venue Associations", "the specifications of the two venues"],
+    "Keeps": "Nothing: the show's documents and the venues' data are used while the show runs."
+}

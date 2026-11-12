@@ -1,0 +1,47 @@
+# =============================================================================
+#  XRV-LTP.orch - Live Theatrical Performance (MPAI-XRV LTP V1.0)
+#  Workflow Description Language v0.3, AIF V3.0
+#
+#  One Controller, one Module: the Live Theatrical Performance Composite AIM
+#  (1XRV-LTP-V1.0-I01), which runs continuously. The User Agent binds three
+#  devices to its boundary for the life of the workflow:
+#    Show          - the documents of the show, given before it begins: the
+#                    Script, the Action Table, the Script-Venue Associations,
+#                    the RE and VE Venue Specifications and the Participant Data;
+#                    it receives the Participant Data as the show changes it
+#    RealVenue     - the Real Environment: its RE Data In (MoCap, cameras,
+#                    consoles, seats...), and the RE Data Out it is to execute
+#                    (the Output Units: lighting, MIDI, stage machinery)
+#    VirtualVenue  - the Virtual Environment: its VE Data In, and the VE Data
+#                    Out it is to execute (the virtual stage)
+#  It names no AIM.
+# =============================================================================
+
+workflow XRV-LTP over 1XRV-LTP-V1.0-I01
+
+on Start:
+
+    ask Controller to start
+
+    stream  Script                  (XRV-SCR-V1.0) from device "Show"
+    stream  ActionTable             (XRV-ATB-V1.0) from device "Show"
+    stream  Associations            (XRV-SVA-V1.0) from device "Show"
+    stream  REVenueSpecification    (XRV-RVS-V1.0) from device "Show"
+    stream  VEVenueSpecification    (XRV-VVS-V1.0) from device "Show"
+    stream  ParticipantDataIn       (XRV-PTD-V1.0) from device "Show"
+    deliver ParticipantDataOut      (XRV-PTD-V1.0) to device "Show"
+
+    stream  REDataIn                (XRV-RDI-V1.0) from device "RealVenue"
+    deliver REDataOut               (XRV-RDO-V1.0) to device "RealVenue"
+
+    stream  VEDataIn                (XRV-VDI-V1.0) from device "VirtualVenue"
+    deliver VEDataOut               (XRV-VDO-V1.0) to device "VirtualVenue"
+
+    prompt "The show is loaded. It follows the Script as the venues tell what happens."
+
+    loop until Stop:
+        wait 1s
+
+on Stop:
+
+    ask Controller to stop

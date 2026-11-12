@@ -213,7 +213,11 @@
   "1PGM-VSE-V1.0-I01": "conforms",
   "1PGM-VSM-V1.0-I01": "conforms",
   "1XRV-ACG-V1.0-I01": "conforms",
+  "1XRV-END-V1.0-I01": "conforms",
+  "1XRV-LTP-V1.0-I01": "conforms",
   "1XRV-OSI-V1.0-I01": "conforms",
   "1XRV-PFI-V1.0-I01": "conforms",
-  "1XRV-PTI-V1.0-I01": "conforms"
+  "1XRV-PTI-V1.0-I01": "conforms",
+  "1XRV-REG-V1.0-I01": "conforms",
+  "1XRV-VEG-V1.0-I01": "conforms"
 }
