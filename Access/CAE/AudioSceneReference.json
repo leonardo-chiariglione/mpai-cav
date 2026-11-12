@@ -1,0 +1,2 @@
+{ "Header": "CAE-ASR-V1.0", "AudioSceneReferenceID": "asr-eae-1", "PolynomialVariable": "AngleSine", "Polynomial": [{"Coefficient": 1.0, "Exponent": 0}],
+  "DescrMetadata": "A reference polynomial for the Enhanced Audioconference Experience: a constant term, made here so that the AccessSources of Speech Detection and Separation and Noise Cancellation Module name a file." }

@@ -4,7 +4,7 @@ import json, os, sys
 import numpy as np, torch
 HERE = os.path.dirname(os.path.abspath(__file__)); sys.path.insert(0, HERE)
 import tape_sim as ts, train_tic as tt
-DATA = os.path.join(os.path.abspath(os.path.join(HERE, '..', '..', '..')), 'Test', 'Data', 'Music', 'dataset')
+DATA = os.path.join(os.path.abspath(os.path.join(HERE, '..', '..', '..')), 'Test', 'Data', 'Music', os.environ.get('TIC_DATASET', 'dataset'))
 model = tt.Tic(); model.load_state_dict(torch.load(os.path.join(DATA, 'tic.pt'))); model.eval()
 report = json.load(open(os.path.join(DATA, 'tic-report.json'), encoding='utf-8'))
 index = {c: i for i, c in enumerate(ts.CLASSES)}
