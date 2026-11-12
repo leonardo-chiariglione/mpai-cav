@@ -191,6 +191,7 @@ public partial class RcaShell : ComponentBase
         {
             AppTitle = "";
             Instruction = "";
+            Shown = "";
             typing = false;
             stageImage = null;
             stageVideo = null;
@@ -456,7 +457,7 @@ public partial class RcaShell : ComponentBase
                 if (AvatarUtterance.TextOfPortableAvatar(sav) is { } words)
                 {
                     var language = AvatarUtterance.LanguageOfPortableAvatar(sav);
-                    Instruct(words);
+                    Show(words);
                     if (language is "ja" or "zh")
                         await SpeakAsync($"This text is in {(language == "ja" ? "Japanese" : "Chinese")}, which I cannot read aloud yet. It is on the screen.");
                     else await SpeakAsync(words, language);
@@ -515,8 +516,8 @@ public partial class RcaShell : ComponentBase
                 if (kv.Key == "Prompt") { Instruct(kv.Value); await SpeakAsync(kv.Value); continue; }
                 if (kv.Key.StartsWith("Display:OSD-BTO", StringComparison.OrdinalIgnoreCase) ||
                     kv.Key.Equals("OSD-BTO-V1.5", StringComparison.OrdinalIgnoreCase))
-                { Instruct(Words(kv.Value)); continue; }
-                if (kv.Key.StartsWith("Display", StringComparison.OrdinalIgnoreCase)) Instruct(kv.Value);
+                { Show(Words(kv.Value)); continue; }
+                if (kv.Key.StartsWith("Display", StringComparison.OrdinalIgnoreCase)) Show(kv.Value);
             }
         });
 
@@ -630,6 +631,11 @@ public partial class RcaShell : ComponentBase
     }
 
     private void Instruct(string text) { Instruction = text; Refresh(); }
+
+    // WHAT AN APP DISPLAYS STAYS (the author, 2026-11-12): a translation, an answer, has its own place on the page, apart from the line that tells the person
+    // what to do. Shared, the next "Speak when you are ready." took its place as soon as the avatar had said it. It stays until the App displays something else, or ends.
+    private string Shown = "";
+    private void Show(string text) { Shown = text; Refresh(); }
     // Each line with the local clock, as the Service's trace and rca.js have it.
     private void Status(string text)   { StatusLine  = text; Refresh(); Console.WriteLine($"{DateTime.Now:HH:mm:ss.fff}  {text}"); }
     private void Refresh() => _ = InvokeAsync(StateHasChanged);

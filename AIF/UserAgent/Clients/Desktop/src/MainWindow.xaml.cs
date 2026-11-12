@@ -455,7 +455,8 @@ public partial class MainWindow : Window
                 $"{chosen.Name}   \u2014   workflow {_workflow.Name} over {string.Join(", ", _workflow.Modules)}   \u2014   from {ServiceUrl}";
             // CHOOSING AN APP IS STARTING IT. A person who has picked what they want
             // should not then have to announce it; the choice is the instruction.
-            InstructionText.Text  = "";
+            InstructionText.Text  = "";
+            ShownText.Text = ""; ShownBox.Visibility = Visibility.Collapsed;
             // THE LIST STAYS. A client that holds no application shows what the
             // Service offers for as long as it is running; choosing one App does
             // not hide the others. AppColumn.Width = new GridLength(0);
@@ -536,7 +537,8 @@ public partial class MainWindow : Window
             _workflowPath = path;
             WorkflowText.Text =
                 $"{Path.GetFileName(path)}   \u2014   workflow {_workflow.Name} over {string.Join(", ", _workflow.Modules)}";
-            InstructionText.Text = "";
+            InstructionText.Text = "";
+            ShownText.Text = ""; ShownBox.Visibility = Visibility.Collapsed;
             Status("workflow read");
         }
         catch (Exception ex)
@@ -592,7 +594,8 @@ public partial class MainWindow : Window
                     _workflow            = null;
                     _appId               = null;
                     WorkflowText.Text    = $"Service: {ServiceUrl}";
-                    InstructionText.Text = "";
+                    InstructionText.Text = "";
+                    ShownText.Text = ""; ShownBox.Visibility = Visibility.Collapsed;
                     StageImage.Source    = null;
                     StageTitle.Text      = "No image displayed";
                     StageText.Text       = "";
@@ -725,7 +728,8 @@ public partial class MainWindow : Window
             await Dispatcher.InvokeAsync(() =>
             {
                 WorkflowText.Text    = $"Service: {ServiceUrl}";
-                InstructionText.Text = "";
+                InstructionText.Text = "";
+                ShownText.Text = ""; ShownBox.Visibility = Visibility.Collapsed;
                 StageImage.Source    = null;
                 StageTitle.Text      = "No image displayed";
                 StageText.Text       = "";
@@ -1086,7 +1090,7 @@ public partial class MainWindow : Window
                     words = "I could not read any text there. Try the top of a column.";
                 }
                 var language = AvatarUtterance.LanguageOfPortableAvatar(sav);
-                Instruct(words);
+                Show(words);
                 if (language is "ja" or "zh")
                 {
                     // Shown, not spoken: those voices do not speak yet.
@@ -1165,10 +1169,10 @@ public partial class MainWindow : Window
 
                 if (kv.Key.StartsWith("Display:OSD-BTO", StringComparison.OrdinalIgnoreCase) ||
                     kv.Key.Equals("OSD-BTO-V1.5", StringComparison.OrdinalIgnoreCase))
-                { Instruct(Words(kv.Value)); continue; }
+                { Show(Words(kv.Value)); continue; }
 
                 if (kv.Key.StartsWith("Display", StringComparison.OrdinalIgnoreCase))
-                    Instruct(kv.Value);
+                    Show(kv.Value);
             }
         });
 
@@ -1319,6 +1323,11 @@ public partial class MainWindow : Window
 
     private void Instruct(string text) =>
         Dispatcher.Invoke(() => InstructionText.Text = text);
+
+    // WHAT AN APP DISPLAYS STAYS (the author, 2026-11-12): shared with the instruction line, a translation was replaced by "Speak when you are ready." as
+    // soon as the avatar had said it. It stays until the App displays something else, or ends ("" hides the box).
+    private void Show(string text) =>
+        Dispatcher.Invoke(() => { ShownText.Text = text; ShownBox.Visibility = string.IsNullOrEmpty(text) ? Visibility.Collapsed : Visibility.Visible; });
 
     // THE STATUS LINE KEEPS ONLY THE LAST THING SAID. Every step the interpreter
     // takes is also written down, so that a run can be read afterwards rather

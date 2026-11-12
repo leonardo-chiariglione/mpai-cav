@@ -29,6 +29,7 @@ aside h2 { margin: 4px 0 10px; font-size: 16px; }
 .stage.video { width: 560px; }
 .stage.video iframe { width: 100%; aspect-ratio: 16 / 9; border: 0; border-radius: 6px; background: #0A0D11; }
 .instruction { font-size: 16px; margin: 4px 0; min-height: 1.4em; }
+.shown { font-size: 18px; margin: 6px 0; padding: 8px 10px; background: #151A21; border: 1px solid #2A323D; border-radius: 4px; white-space: pre-wrap; }
 .languages, .picture { display: flex; gap: 16px; align-items: end; }
 .languages label { display: flex; flex-direction: column; gap: 4px; font-size: 13px; }
 .row { display: flex; gap: 8px; align-items: flex-start; }
