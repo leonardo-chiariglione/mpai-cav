@@ -39,6 +39,16 @@
   #notice { position: fixed; left: 50%; top: 14px; transform: translateX(-50%); background: var(--panel); border-radius: 8px; padding: 8px 18px; font-size: 16px; max-width: calc(100vw - 40px); text-align: center; z-index: 15; }
   #notice:empty { display: none; }
   .label { color: #fff; font: 12px system-ui, Arial; background: rgba(0,0,0,.55); padding: 2px 6px; border-radius: 4px; white-space: nowrap; }
+  #secHelp { position: fixed; left: 12px; bottom: 46px; z-index: 19; width: min(380px, calc(100vw - 24px)); max-height: 60vh; overflow: auto; background: var(--panel); border: 1px solid #f2c94c; border-radius: 10px; padding: 10px 14px; font-size: 14px; line-height: 1.45; }
+  #secHelp[hidden] { display: none; }
+  body:not(.inMeetingRoom) .roomOnly { display: none !important; }   /* the buttons of the meeting are shown in the meeting room only */
+  #secHelp h3 { margin: 0 0 6px; font-size: 15px; color: #f2c94c; }
+  #secHelp b { display: block; margin-top: 6px; font-size: 13px; color: #aaa; font-weight: 600; }
+  #secHelp div { margin-left: 8px; }
+  #screenView { display: none; position: fixed; inset: 0; background: #000; z-index: 100; cursor: zoom-out; align-items: center; justify-content: center; }
+  #screenView.on { display: flex; }
+  #screenImg { width: 100%; height: 100%; object-fit: contain; }   /* as large as the display allows, smaller pictures too, without changing their shape */
+  #screenHint { position: fixed; left: 50%; bottom: 12px; transform: translateX(-50%); color: #aaa; font: 13px system-ui, Arial; background: rgba(0,0,0,.6); padding: 3px 10px; border-radius: 4px; }
 </style>
 <script type="importmap">
 { "imports": {
@@ -52,7 +62,17 @@
 <div id="notice"></div>
 <div id="bar"><button id="ghostBtn" style="order:7" title="G">Leave my body</button></div><div id="handsList"></div>
 <div id="summary" hidden><h2><span id="summaryTitle">Summary</span><span><button id="summaryClose" title="Close this panel">&times;</button><button id="summaryUpdate" title="A new summary, from everything said until now">Update</button></span></h2><div id="summaryText"></div></div>
-<div id="screenView"><img id="screenImg" alt="shared screen"></div>
+<div id="secHelp" hidden><h3>Say to the Secretary</h3>
+<b>Summary (of what is said from your request on)</b><div>"Summarise the meeting" - it appears on your display and grows as the meeting goes on<br>"Stop the summary" - it stops growing (and stops at the end of the meeting)<br>"Summarise the meeting in Greek" / "in French" / ...<br>"Summarise the meeting out loud" - spoken as well<br>"Hide the summary" - "stop reading"</div>
+<b>Your hand</b><div>"Raise my hand" - "lower my hand"</div>
+<b>Your microphone</b><div>"Mute me" - "unmute me"</div>
+<b>Your screen</b><div>"Share my screen" (choose what in the screen helper's window) - "stop sharing"</div>
+<b>Her answers</b><div>Written, on your display. "Answer out loud" - she speaks them too; "answer in writing" - back to written only</div>
+<b>The meeting</b><div>"Close the meeting" (the convener only; she asks you to confirm: "yes" / "no")</div>
+<b>Done</b><div>"Thank you" / "back to the meeting" - or press Secretary again</div>
+<b>When she has understood, her written answer begins with "OK". No OK: say it again.</b>
+<b>Spoken summary: English, French, German, Spanish, Portuguese, Italian, Greek. Written only: Japanese, Chinese.</b></div>
+<div id="screenView"><img id="screenImg" alt=""><div id="screenHint">Click or Esc to go back to the room</div></div>
 <div id="caption" hidden><span id="captionText"></span><div id="captionNote"></div><small id="captionHint"></small></div>
 <script type="module">
 import * as THREE from 'three';
@@ -149,7 +169,7 @@ if (W) {
       d.rect = d.axis === 'x' ? [d.x - 0.1, d.y - d.width / 2, d.x + 0.1, d.y + d.width / 2] : [d.x - d.width / 2, d.y - 0.1, d.x + d.width / 2, d.y + 0.1];
       const leaf = new THREE.Mesh(new THREE.BoxGeometry(d.axis === 'x' ? 0.08 : d.width, 2.2, d.axis === 'x' ? d.width : 0.08), new THREE.MeshStandardMaterial({ color: 0x8b5a2b, roughness: 0.6 }));
       leaf.position.set(d.x, 1.1, -d.y); scene.add(leaf); d.leaf = leaf; d.open = false; doors.push(d);
-      if (d.id !== 'MPAI-main') { const dl = label(d.name.replace(/ door$/, '')); dl.position.set(d.x, 2.6, -d.y); scene.add(dl); d.label = dl; }   // the name of the room, over its door
+      if (d.id !== 'MPAI-main') { const dl = label(d.name.replace(/ door$/, '')); dl.element.style.font = 'bold 16px system-ui, Arial'; dl.position.set(d.x, 2.6, -d.y); scene.add(dl); d.label = dl; }   // the name of the room, over its door, larger than a name over a Persona
     }
   }
 }
@@ -625,7 +645,7 @@ function prepareSeat() {
 // THE END OF THE MEETING. The rights of a meeting - the doors, the seat, the speech - are valid for the meeting, and the AVS Service withdraws them when it ends: at its time, or when its
 // convener ends it (the button). A User whose rights are gone is refused by the M-Instance (403): its client sees that, and the Persona leaves to the Square.
 function endButton() {
-  const b = document.createElement('button'); b.textContent = 'Close meeting';
+  const b = document.createElement('button'); b.textContent = 'Close meeting'; b.classList.add('roomOnly');
   Object.assign(b.style, { order: 1, background: 'var(--panel)', color: 'inherit', border: '1px solid #a55', borderRadius: '8px', padding: '0 14px', fontSize: '14px', lineHeight: '1.15', cursor: 'pointer' });
   let armed = false;
   b.onclick = async () => {
@@ -653,13 +673,13 @@ function watchSharing() {
   }, 1500);
 }
 function shareButton() {
-  const b = document.createElement('button'); b.id = 'shareBtn'; b.textContent = 'Share screen';
+  const b = document.createElement('button'); b.id = 'shareBtn'; b.textContent = 'Share screen'; b.classList.add('roomOnly');
   Object.assign(b.style, { order: 2, background: 'var(--panel)', color: 'inherit', border: '1px solid #5a8', borderRadius: '8px', padding: '0 14px', fontSize: '14px', lineHeight: '1.15', cursor: 'pointer' });
   b.onclick = () => sharing ? stopShare() : startShare(false);
   document.getElementById('bar').appendChild(b);
   // EDIT SLIDES: the same sharing, for working on the slides while the room watches. The browser asks which window - the one of the slides - and brings it to the front by itself, so the sharer
   // is at once in its editor (PowerPoint), and what it does shows on the walls as it does it. Coming back to the meeting is the sharer's: the floating room, or the window of the meeting.
-  const e = document.createElement('button'); e.id = 'editBtn'; e.textContent = 'Edit slides'; e.title = 'Share the window of your slides and go to it: you edit, the room watches as you do';
+  const e = document.createElement('button'); e.id = 'editBtn'; e.textContent = 'Edit slides'; e.classList.add('roomOnly'); e.title = 'Share the window of your slides and go to it: you edit, the room watches as you do';
   Object.assign(e.style, { order: 2, background: 'var(--panel)', color: 'inherit', border: '1px solid #5a8', borderRadius: '8px', padding: '0 14px', fontSize: '14px', lineHeight: '1.15', cursor: 'pointer' });
   e.onclick = () => sharing ? (sharing.helper && sharing.own ? helperCall('/front', {}) : stopShare()) : startShare(true);      // while a window is shared through the helper, Edit slides goes to that window
   document.getElementById('bar').appendChild(e);
@@ -781,9 +801,36 @@ function ensureWalls() {
 }
 function watchScreen(id, own = false) {          // the shared screen of the room; its sharer sees it too when it shares a window (without the sound: it has that already)
   if ((watching?.id ?? null) === id) return;
+// FULL SCREEN: a click on a wall where the shared screen is shown puts the picture on the whole display (the browser's full screen); a click or Esc goes back to the room. The sound and
+// everything else go on as they were: only what this client shows changes.
+const screenView = document.getElementById('screenView'), screenImg = document.getElementById('screenImg');
+let lastScreenJpeg = null;                     // the last picture of the shared screen, as it came
+function wallScreenAt(ev) {                    // a wall showing the shared screen under the pointer, if any
+  const walls = wallScreens.walls.filter(w => w.mesh.visible); if (!walls.length) return null;
+  const r = renderer.domElement.getBoundingClientRect();
+  ptr.set(((ev.clientX - r.left) / r.width) * 2 - 1, -((ev.clientY - r.top) / r.height) * 2 + 1);
+  ray.setFromCamera(ptr, camera);
+  return ray.intersectObjects(walls.map(w => w.mesh))[0] ?? null;
+}
+function openScreenView() {
+  if (lastScreenJpeg) screenImg.src = URL.createObjectURL(lastScreenJpeg);                // the last picture as it came (not the wall's copy, which has black bands), at once; the next ones as they arrive
+  else { const c = wallScreens.walls[0]?.canvas; if (c) screenImg.src = c.toDataURL('image/jpeg', 0.92); }
+  screenView.classList.add('on');
+  document.documentElement.requestFullscreen?.().catch(() => { });
+}
+function closeScreenView() {
+  if (!screenView.classList.contains('on')) return;
+  screenView.classList.remove('on');
+  if (screenImg.src.startsWith('blob:')) URL.revokeObjectURL(screenImg.src);
+  screenImg.removeAttribute('src');
+  if (document.fullscreenElement) document.exitFullscreen?.().catch(() => { });
+}
+screenView.addEventListener('click', closeScreenView);
+document.addEventListener('fullscreenchange', () => { if (!document.fullscreenElement) closeScreenView(); });
+addEventListener('keydown', e => { if (e.key === 'Escape') closeScreenView(); });
   if (watching) { try { watching.ws.close(); } catch { } watching = null; }
   ensureWalls();
-  const show = on => { for (const w of wallScreens.walls) w.mesh.visible = on; for (const sb of signBoards) if (sb.userData.mmmSign) sb.visible = !on; };      // the logo gives way to the screen
+  const show = on => { for (const w of wallScreens.walls) w.mesh.visible = on; for (const sb of signBoards) if (sb.userData.mmmSign) sb.visible = !on; if (!on) closeScreenView(); };      // the logo gives way to the screen
   if (!id) { show(false); return; }
   const ws = new WebSocket(`${location.protocol === 'https:' ? 'wss' : 'ws'}://${location.host}/ws/v2.2/screen/${id}/watch?token=${encodeURIComponent(client.token)}`); ws.binaryType = 'arraybuffer';
   watching = { id, ws };
@@ -801,7 +848,9 @@ function watchScreen(id, own = false) {          // the shared screen of the roo
     }
     if (b[0] !== 1 || !wallScreens.walls.length) return;
     try {
-      const bmp = await createImageBitmap(new Blob([b.subarray(1)], { type: 'image/jpeg' }));
+      const jpeg = new Blob([b.subarray(1)], { type: 'image/jpeg' }); lastScreenJpeg = jpeg;
+      if (screenView.classList.contains('on')) { const old = screenImg.src; screenImg.src = URL.createObjectURL(jpeg); if (old.startsWith('blob:')) URL.revokeObjectURL(old); }   // full screen: the picture itself
+      const bmp = await createImageBitmap(jpeg);
       for (const { ctx, canvas, tex } of wallScreens.walls) {                  // each wall is wholly the screen: black, with the picture in it as large as it goes
         const k = Math.min(canvas.width / bmp.width, canvas.height / bmp.height), w = bmp.width * k, h = bmp.height * k;
         ctx.fillStyle = '#000'; ctx.fillRect(0, 0, canvas.width, canvas.height); ctx.drawImage(bmp, (canvas.width - w) / 2, (canvas.height - h) / 2, w, h); tex.needsUpdate = true;
@@ -958,6 +1007,7 @@ async function capture() {   // MM-Capture: the Things of the M-Location that th
 // THE BAR, THE HAND AND THE SUMMARY (M3283: MC-3, MC-4, MC-5).
 const barAdd = (el, order) => { el.style.order = order; document.getElementById('bar').appendChild(el); return el; };
 const sendTo = (to, id, text) => act('communicate/mm-send', client.name, { Nil: id, To: to, With: [message(id, text)] });
+setInterval(() => document.body.classList.toggle('inMeetingRoom', client?.at === 'MeetingRoom'), 300);      // where the meeting buttons are shown
 const readMessage = async id => { const rs = await fetch(`/api/v2.2/items/${encodeURIComponent(id)}`, { headers: { Authorization: 'Bearer ' + client.token } }); return rs.ok ? (await rs.json()).ItemValueOrRef?.[0]?.MessageData?.[0]?.MessageData : null; };
 const wait = ms => new Promise(r => setTimeout(r, ms));
 let roomMaster = null;       // everything heard from the room goes through this gain: a spoken summary takes the place of it, for the User that asked, and nobody else
@@ -974,7 +1024,7 @@ function handAndSummary() {
 function startHand() {
   client.hands = new Set();
   const b = barAdd(document.createElement('button'), 5), list = document.getElementById('handsList');
-  b.textContent = 'Raise hand'; b.title = 'Ask for the floor. The hand comes down by itself once you have spoken for 5 seconds.';
+  b.classList.add('roomOnly'); b.textContent = 'Raise hand'; b.title = 'Ask for the floor. The hand comes down by itself once you have spoken for 5 seconds.';
   b.onclick = () => sendTo('AVS', `Hand-${client.name}-${Date.now()}`, client.hands.has(client.name) ? 'hand;down' : 'hand;up');
   setInterval(async () => {
     const told = await readMessage(`Hands-for-${client.name}`);
@@ -1009,7 +1059,7 @@ function startSummary() {
   function show() {
     sum.shown = true;
     if (sum.mode === 'spoken' && sum.audio && secretaryOn) { panel.hidden = true; play(); return; }
-    title.textContent = 'Summary - ' + lang.selectedOptions[0].text; text.textContent = sum.text; panel.hidden = false;
+    title.textContent = 'Summary - ' + lang.selectedOptions[0].text + (sum.stamp ? ' - ' + sum.stamp : ''); text.textContent = sum.text; panel.hidden = false;      // a running summary says how far it goes
   }
   async function request() {
     sum.busy = true;
@@ -1035,8 +1085,8 @@ function startSummary() {
     let m = null; try { m = JSON.parse(answer); } catch { return; }
     if (!m?.Version || m.Version === lastVersion || !m.Summary) return;
     lastVersion = m.Version;
-    Object.assign(sum, { text: (m.TranslatedSummary ?? m.Summary).SummaryData[0].Data, audio: null, mode: 'written', key: '' });
-    client.notice = `${m.AskedBy} asked for a summary.`;
+    Object.assign(sum, { text: (m.TranslatedSummary ?? m.Summary).SummaryData[0].Data, audio: null, mode: 'written', key: '', stamp: m.Stamp ?? '' });
+    if (m.Note !== '') client.notice = m.Note ?? `${m.AskedBy} asked for a summary.`;      // a running summary of one's own is updated without a notice
     show();
   }, 2000);
   // What the Secretary does for this participant: a summary in the language and the form asked, hidden, or its reading stopped.
@@ -1059,11 +1109,11 @@ function pcmSource(b64) {
 // is shown on the display, the hand, the microphone, the end of the meeting. Pressed again, or when the participant says it has done, what it says is heard by the room again.
 function startSecretary() {
   const b = barAdd(document.createElement('button'), 6);
-  b.textContent = 'Secretary'; b.title = 'Speak to the Secretary instead of the meeting: ask for a summary, raise your hand, mute yourself. Press again to go back to the meeting.';
+  b.classList.add('roomOnly'); b.textContent = 'Secretary'; b.title = 'Speak to the Secretary instead of the meeting: ask for a summary, raise your hand, mute yourself. Press again to go back to the meeting.';
   client.dialogue = false; let next = 1, speaking = null, ready = false;
   // A page that is loaded again starts after the replies that exist: it does not play the old ones again.
   (async () => { while (next < 5000 && await readMessage(`Secretary-${client.name}-${next}`)) next++; ready = true; })();
-  const sw = barAdd(document.createElement('button'), 8);
+  const sw = barAdd(document.createElement('button'), 8); sw.classList.add('roomOnly');
   const swSet = on => {
     secretaryOn = on; sw.textContent = 'Secretary: ' + (on ? 'on' : 'off'); sw.style.borderColor = on ? '#5a8' : '#a55';
     sw.title = 'Off: nothing of the Secretary is heard or done on this page - no voice, no answers, no spoken summary.';
@@ -1071,7 +1121,7 @@ function startSecretary() {
     else client.notice = 'The Secretary is on.';
   };
   sw.onclick = () => swSet(!secretaryOn);
-  const set = on => { client.dialogue = on; b.style.borderColor = on ? '#f2c94c' : '#5a8'; b.style.background = on ? '#4a4020' : 'var(--panel)'; if (!on) client.notice = 'Back to the meeting.'; else client.notice = 'The Secretary listens: what you say is not heard by the room.'; };
+  const set = on => { client.dialogue = on; document.getElementById('secHelp').hidden = !on; b.style.borderColor = on ? '#f2c94c' : '#5a8'; b.style.background = on ? '#4a4020' : 'var(--panel)'; if (!on) client.notice = 'Back to the meeting.'; else client.notice = 'The Secretary listens: what you say is not heard by the room.'; };
   swSet(true); client.notice = '';
   b.onclick = () => { if (!secretaryOn) { client.notice = 'The Secretary is off: press Secretary: off to switch her on.'; return; } set(!client.dialogue); };
   const say = reply => {
@@ -1092,6 +1142,7 @@ function startSecretary() {
     if (d.Screen === 'Stop') stopShare();
     if (d.Mode === 'meeting') set(false);
   };
+    if (d.Screen === 'Share' && !sharing) startShare(false);       // by voice: through the screen helper, which asks what to share; without it the browser wants a click (Share screen)
   setInterval(async () => {
     if (!ready) return;
     const told = await readMessage(`Secretary-${client.name}-${next}`);
@@ -1362,6 +1413,7 @@ function clickPoint(e) {         // where in the world a click on the picture is
     if (d.moved || !client || client.ghost || e.target !== renderer.domElement) return;
     const p = clickPoint(e); if (p) goTo(p.x, p.y);
   });
+    if (wallScreenAt(e)) { openScreenView(); return; }            // a click on the shared screen: full screen, no walking
 }
 
 function driveGhost(dt) {   // the camera of a User out of its body
@@ -1585,7 +1637,7 @@ renderer.setAnimationLoop(() => {
   }
   if (W && client) for (const l of buildingLabels) l.visible = client.loc === 'MVS';
   if (W && client) for (const d of doors) if (d.open && Math.hypot(client.x - d.x, client.y - d.y) > 2) { d.open = false; d.leaf.visible = true; }      // the door closes behind whoever went through it
-  if (W && client) for (const d of doors) if (d.label) d.label.visible = (d.from === client.at && client.at !== 'MVS' || d.to === client.at && d.from !== 'MVS') && Math.hypot(client.x - d.x, client.y - d.y) < 13;   // the doors of the place it is in   // the names of the buildings are for whoever is outside
+  if (W && client) for (const d of doors) if (d.label) d.label.visible = (d.from === client.at && client.at !== 'MVS' || d.to === client.at && d.from !== 'MVS') && (client.at === 'Atrium' || Math.hypot(client.x - d.x, client.y - d.y) < 13);   // the doors of the place it is in (in the atrium all of them, wherever one stands)   // the names of the buildings are for whoever is outside
   if (client) drive(dt); else controls.update(); renderer.render(scene, camera); labels.render(scene, camera);
 });
 await refresh(); setInterval(refresh, 500);

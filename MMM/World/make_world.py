@@ -138,7 +138,7 @@ def round_table(m, cx, cy, radius, sides=24):
 
 
 # ------------------------------------------------------------------ the MPAI building: an atrium (public) and three wings
-# Origin: the centre of the atrium. The atrium is x in [-12, 12], y in [-9, 9], 5 m high; its main door is in the west wall. Three wings go out of it, each a corridor with rooms on both sides:
+# Origin: the centre of the atrium. The atrium is x in [-10, 10], y in [-6, 6], 5 m high (it cannot be narrower than 2 x 9.5 m east-west: the rooms of the north and south wings would run into those of the east wing); its main door is in the west wall. Three wings go out of it, each a corridor with rooms on both sides:
 #   north - the rooms of the member companies; east - the offices of MPAI (President, Vice-president, Board members, Secretariat); south - the meeting rooms, one for each group.
 CORR = 3.0                  # width of a corridor
 RW, RD = 7.0, 8.0           # a room: 7 m along the corridor, 8 m deep
@@ -156,8 +156,8 @@ def cell(id, x0, y0, x1, y1, h, kind, name):
     cells[id] = dict(x0=x0, y0=y0, x1=x1, y1=y1, h=h, kind=kind, name=name)
 
 
-cell('Atrium', -12, -9, 12, 9, 5.0, 'atrium', 'Atrium')
-doors.append(dict(id='MPAI-main', name='MPAI, main door', a='MVS', b='Atrium', x=-12, y=0, axis='x', outside=-1))
+cell('Atrium', -10, -6, 10, 6, 5.0, 'atrium', 'Atrium')
+doors.append(dict(id='MPAI-main', name='MPAI, main door', a='MVS', b='Atrium', x=-10, y=0, axis='x', outside=-1))
 
 
 def wing(id, name, door_xy, axis, direction, rooms, kind):
@@ -187,9 +187,9 @@ def wing(id, name, door_xy, axis, direction, rooms, kind):
             doors.append(dict(id=rid + '-door', name=rname + ' door', a=id, b=rid, x=(xa[0] + xa[1]) / 2, y=(py + HW) if side == 0 else (py - HW), axis='y', outside=(-1 if side == 0 else 1)))
 
 
-wing('MembersWing', "Members' wing", (0, 9), 'y', (0, 1), MEMBER_ROOMS, 'member')
-wing('OfficesWing', 'Offices of MPAI', (12, 0), 'x', (1, 0), OFFICES, 'office')
-wing('MeetingsWing', 'Meeting rooms', (0, -9), 'y', (0, -1), MEETING_ROOMS, 'meeting')
+wing('MembersWing', "Members' wing", (0, 6), 'y', (0, 1), MEMBER_ROOMS, 'member')
+wing('OfficesWing', 'Offices of MPAI', (10, 0), 'x', (1, 0), OFFICES, 'office')
+wing('MeetingsWing', 'Meeting rooms', (0, -6), 'y', (0, -1), MEETING_ROOMS, 'meeting')
 
 MMM_SIGN = dict(w=2.4, h=1.644, z=1.0, dx=-2.0)    # the logo of MPAI-MMM on the north wall of the MMM meeting room: size in metres, height above the floor, place along the wall from its centre
 TABLE_R, SEAT_R = 1.0, 1.5                             # the round table of a meeting room (2 m across: five or six people), and the circle of the seats round it (0.5 m from the edge of the table)
@@ -233,9 +233,9 @@ def furnish_room(m, id, c):
         m.box('shelf', c['x0'] + 0.3, c['y1'] - 0.7, 0, c['x1'] - 0.3, c['y1'] - 0.3, 1.8)
     elif c['kind'] == 'atrium':
         m.box('carpet', c['x0'] + 0.6, c['y0'] + 0.6, FLOOR * 0.5, c['x1'] - 0.6, c['y1'] - 0.6, FLOOR * 0.5 + 0.02)
-        m.box('counter', RECEPTION['cx'] - 0.9, -3.0, 0, RECEPTION['cx'] + 0.4, 3.0, 1.05)       # the counter of the reception, long across the way in
-        m.box('screen', -11.9, 3.0, 1.2, -11.8, 7.0, 3.0)                                       # the board of the building, on the west wall
-        m.box('chair', -9.0, 6.0, 0, -7.4, 7.6, 0.45); m.box('chair', -9.0, -7.6, 0, -7.4, -6.0, 0.45)   # two sofas
+        m.box('counter', RECEPTION['cx'] - 0.9, -2.5, 0, RECEPTION['cx'] + 0.4, 2.5, 1.05)       # the counter of the reception, long across the way in
+        m.box('screen', -9.9, 2.0, 1.2, -9.8, 5.0, 3.0)                                       # the board of the building, on the west wall
+        m.box('chair', -7.5, 3.8, 0, -5.9, 5.4, 0.45); m.box('chair', -7.5, -5.4, 0, -5.9, -3.8, 0.45)   # two sofas
 
 
 def make_building():
@@ -274,7 +274,7 @@ def make_building():
 
 
 # ------------------------------------------------------------------ the sign on top of the MPAI building: the logo and the name of MPAI on two lines
-SIGN = dict(w=9.0, h=1.425, z=5.2, x=-12.25, text_px=98)       # metres, in the building's frame: on the roof edge of the atrium, facing the Square (west)
+SIGN = dict(w=9.0, h=1.425, z=5.2, x=-10.25, text_px=98)       # metres, in the building's frame: on the roof edge of the atrium, facing the Square (west)
 
 
 def make_sign(path):

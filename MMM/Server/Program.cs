@@ -155,6 +155,7 @@ if (meeting.EndsAt is { } ends) Console.WriteLine($"The meeting ends at {ends.To
 _ = Task.Run(async () => { while (true) { try { await meeting.PumpAsync(); } catch (Exception e) { Console.Error.WriteLine("meeting: " + e.Message); } await Task.Delay(200); } });
 var minutesShown = 0;
 _ = Task.Run(async () => { while (true) { try { await meeting.PumpSummaryAsync(); } catch (Exception e) { Console.Error.WriteLine("summary: " + e.Message); } await Task.Delay(300); } });
+_ = Task.Run(async () => { while (true) { try { await meeting.PumpRunningSummariesAsync(); } catch (Exception e) { Console.Error.WriteLine("running summary: " + e.Message); } await Task.Delay(2000); } });   // a summary asked by voice grows as the meeting goes on
 _ = Task.Run(async () => { while (true) { try { await meeting.PumpDialogueAsync(); } catch (Exception e) { Console.Error.WriteLine("dialogue: " + e.Message); } await Task.Delay(300); } });
 _ = Task.Run(async () => { while (true) { try { await meeting.PumpAsrAsync(); } catch (Exception e) { Console.Error.WriteLine("asr: " + e.Message); } await Task.Delay(200); } });
 _ = Task.Run(async () => { while (true) { var minutes = meeting.TheMinutes; while (minutesShown < minutes.Count) Console.WriteLine("minutes: " + minutes[minutesShown++]); await Task.Delay(200); } });

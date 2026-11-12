@@ -169,20 +169,39 @@ public sealed class WhisperAsr : IDisposable
         await one.WaitAsync();
         try
         {
-            using var form = new MultipartFormDataContent();
-            var file = new ByteArrayContent(Wav(pcm16k)); file.Headers.ContentType = new MediaTypeHeaderValue("audio/wav");
-            form.Add(file, "file", "speech.wav");
-            form.Add(new StringContent("verbose_json"), "response_format");
-            form.Add(new StringContent("0.0"), "temperature");
-            using var response = await http.PostAsync("inference", form);
-            if (!response.IsSuccessStatusCode) return "";
-            using var json = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
+            async Task<string?> Ask(string? language)
+            {
+                using var form = new MultipartFormDataContent();
+                var file = new ByteArrayContent(Wav(pcm16k)); file.Headers.ContentType = new MediaTypeHeaderValue("audio/wav");
+                form.Add(file, "file", "speech.wav");
+                form.Add(new StringContent("verbose_json"), "response_format");
+                form.Add(new StringContent("0.0"), "temperature");
+                if (language is not null) form.Add(new StringContent(language), "language");
+                using var response = await http.PostAsync("inference", form);
+                if (!response.IsSuccessStatusCode) return null;
+                var said = await response.Content.ReadAsStringAsync();
+                Keep(pcm16k, said);
+                return said;
+            }
+            var answer = await Ask(null);
+            if (answer is null) return "";
+            var json = JsonDocument.Parse(answer);
             var root = json.RootElement;
 
-            // Noise and breath make Whisper write words that nobody said, often in another script. The words are kept only if the language it found is one of those the
-            // participants speak (ABV_LANGS, default English, Italian, Portuguese, Spanish, French, German) and its own segments are neither "no speech" nor doubtful.
+            // Noise and breath make Whisper write words that nobody said, often in another script; and on a short piece it often takes the language for another (English for
+            // Latin, Korean or Nynorsk: seen 2026-11-12). Where the language it found is not one the participants speak (ABV_LANGS, default English, Italian, Portuguese, Spanish,
+            // French, German), it is asked again with the first of those set: speech is then written in it, and noise becomes a caption ("[BLANK_AUDIO]", "(laughs)"), which is dropped.
+            // The segments kept are those that are neither "no speech" nor doubtful.
             var detected = root.TryGetProperty("language", out var l) ? (l.GetString() ?? "") : "";
-            if (detected.Length > 0 && !Languages.Contains(detected, StringComparer.OrdinalIgnoreCase) && !Languages.Contains(NameToCode(detected), StringComparer.OrdinalIgnoreCase)) return "";
+            var again = false;
+            if (detected.Length > 0 && !Languages.Contains(detected, StringComparer.OrdinalIgnoreCase) && !Languages.Contains(NameToCode(detected), StringComparer.OrdinalIgnoreCase))
+            {
+                json.Dispose();
+                answer = await Ask(Languages.FirstOrDefault() ?? "en"); again = true;
+                if (answer is null) return "";
+                json = JsonDocument.Parse(answer); root = json.RootElement;
+            }
+            using var _ = json;
             var kept = new StringBuilder();
             if (root.TryGetProperty("segments", out var segments) && segments.ValueKind == JsonValueKind.Array)
             {
@@ -190,7 +209,10 @@ public sealed class WhisperAsr : IDisposable
                 {
                     var noSpeech = s.TryGetProperty("no_speech_prob", out var n) && n.TryGetDouble(out var nd) ? nd : 0;
                     var logprob = s.TryGetProperty("avg_logprob", out var a) && a.TryGetDouble(out var ad) ? ad : 0;
-                    if (noSpeech > 0.55 || logprob < -1.1) continue;
+                    // Asked again with the language set, Whisper writes real words right but often rates them "no speech" ("Stop sharing my screen.": 0.73, with a log
+                    // probability of -0.19, 2026-11-12): there a segment it is sure of (log probability -0.4 or more) is kept up to 0.8. Silence stays out ([BLANK_AUDIO] at 0.82).
+                    var noSpeechLimit = again && logprob >= -0.4 ? 0.8 : 0.55;
+                    if (noSpeech > noSpeechLimit || logprob < -1.1) continue;
                     kept.Append(' ').Append(s.TryGetProperty("text", out var t) ? t.GetString() : "");
                 }
             }
@@ -207,6 +229,21 @@ public sealed class WhisperAsr : IDisposable
     {
         "english" => "en", "italian" => "it", "portuguese" => "pt", "spanish" => "es", "french" => "fr", "german" => "de", _ => name
     };
+
+    // FOR FINDING WHY SPEECH IS NOT RECOGNISED (2026-11-12): each piece sent to Whisper is kept, as a .wav with Whisper's answer beside it (.json), in %TEMP%\mmm-asr - the last 100.
+    // They are the participants' own words: the folder is on this PC only and is emptied as it goes.
+    private static readonly string KeepDir = Path.Combine(Path.GetTempPath(), "mmm-asr");
+    private static void Keep(byte[] pcm16k, string answer)
+    {
+        try
+        {
+            Directory.CreateDirectory(KeepDir);
+            var name = Path.Combine(KeepDir, DateTime.Now.ToString("HHmmss-fff"));
+            File.WriteAllBytes(name + ".wav", Wav(pcm16k)); File.WriteAllText(name + ".json", answer);
+            foreach (var old in new DirectoryInfo(KeepDir).GetFiles().OrderByDescending(f => f.Name).Skip(200)) old.Delete();
+        }
+        catch { }
+    }
 
     // Whisper writes captions for what is not speech ("[BLANK_AUDIO]", "(music)"): not words.
     private static string Clean(string text)

@@ -182,6 +182,7 @@ public sealed class MeetingServices(HttpClient http, MInstance m, Recognizer? re
         if (ended) return;
         ended = true;
         m.StopScreens();                                       // a screen shared in the room is over with the meeting
+        await EndSummaries();                                  // a summary asked and not stopped is made now, of what was said since it was asked
         foreach (var user in seatOf.Keys.Concat(invited).Where(u => u != Meeting.Secretary).Distinct().ToList()) await Revoke(user);
         await Say(avs, $"Ended-{++sequence}", Meeting.Secretary, "ended");
     }
@@ -461,6 +462,101 @@ public sealed class MeetingServices(HttpClient http, MInstance m, Recognizer? re
     private static readonly string[] Yes = ["yes", "yeah", "yep", "sure", "confirm", "do it", "go ahead", "please do", "ok", "okay"], No = ["no", "nope", "don't", "do not", "cancel", "stop", "never mind"];
     private static bool Says(string words, string[] any) => any.Any(a => System.Text.RegularExpressions.Regex.IsMatch(words, @"\b" + System.Text.RegularExpressions.Regex.Escape(a) + @"\b", System.Text.RegularExpressions.RegexOptions.IgnoreCase));
 
+    // THE COMMANDS OF THE LIST, AS SAID (2026-11-12). The language model took "share my screen" for a yes; what a participant reads in the list of commands and says as it is
+    // written is therefore carried out at once, the same way every time, without the model ("please", "Secretary" and the punctuation do not count). Anything else - a summary in
+    // a language, two requests at once - goes to the Voice Command Interface. Not in the standard: a convention of this implementation.
+    private static readonly (string Pattern, Func<JsonObject> Request)[] PlainCommands =
+    [
+        (@"^(raise|put up) my hand$", () => new JsonObject { ["Hand"] = "Raise" }),
+        (@"^(lower my hand|put my hand down|lower it)$", () => new JsonObject { ["Hand"] = "Lower" }),
+        (@"^(mute me|mute my microphone|(turn|switch) (off )?my microphone( off)?|microphone off)$", () => new JsonObject { ["Microphone"] = "Off" }),
+        (@"^(unmute me|unmute my microphone|(turn|switch) on my microphone|(turn|switch) my microphone on|microphone on)$", () => new JsonObject { ["Microphone"] = "On" }),
+        (@"^(share my screen|share the screen|share my window)$", () => new JsonObject { ["Screen"] = "Share" }),
+        (@"^(stop sharing( my screen| the screen)?|stop the sharing)$", () => new JsonObject { ["Screen"] = "Stop" }),
+        (@"^(summari[sz]e the meeting|make a summary|a summary)$", () => new JsonObject { ["Summary"] = new JsonObject() }),
+        (@"^(hide the summary|take the summary away)$", () => new JsonObject { ["Display"] = "Hide" }),
+        (@"^(stop reading|stop reading it)$", () => new JsonObject { ["Display"] = "StopReading" }),
+        (@"^(answer out loud|answer by voice|speak your answers)$", () => new JsonObject { ["Answers"] = "Spoken" }),
+        (@"^(answer in writing|write your answers)$", () => new JsonObject { ["Answers"] = "Written" }),
+        (@"^close the meeting$", () => new JsonObject { ["CloseMeeting"] = true }),
+        (@"^(thank you|thanks|that is all|that's all|back to the meeting|goodbye)$", () => new JsonObject { ["ReturnToMeeting"] = true }),
+    ];
+
+    // THE RUNNING SUMMARY (the author, 2026-11-12). "Summarise the meeting" starts it: from then on, as the meeting goes on, the Secretary makes the summary of what has
+    // been said since the request and sends it again whenever something new has been said - to the one that asked, in its language, and to the other participants,
+    // each in its own, written (Summary-Latest-<User>: the display of each shows it). "Stop the summary", or the end of the meeting, stops it, after a last update.
+    public const int RunningSummaryEveryMs = 15_000;
+    private readonly Dictionary<string, (int Lines, long At)> summarySent = new();      // a running summary: how many lines of the minutes its last version had, and when
+    private readonly SemaphoreSlim runningOne = new(1, 1);
+
+    public async Task PumpRunningSummariesAsync()
+    {
+        if (!await runningOne.WaitAsync(0)) return;
+        try
+        {
+            List<KeyValuePair<string, (int From, string Language, string Form)>> running;
+            lock (summaryStarted) running = summaryStarted.ToList();
+            foreach (var (user, s) in running) await UpdateSummary(user, s, force: false);
+        }
+        finally { runningOne.Release(); }
+    }
+
+    private async Task UpdateSummary(string user, (int From, string Language, string Form) s, bool force, bool final = false)
+    {
+        try
+        {
+            var lines = minutes.Count; var now = Environment.TickCount64;
+            (int Lines, long At) last; lock (summaryStarted) last = summarySent.GetValueOrDefault(user, (s.From, 0));
+            if ((lines <= last.Lines && !final) || (!force && now - last.At < RunningSummaryEveryMs)) return;        // nothing new, or too soon after the last one (the last version is marked final)
+            var said = minutes.Skip(s.From).Take(lines - s.From).Where(line => !line.StartsWith("AVS: ", StringComparison.Ordinal)).ToList();
+            lock (summaryStarted) summarySent[user] = (lines, now);
+            if (said.Count == 0 || Summarise is null) return;
+            var english = await Condensed(said);
+            var done = new Dictionary<string, string> { ["en"] = english };
+            async Task<string> In(string lang) { if (done.TryGetValue(lang, out var had)) return had; var t = Translate is null ? english : await Translate(english, lang); done[lang] = t; return t; }
+            var id = $"Running-{user}-{DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}";
+            foreach (var to in participants.Where(u => u != Meeting.Secretary).Append(user).Distinct().ToList())
+            {
+                string lang; if (to == user) lang = s.Language; else lock (summaryLang) lang = summaryLang.GetValueOrDefault(to, "en");
+                var t = await In(lang);
+                var push = new JsonObject { ["Version"] = id, ["AskedBy"] = user, ["Language"] = t == english ? "en" : lang, ["Mode"] = "written", ["Summary"] = SummaryOf($"{id}-en", english),
+                                            ["Note"] = to == user ? "" : $"{user}'s summary of the meeting, as it goes on.",
+                                            ["Stamp"] = (final ? "final, " : "so far, ") + $"{said.Count} sentences to {DateTime.Now:HH:mm}" };      // the display says how far it goes
+                if (t != english) push["TranslatedSummary"] = SummaryOf($"{id}-{lang}", t);
+                await Say(secretary, $"Summary-Latest-{to}", to, push.ToJsonString());
+            }
+        }
+        catch (Exception e) { Console.Error.WriteLine("running summary: " + e.Message); }
+    }
+
+    // The summaries still running when the meeting ends: a last update each, then they stop.
+    private async Task EndSummaries()
+    {
+        List<KeyValuePair<string, (int From, string Language, string Form)>> pending;
+        lock (summaryStarted) { pending = summaryStarted.ToList(); summaryStarted.Clear(); }
+        foreach (var (user, s) in pending) await UpdateSummary(user, s, force: true, final: true);
+    }
+
+    private static bool StopSummary(string words) =>
+        System.Text.RegularExpressions.Regex.IsMatch(Normal(words), @"^(stop the summary|stop summary|stop summarising|stop summarizing|end the summary|the summary|summary|give me the summary)$");
+    private static string Normal(string words)
+    {
+        var w = System.Text.RegularExpressions.Regex.Replace(words.ToLowerInvariant(), @"[^\p{L}\p{N}' ]+", " ");
+        w = System.Text.RegularExpressions.Regex.Replace(w, @"\b(please|secretary|now|can you|could you)\b", " ");
+        return System.Text.RegularExpressions.Regex.Replace(w, @"\s+", " ").Trim();
+    }
+    private readonly Dictionary<string, (int From, string Language, string Form)> summaryStarted = new();   // a summary asked by voice and not yet stopped: from which line of the minutes
+    private readonly Dictionary<string, int> summaryFrom = new();                                          // stopped: the summary being made starts at that line
+
+    private static JsonObject? Plain(string words)
+    {
+        var w = System.Text.RegularExpressions.Regex.Replace(words.ToLowerInvariant(), @"[^\p{L}\p{N}' ]+", " ");
+        w = System.Text.RegularExpressions.Regex.Replace(w, @"\b(please|secretary|now|can you|could you)\b", " ");
+        w = System.Text.RegularExpressions.Regex.Replace(w, @"\s+", " ").Trim();
+        foreach (var (pattern, request) in PlainCommands) if (System.Text.RegularExpressions.Regex.IsMatch(w, pattern)) return request();
+        return null;
+    }
+
     private async Task Dialogue(string user, string words)
     {
         if (!participants.Contains(user)) return;                              // the Secretary speaks with the participants of the meeting
@@ -471,7 +567,22 @@ public sealed class MeetingServices(HttpClient http, MInstance m, Recognizer? re
             if (Says(words, No)) { await Reply(user, "The meeting stays open.", null, pref); return; }
         }
         if (Interpret is null) { await Reply(user, "I cannot understand speech in this meeting.", null, pref); return; }
-        var (command, _) = await Interpret(user, words);
+        if (StopSummary(words))                                                // the end of a summary asked before: it is made now, of what was said since
+        {
+            (int From, string Language, string Form) started; bool had;
+            lock (summaryStarted) had = summaryStarted.Remove(user, out started);
+            if (!had) { await Reply(user, "OK. No summary is running: say \"summarise the meeting\" to start one.", null, pref); return; }
+            await Reply(user, "OK. The summary is stopped; it stays on your display.", null, pref);
+            await UpdateSummary(user, started, force: true, final: true);     // the last of what was said goes in
+            if (started.Form == "spoken")                                       // asked spoken: it is read once, now that it is complete
+            {
+                lock (summaryStarted) summaryFrom[user] = started.From;
+                await Reply(user, "Here it is.", new JsonObject { ["Summary"] = new JsonObject { ["Language"] = started.Language, ["Form"] = "spoken" } }, pref);
+            }
+            lock (summaryStarted) summarySent.Remove(user);
+            return;
+        }
+        var command = Plain(words) is { } plain ? new JsonObject { ["UserCommandRQ"] = plain } : (await Interpret(user, words)).Command;
         if (command?["UserCommandRQ"] is not JsonObject rq)
         {
             await Reply(user, "Sorry, I did not catch a request. I can summarise the meeting, raise or lower your hand, switch your microphone, or close the meeting.", null, pref);
@@ -484,8 +595,9 @@ public sealed class MeetingServices(HttpClient http, MInstance m, Recognizer? re
             var language = ((string?)s["Language"] ?? pref.Language).ToLowerInvariant(); var form = ((string?)s["Form"] ?? pref.Form).ToLowerInvariant();
             if (language is "ja" or "zh" && form == "spoken") { form = "written"; say.Add("No voice speaks that language, so I will write it."); }
             pref.Language = language; pref.Form = form;
-            ui["Summary"] = new JsonObject { ["Language"] = language, ["Form"] = form };
-            say.Add("One moment, I am preparing your summary.");
+            // THE SUMMARY IS OF WHAT IS SAID FROM NOW (the author, 2026-11-12): until the participant says "stop the summary", or the meeting ends.
+            lock (summaryStarted) { summaryStarted[user] = (minutes.Count, language, form); summarySent.Remove(user); }
+            say.Add("I am summarising from now: the summary appears on your display and grows as the meeting goes on. Say \"stop the summary\" to stop it.");
         }
         if (rq["Display"] is JsonValue d) { ui["Display"] = d.GetValue<string>(); say.Add("Done."); }
         if (rq["Hand"] is JsonValue h) { var up = h.GetValue<string>() == "Raise"; await SetHand(user, up, ""); say.Add(up ? "Your hand is up." : "Your hand is down."); }
@@ -493,25 +605,28 @@ public sealed class MeetingServices(HttpClient http, MInstance m, Recognizer? re
         if (rq["Screen"] is JsonValue sc)
         {
             if (sc.GetValue<string>() == "Stop") { ui["Screen"] = "Stop"; say.Add("Screen sharing stopped."); }
-            else say.Add("I cannot start the sharing for you: the browser lets only you start it. Press Share screen.");
+            else { ui["Screen"] = "Share"; say.Add("Choose what to share in the window of the screen helper."); }     // the client starts it: with the screen helper no click in the browser is needed
         }
         if (rq["CloseMeeting"] is JsonValue cm && cm.GetValue<bool>())
         {
             if (user != convener) say.Add("Only the convener can close the meeting.");
             else { closing.Add(user); say.Add("Do you want to close the meeting for everybody? Say yes or no."); }
         }
-        if (rq["Confirm"] is not null && !say.Any()) say.Add("There is nothing to confirm.");
+        if (rq["Confirm"] is not null && !say.Any())          // a yes or a no with no question before it: the request was not understood - no OK, so the participant says it again
+        { await Reply(user, "Sorry, I did not catch a request. Please say it again.", null, pref); return; }
         if (rq["ReturnToMeeting"] is JsonValue back && back.GetValue<bool>()) { ui["Mode"] = "meeting"; say.Add("Back to the meeting."); }
         if (say.Count == 0) say.Add("Done.");
-        await Reply(user, string.Join(" ", say), ui, pref);
+        await Reply(user, "OK. " + string.Join(" ", say), ui, pref);      // understood: the written answer begins with OK (not said aloud: the author, 2026-11-12); no OK, not understood
     }
 
     // The answer of the Secretary to one participant: a Message of its own, in a few words, spoken (and written too if the participant asked for it).
-    private async Task Reply(string user, string text, JsonObject? ui, Preference? pref = null)
+    // aloud: what she says by voice when the participant has her answers in writing only (the OK of a request she understood, 2026-11-12: the participant hears that it went through).
+    private async Task Reply(string user, string text, JsonObject? ui, Preference? pref = null, string? aloud = null)
     {
         pref ??= preferences.TryGetValue(user, out var p0) ? p0 : preferences[user] = new Preference();
         var reply = new JsonObject { ["Say"] = text, ["Written"] = true, ["Do"] = ui ?? new JsonObject() };
-        if (pref.Voice && Synthesise is not null) { try { reply["Speech"] = Convert.ToBase64String(await Synthesise(text, "en")); } catch (Exception) { } }          // 16 kHz, 16 bits, mono
+        var spoken = pref.Voice ? text : aloud;
+        if (spoken is not null && Synthesise is not null) { try { reply["Speech"] = Convert.ToBase64String(await Synthesise(spoken, "en")); } catch (Exception) { } }          // 16 kHz, 16 bits, mono
         await Say(secretary, $"Secretary-{user}-{++pref.Sequence}", user, reply.ToJsonString());
     }
 
@@ -527,7 +642,8 @@ public sealed class MeetingServices(HttpClient http, MInstance m, Recognizer? re
                 lock (summaryAsked) { if (summaryAsked.Count == 0) break; r = summaryAsked.Dequeue(); }
                 var answer = $"Summary-for-{r.ID}";
                 if (!participants.Contains(r.User)) { await Say(secretary, answer, r.User, "refused: the summary is for the participants of the meeting"); continue; }
-                var said = minutes.Where(line => !line.StartsWith("AVS: ", StringComparison.Ordinal)).ToList();         // the hands are not what was said
+                int from; lock (summaryStarted) from = summaryFrom.Remove(r.User, out var f) ? f : 0;                // asked by voice: from the moment of the request
+                var said = minutes.Skip(from).Where(line => !line.StartsWith("AVS: ", StringComparison.Ordinal)).ToList();         // the hands are not what was said
                 if (Summarise is null) { await Say(secretary, answer, r.User, "refused: this meeting has no summary service"); continue; }
                 if (said.Count == 0) { await Say(secretary, answer, r.User, "nothing has been said yet"); continue; }
                 try

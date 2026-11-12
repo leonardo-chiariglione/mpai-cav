@@ -121,9 +121,9 @@ public class MmmSecretaryDialogueTests
         }
 
         var raised = await Say("raise my hand");
-        Assert.Equal("Your hand is up.", (string?)raised["Say"]);
+        Assert.Equal("OK. Your hand is up.", (string?)raised["Say"]);      // an understood request begins with OK, written (2026-11-12)
         Assert.Contains("Anna", services.HandsUp);                                                    // the Secretary did it
-        Assert.Null((string?)raised["Speech"]);                                                       // text is the default: no voice unless asked
+        Assert.Null((string?)raised["Speech"]);                                                       // text is the default: no voice unless asked (the OK is written, not said)
         Assert.True((bool)raised["Written"]!);
         Assert.DoesNotContain(services.TheMinutes, line => line.Contains("raise my hand"));          // it is not the meeting: not in the minutes
 
@@ -131,9 +131,14 @@ public class MmmSecretaryDialogueTests
         Assert.NotEqual(200, (await bruno.ReadAsync("Speech-Anna-1")).Http);
         Assert.NotEqual(200, (await bruno.ReadAsync("Secretary-Anna-1")).Http);
 
-        var summary = await Say("summarise in greek");
-        Assert.Equal("el", (string?)summary["Do"]!["Summary"]!["Language"]);                           // the client is told which summary to ask for
-        Assert.Equal("written", (string?)summary["Do"]!["Summary"]!["Form"]);                         // text is the default
+        var started = await Say("summarise in greek");                                                // the summary is of what is said from the request on (2026-11-12)
+        Assert.Contains("stop the summary", (string?)started["Say"]);
+        Assert.Null(started["Do"]!["Summary"]);
+        var stopped = await Say("stop the summary");                                                  // it grows as the meeting goes on; stopped, it stays on the display
+        Assert.Contains("stopped", (string?)stopped["Say"]);
+        Assert.Null(stopped["Do"]!["Summary"]);                                                        // written (the default): nothing more for the client to ask
+        var none = await Say("stop the summary");
+        Assert.Contains("No summary is running", (string?)none["Say"]);
 
         var mute = await Say("mute me");
         Assert.Equal("Off", (string?)mute["Do"]!["Microphone"]);

@@ -21,14 +21,19 @@ public sealed class SummaryServices(string root, string model = "llama3.1") : ID
     };
 
     // English summary of a piece of the minutes (or of the summaries of pieces).
+    // 2026-11-12: asked for "the decisions taken and the actions agreed", at Ollama's default temperature, the model made them up (an approved project, actions for
+    // the speaker) where nobody had decided anything. Now it reports what was said, a decision or an action only when stated, and runs at temperature 0.
     public Task<string> SummariseAsync(string minutes) => llm.Value.ChatAsync(
-        "You summarise the minutes of a meeting, in English. Write a short summary: the points discussed, the decisions taken and the actions agreed, each action with who is to do it. " +
-        "Use only what the minutes say; do not add anything; the speakers are named at the start of each line. Answer with the summary only, as plain text, with no introduction.",
-        minutes);
+        "You summarise the minutes of a meeting, in English. Each line of the minutes is one thing a person said, with the speaker's name at the start. " +
+        "Some lines may be noise that the speech recognition turned into words; leave out a line that makes no sense. " +
+        "Write what was actually said, in a few short sentences, naming who said it. Report a decision only if somebody clearly stated it was decided, and an action only if " +
+        "somebody clearly agreed to do it, with who is to do it. If there is no clear decision or action, write \"No decisions or actions were recorded.\" " +
+        "Never invent topics, projects, decisions, actions or names; do not guess what was meant. Answer with the summary only, as plain text, with no introduction.",
+        minutes, temperature: 0);
 
     public Task<string> TranslateAsync(string english, string language) => llm.Value.ChatAsync(
         $"You translate into {Names.GetValueOrDefault(language, language)}. Answer with the translation only, as plain text. Keep names and numbers as they are.",
-        english);
+        english, temperature: 0);
 
     // The text spoken in the language, as 16 kHz, 16 bit, mono PCM (what the clients play).
     public async Task<byte[]> SynthesiseAsync(string text, string language)

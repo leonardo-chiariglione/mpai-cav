@@ -72,14 +72,15 @@ public sealed class OllamaClient : IDisposable
         _http = new HttpClient { BaseAddress = new Uri(baseUrl), Timeout = TimeSpan.FromMinutes(5) };
     }
 
-    // Send a system + user prompt, return the assistant's text reply.
-    public Task<string> ChatAsync(string system, string user) =>
+    // Send a system + user prompt, return the assistant's text reply. temperature: Ollama's default (0.8) when not given; 0 for a reply
+    // that keeps to the text it is given (a summary, a translation), the same each time.
+    public Task<string> ChatAsync(string system, string user, double? temperature = null) =>
         PostAsync(model => new
         {
             model,
             stream = false,
             keep_alive = _keepAlive,
-            options = new { num_ctx = _context },
+            options = temperature is double t ? (object)new { num_ctx = _context, temperature = t, seed = 1 } : new { num_ctx = _context },
             messages = new[]
             {
                 new { role = "system", content = system },
