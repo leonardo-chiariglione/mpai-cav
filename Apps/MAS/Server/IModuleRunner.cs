@@ -103,8 +103,10 @@ public sealed class RunResult
 
 // Turns the two path segments that name a boundary Port into the Port they address (MPAI-MAS V1.1, API 1).
 //
-// {DataType} is the Data Type in canonical form, its Header, <Standard>-<Acronym>-V<Major>.<Minor>; {PortNumber} is a decimal integer from 1 with no
-// leading zero, always present. Neither needs percent-encoding, and "#", which begins a fragment, is never in a URL.
+// {DataType} is the Data Type in canonical form, its Header, <Standard>-<Acronym>-V<Major>.<Minor>, or a type of the type system of AIF V3.0 (Metadata, 1.1),
+// which a Port may carry as well: a base type (string, int32, float64, boolean, ...) or a struct or variant in braces, each optionally an array ([]) - the
+// pattern of AIFType in AIF V3.0 AIMMetadata.json. The MachineID input of the MMC Modules is a string (2026-11-12: refused here, the Apps of the MAS App stopped).
+// {PortNumber} is a decimal integer from 1 with no leading zero, always present. "#", which begins a fragment, is never in a URL.
 //
 //     Input/OSD-BTO-V1.5/1      -> Port 1
 //     Input/OSD-BTO-V1.5/2      -> Port 2
@@ -115,6 +117,9 @@ public static class PortSegment
 {
     private static readonly System.Text.RegularExpressions.Regex CanonicalDataType =
         new(@"^[A-Z0-9]{3,4}-[A-Z0-9]{3}-V[0-9]{1,2}\.[0-9]{1,2}$", System.Text.RegularExpressions.RegexOptions.CultureInvariant);
+
+    private static readonly System.Text.RegularExpressions.Regex AifType =
+        new(@"^((int8|int16|int32|int64|uint8|byte|uint16|uint32|uint64|float32|float64|number|boolean|string)|\{.+\})(\[\])*$", System.Text.RegularExpressions.RegexOptions.CultureInvariant);
 
     private static readonly System.Text.RegularExpressions.Regex CanonicalPortNumber =
         new(@"^[1-9][0-9]{0,8}$", System.Text.RegularExpressions.RegexOptions.CultureInvariant);
@@ -131,7 +136,7 @@ public static class PortSegment
         dataType   = string.Empty;
         portNumber = 0;
 
-        if (!CanonicalDataType.IsMatch(typeSegment ?? string.Empty)) return false;
+        if (!CanonicalDataType.IsMatch(typeSegment ?? string.Empty) && !AifType.IsMatch(typeSegment ?? string.Empty)) return false;
         if (!CanonicalPortNumber.IsMatch(numberSegment ?? string.Empty)) return false;
 
         dataType   = typeSegment!;
