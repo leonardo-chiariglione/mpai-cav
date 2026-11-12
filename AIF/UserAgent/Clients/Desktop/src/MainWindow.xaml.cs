@@ -455,7 +455,7 @@ public partial class MainWindow : Window
                 $"{chosen.Name}   \u2014   workflow {_workflow.Name} over {string.Join(", ", _workflow.Modules)}   \u2014   from {ServiceUrl}";
             // CHOOSING AN APP IS STARTING IT. A person who has picked what they want
             // should not then have to announce it; the choice is the instruction.
-            InstructionText.Text  = "";
+            InstructionText.Text  = "";
             ShownText.Text = ""; ShownBox.Visibility = Visibility.Collapsed;
             // THE LIST STAYS. A client that holds no application shows what the
             // Service offers for as long as it is running; choosing one App does
@@ -537,7 +537,7 @@ public partial class MainWindow : Window
             _workflowPath = path;
             WorkflowText.Text =
                 $"{Path.GetFileName(path)}   \u2014   workflow {_workflow.Name} over {string.Join(", ", _workflow.Modules)}";
-            InstructionText.Text = "";
+            InstructionText.Text = "";
             ShownText.Text = ""; ShownBox.Visibility = Visibility.Collapsed;
             Status("workflow read");
         }
@@ -594,7 +594,7 @@ public partial class MainWindow : Window
                     _workflow            = null;
                     _appId               = null;
                     WorkflowText.Text    = $"Service: {ServiceUrl}";
-                    InstructionText.Text = "";
+                    InstructionText.Text = "";
                     ShownText.Text = ""; ShownBox.Visibility = Visibility.Collapsed;
                     StageImage.Source    = null;
                     StageTitle.Text      = "No image displayed";
@@ -728,7 +728,7 @@ public partial class MainWindow : Window
             await Dispatcher.InvokeAsync(() =>
             {
                 WorkflowText.Text    = $"Service: {ServiceUrl}";
-                InstructionText.Text = "";
+                InstructionText.Text = "";
                 ShownText.Text = ""; ShownBox.Visibility = Visibility.Collapsed;
                 StageImage.Source    = null;
                 StageTitle.Text      = "No image displayed";
