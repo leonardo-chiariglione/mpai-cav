@@ -10,6 +10,7 @@
     "MInstanceID":             { "type": "string", "description": "Identifier of the M-Instance (Virtual Space) where this Spatial Attitude is defined." },
     "UEnvironmentID":          { "type": "string", "description": "Identifier of the U-Environment (Real Space) where this Spatial Attitude is defined." },
     "ObjectSpatialAttitudeID": { "type": "string", "description": "Unique identifier of this Spatial Attitude instance." },
+    "ObjectID":                { "type": "string", "description": "Identifier of the Object this Spatial Attitude describes: the same in every Spatial Attitude of that Object within a U-Environment or M-Instance." },
     "SpatialAttitudeTime":     { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json", "description": "Time this Spatial Attitude instance was produced." },
 
     "General":                 { "type": "object", "additionalProperties": false, "required": [ "CoordType" ],

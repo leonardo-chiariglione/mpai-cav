@@ -1,7 +1,7 @@
 { "$id":                    "https://schemas.mpai.community/TFA/V1.5/data/SpatialQualifier.json",
   "$schema":                "https://json-schema.org/draft/2020-12/schema",
   "title":                  "Spatial Qualifier V1.5",
-  "description":            "Qualifier stating the conventions by which the numbers of a Spatial Attitude, of Spatial Data and of Pointing Data are to be read: the representation, the reference frame, the axes and their handedness, the units and the order of the rotations. It states what the data cannot state, and it does not change them. When the Qualifier is absent the data do not state their conventions. A Qualifier carried by a Data Type that contains another (a Path of Points of View, a Spatial Attitude with its Position and Orientation) applies to what it contains, unless the contained Data Type carries its own.",
+  "description":            "Qualifier stating the conventions by which the numbers of a Spatial Attitude, of Spatial Data and of Pointing Data are to be read: the representation, the reference frame, the axes and their handedness, the units and the order of the rotations. It states what the data cannot state, and it does not change them. When the Qualifier is absent, the default conventions of the Data Type apply. For Position, Orientation and Spatial Attitude (OSD) they are those of ISO 8855: a right-handed East-North-Up frame; body axes X forward, Y left, Z up; Euler angles (α, β, γ) = (yaw, pitch, roll), intrinsic rotations about Z, Y′, X″, positive by the right-hand rule; degrees and metres; a quaternion (w, x, y, z). A Data Type with no stated default does not state its conventions. A Qualifier carried by a Data Type that contains another (a Path of Points of View, a Spatial Attitude with its Position and Orientation) applies to what it contains, unless the contained Data Type carries its own.",
   "type":                   "object",
   "required":               [ "Header", "SpatialQualifierID", "SubTypes", "Formats", "Attributes" ],
   "additionalProperties":   false,
@@ -25,7 +25,16 @@
 
       "ReferenceFrame":     { "type": "object", "additionalProperties": false, "required": [ "Name" ], "properties": {
         "Name":             { "type": "string", "description": "E.g. Ego, Local ENU, Map, Geocentric, Screen, Room." },
-        "Origin":           { "type": "string", "description": "What the origin is, e.g. the centre of the vehicle, the room centre, the top-left corner of the picture." } } },
+        "Origin":           { "type": "string", "description": "What the origin is, e.g. the centre of the vehicle, the room centre, the top-left corner of the picture." },
+        "OriginGeodetic":   { "type": "array", "minItems": 2, "maxItems": 3, "prefixItems": [
+                            { "type": "number", "minimum":          -90,  "maximum":  90, "description": "Latitude, degrees." },
+                            { "type": "number", "exclusiveMinimum": -180, "maximum": 180, "description": "Longitude, degrees." },
+                            { "type": "number",                                            "description": "Height, metres, as the HeightReference of Geodetic says (Ellipsoidal when absent). When absent, the height is not stated." } ],
+                              "description": "The origin as a geodetic point, in the Datum of Geodetic (WGS84 when absent)." },
+        "OriginObjectID":   { "type": "string", "description": "The origin is the Position of the Object with this identifier: a frame attached to that Object, whose axes are the body axes of the Object." },
+        "EPSG":             { "type": "string", "pattern": "^EPSG:[0-9]+$", "description": "A registered coordinate reference system, e.g. EPSG:4978 (the Earth-fixed WGS 84 frame): its origin and axes are those of the registry entry." } },
+                              "allOf": [ { "not": { "required": [ "OriginGeodetic", "OriginObjectID" ] } }, { "not": { "required": [ "OriginGeodetic", "EPSG" ] } }, { "not": { "required": [ "OriginObjectID", "EPSG" ] } } ],
+                              "description": "The reference frame: its name and what its origin is; at most one of OriginGeodetic, OriginObjectID and EPSG states the origin so that a machine can use it." },
 
       "Handedness":         { "type": "string", "enum": [ "Right", "Left" ], "description": "Handedness of the Cartesian axes." },
       "UpAxis":             { "$ref": "#/$defs/Axis" },

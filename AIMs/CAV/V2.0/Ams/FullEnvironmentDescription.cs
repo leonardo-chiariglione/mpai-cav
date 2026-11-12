@@ -81,7 +81,7 @@ public sealed class FullEnvironmentDescription(string instanceId, IReadOnlyDicti
         var id = $"BMS{++scenes:D6}";
         var members = new JsonArray(new JsonObject
         {
-            ["BXOSpaceTime"] = EssJson.SpaceTime($"{id}-ego-ST", ms, EssJson.Attitude($"{id}-ego", ms, (0, 0, 0), (1, 1, 1), (0, 0, 0))),
+            ["BXOSpaceTime"] = EssJson.SpaceTime($"{id}-ego-ST", ms, EssJson.Attitude($"{id}-ego", ms, (0, 0, 0), (1, 1, 1), (0, 0, 0), qualifier: EssJson.EgoQualifier())),
             ["BXOOrBXOID"] = cav ?? "ego"
         });
         foreach (var entry in fed["FullEnvironmentObjects"]?.AsArray() ?? [])
@@ -98,7 +98,7 @@ public sealed class FullEnvironmentDescription(string instanceId, IReadOnlyDicti
         {
             ["Header"] = AmsTypes.Bms, ["MInstanceID"] = InstanceId, ["BasicMultimodalSceneDescriptorsID"] = id,
             ["BMSDescriptorsTime"] = EssJson.SimpleTime($"{id}-T", ms),
-            ["BMSDescriptorsSpaceTime"] = EssJson.SpaceTime($"{id}-ST", ms, EssJson.Attitude($"{id}-frame", ms, (0, 0, 0), (1, 1, 1), (0, 0, 0))),
+            ["BMSDescriptorsSpaceTime"] = EssJson.SpaceTime($"{id}-ST", ms, EssJson.Attitude($"{id}-frame", ms, (0, 0, 0), (1, 1, 1), (0, 0, 0), qualifier: EssJson.EgoQualifier())),
             ["MultimodalObjectCount"] = members.Count, ["BasicObjectsData"] = members
         };
     }
@@ -331,7 +331,7 @@ public sealed class FullEnvironmentDescription(string instanceId, IReadOnlyDicti
                     {
                         ["BasicEnvironmentObjectID"] = reportedId,
                         ["InstanceIdentifier"] = source["InstanceIdentifier"]?.DeepClone() ?? EssJson.Identifier("car", 1),
-                        ["SpatialAttitude"] = EssJson.Attitude($"{reportedId}-{ms}", ms, (x, y, 0), (1, 1, 1), relative),
+                        ["SpatialAttitude"] = EssJson.Attitude($"{reportedId}-{ms}", ms, (x, y, 0), (1, 1, 1), relative, qualifier: EssJson.EgoQualifier()),
                         ["ExistenceConfidence"] = (double?)source["ExistenceConfidence"] ?? 1.0, ["Motion"] = "Dynamic",
                         ["Contributions"] = new JsonArray(new JsonObject { ["Technology"] = "Visual" })
                     },

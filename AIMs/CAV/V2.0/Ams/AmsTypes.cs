@@ -49,7 +49,7 @@ public static class AmsTypes
     {
         var p = EssJson.Vector(attitude["Position"]?["CartPosition"]) ?? (0, 0, 0);
         var v = EssJson.Vector(attitude["Position"]?["CartVelocity"]) ?? (0, 0, 0);
-        var yaw = EssJson.Vector(attitude["Orientation"]?["Orientation"])?.Z ?? 0;
+        var yaw = EssJson.Yaw(attitude["Orientation"]?["Orientation"]) ?? 0;
         return (p.X, p.Y, yaw * Math.PI / 180, Math.Sqrt(v.X * v.X + v.Y * v.Y));
     }
 }

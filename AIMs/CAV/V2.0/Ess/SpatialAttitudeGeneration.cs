@@ -71,10 +71,12 @@ public sealed class SpatialAttitudeGeneration(string instanceId, IReadOnlyDictio
             var accuracy = !placed ? Unanchored : GnssSigma * Math.Sqrt(weight / (2 - weight)) + 0.02 * sinceFix;
             var orientation = json["Orientation"]?.DeepClone();
             if (orientation?["Orientation"] is JsonArray { Count: 3 } o)
-                o[2] = Math.Round(Math.IEEERemainder((double)o[2]! + turn * 180 / Math.PI, 360), 3);
+                o[0] = EssJson.Angle((double)o[0]! + turn * 180 / Math.PI);     // the yaw: ISO 8855, first
             var ego = EssJson.Attitude($"EGO{++count:D6}", ms,
                 (track.X + offset.East, track.Y + offset.North, odometry.Z), (accuracy, accuracy, accuracy),
-                (velocity.X * cos - velocity.Y * sin, velocity.X * sin + velocity.Y * cos, velocity.Z), orientation);
+                (velocity.X * cos - velocity.Y * sin, velocity.X * sin + velocity.Y * cos, velocity.Z), orientation,
+                qualifier: EssJson.EnuQualifier("the origin of the Offline Map of the CAV", anchor));          // the frame anchored on the map (its geodetic point once known)
+            ego["ObjectID"] = EssJson.EgoObjectID;
             await ports.WriteAsync(Attitude, 1, ego.ToJsonString());
         }
     }

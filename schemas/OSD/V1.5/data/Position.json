@@ -20,17 +20,17 @@
       "ObjectType":         { "$ref": "https://schemas.mpai.community/TFA/V1.5/types/ObjectTypes.json", "description": "Type of the Object: one of Digital Human, Generic." },
       "MediaType":          { "$ref": "https://schemas.mpai.community/TFA/V1.5/types/MediaTypes.json", "description": "Media type: one of Speech, Audio, Visual, 3D Model, Audio-Visual, Haptic, Smell, RADAR, LiDAR, Ultrasound." } } },
 
-    "CartPosition":         { "type": "array", "minItems": 3, "maxItems": 3, "items": { "type": "number" }, "description": "Cartesian position (X, Y, Z) in metres." },
+    "CartPosition":         { "type": "array", "minItems": 3, "maxItems": 3, "items": { "type": "number" }, "description": "Cartesian position (X, Y, Z) in metres of the Object's representative point, in the reference frame (by default, ISO 8855: right-handed, X east, Y north, Z up)." },
     "CartPositionAccuracy": { "type": "array", "minItems": 3, "maxItems": 3, "items": { "type": "number" }, "description": "Accuracy of each Cartesian position component (X, Y, Z) in metres." },
-    "SpherPosition":        { "type": "array", "minItems": 3, "maxItems": 3, "items": { "type": "number" }, "description": "Spherical position (r, φ, θ) in metres and degrees." },
+    "SpherPosition":        { "type": "array", "minItems": 3, "maxItems": 3, "items": { "type": "number" }, "description": "Spherical position (r, φ, θ) in the reference frame: r, the distance from the origin, in metres; φ, the azimuth, by default measured from +X towards +Y, and θ, the elevation above the X-Y plane, in degrees." },
     "SpherPositionAccuracy":{ "type": "array", "minItems": 3, "maxItems": 3, "items": { "type": "number" }, "description": "Accuracy of each spherical position component (r, φ, θ)." },
 
-    "CartVelocity":         { "type": "array", "minItems": 3, "maxItems": 3, "items": { "type": "number" }, "description": "Cartesian velocity (X, Y, Z) in metres/s." },
+    "CartVelocity":         { "type": "array", "minItems": 3, "maxItems": 3, "items": { "type": "number" }, "description": "Cartesian velocity (X, Y, Z) in metres/s, in the reference frame." },
     "CartVelocityAccuracy": { "type": "array", "minItems": 3, "maxItems": 3, "items": { "type": "number" }, "description": "Accuracy of each Cartesian velocity component (X, Y, Z) in metres/s." },
     "SpherVelocity":        { "type": "array", "minItems": 3, "maxItems": 3, "items": { "type": "number" }, "description": "Spherical velocity (r, φ, θ) in metres/s and degrees/s." },
     "SpherVelocityAccuracy":{ "type": "array", "minItems": 3, "maxItems": 3, "items": { "type": "number" }, "description": "Accuracy of each spherical velocity component (r, φ, θ)." },
 
-    "CartAccel":            { "type": "array", "minItems": 3, "maxItems": 3, "items": { "type": "number" }, "description": "Cartesian acceleration (X, Y, Z) in metres/s²." },
+    "CartAccel":            { "type": "array", "minItems": 3, "maxItems": 3, "items": { "type": "number" }, "description": "Cartesian acceleration (X, Y, Z) in metres/s², in the reference frame." },
     "CartAccelAccuracy":    { "type": "array", "minItems": 3, "maxItems": 3, "items": { "type": "number" }, "description": "Accuracy of each Cartesian acceleration component (X, Y, Z) in metres/s²." },
     "SpherAccel":           { "type": "array", "minItems": 3, "maxItems": 3, "items": { "type": "number" }, "description": "Spherical acceleration (r, φ, θ) in metres/s² and degrees/s²." },
     "SpherAccelAccuracy":   { "type": "array", "minItems": 3, "maxItems": 3, "items": { "type": "number" }, "description": "Accuracy of each spherical acceleration component (r, φ, θ)." },

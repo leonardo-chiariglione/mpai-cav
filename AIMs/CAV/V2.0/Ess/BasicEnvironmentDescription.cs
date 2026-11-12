@@ -101,7 +101,7 @@ public sealed class BasicEnvironmentDescription(string instanceId, IReadOnlyDict
                 case Full: continue;                                 // other CAVs' objects: a later stage
             }
             var ms = EssJson.Milliseconds(json!["BVSDescriptorsSpaceTime"]?["Time"]) ?? ports.Now.ToUnixTimeMilliseconds();
-            var behind = EssJson.Vector(json!["UserPoV"]?["Orientation"]) is { } o && Math.Abs(Math.IEEERemainder(o.Z, 360)) > 90;
+            var behind = EssJson.Yaw(json!["UserPoV"]?["Orientation"]) is { } yaw && Math.Abs(Math.IEEERemainder(yaw, 360)) > 90;
             if (!behind) lastDescribed = ms;
             rearHeard |= behind;
             Fuse(json!, ms, behind);
@@ -196,7 +196,7 @@ public sealed class BasicEnvironmentDescription(string instanceId, IReadOnlyDict
         {
             ["BasicEnvironmentObjectID"] = t.Id,
             ["InstanceIdentifier"] = EssJson.Identifier(t.Class, t.Score),
-            ["SpatialAttitude"] = EssJson.Attitude($"{id}-{t.Id}", ms, (t.X, t.Y, 0), (t.AccuracyX, t.AccuracyY, 0.1), (t.Vx, t.Vy, 0)),
+            ["SpatialAttitude"] = EssJson.Attitude($"{id}-{t.Id}", ms, (t.X, t.Y, 0), (t.AccuracyX, t.AccuracyY, 0.1), (t.Vx, t.Vy, 0), qualifier: EssJson.EgoQualifier()),
             ["ExistenceConfidence"] = Math.Round(t.Existence, 3),
             ["Motion"] = "Dynamic",
             ["Contributions"] = new JsonArray(new JsonObject { ["Technology"] = "Visual", ["SceneDescriptorsID"] = t.From, ["ObjectID"] = t.Object }),

@@ -178,7 +178,7 @@ public class MasStage1Tests
     // The MAS's Spatial Attitude of a CAV at (east, north), its heading (degrees), its speed.
     public static JsonNode Pose(long ms, double east, double north, double heading, double speed) =>
         EssJson.Attitude($"P{ms}", ms, (east, north, 0), (0.1, 0.1, 0.1), (speed * Math.Cos(heading * Math.PI / 180), speed * Math.Sin(heading * Math.PI / 180), 0),
-            new JsonObject { ["Header"] = "OSD-OOR-V1.5", ["OrientationID"] = $"P{ms}-O", ["Orientation"] = new JsonArray(0.0, 0.0, heading) });
+            new JsonObject { ["Header"] = "OSD-OOR-V1.5", ["OrientationID"] = $"P{ms}-O", ["Orientation"] = EssJson.YawPitchRoll(heading) });
 
     // What one set of commands says: each device, what it is told.
     private static string Told(IReadOnlyList<(string DataType, string Json)> commands) => commands.Count == 0 ? "nothing" : string.Join("; ", commands.Select(c =>

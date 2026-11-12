@@ -83,7 +83,7 @@ public sealed class BasicVisualSceneDescription : IAimProcessor, IAimRunner, IDi
 
     // Whether the picture looks back: the yaw of its Space-Time, more than a quarter turn from the CAV's heading.
     private static bool LooksBack(JsonNode frame) =>
-        EssJson.Vector(frame["BasicVisualObjectTime"]?["SpatialAttitude1"]?["Orientation"]?["Orientation"]) is { } o && Math.Abs(Math.IEEERemainder(o.Z, 360)) > 90;
+        EssJson.Yaw(frame["BasicVisualObjectTime"]?["SpatialAttitude1"]?["Orientation"]?["Orientation"]) is { } yaw && Math.Abs(Math.IEEERemainder(yaw, 360)) > 90;
 
     public string InstanceId { get; }
     public Task<Message> ProcessAsync(Message message) => throw new NotSupportedException("OSD-BVS for the ESS runs continuously.");
@@ -259,7 +259,7 @@ public sealed class BasicVisualSceneDescription : IAimProcessor, IAimRunner, IDi
         {
             ["Header"] = "OSD-OPV-V1.5", ["PointOfViewID"] = $"{id}-POV",
             ["General"] = new JsonObject { ["CoordType"] = "Cartesian", ["ObjectType"] = "Generic", ["MediaType"] = "Visual" },
-            ["CartPosition"] = new JsonArray(0.0, 0.0, camera.Height), ["Orientation"] = new JsonArray(0.0, 0.0, rear ? 180.0 : 0.0)
+            ["CartPosition"] = new JsonArray(0.0, 0.0, camera.Height), ["Orientation"] = EssJson.YawPitchRoll(rear ? 180.0 : 0.0)
         },
         ["VisualObjectCount"] = objects.Count,
         ["BasicVisualSceneDescriptors"] = new JsonArray(objects.Select(o => (JsonNode)new JsonObject
@@ -270,7 +270,7 @@ public sealed class BasicVisualSceneDescription : IAimProcessor, IAimRunner, IDi
     };
 
     private JsonObject Placed(string id, long ms, Seen o) =>
-        EssJson.Attitude(id + "-SA", ms, (o.Ahead, o.Left, 0), (o.AheadAccuracy, o.AheadAccuracy * Math.Abs(o.Left) / Math.Abs(o.Ahead) + 0.1, 0.1), (0, 0, 0));
+        EssJson.Attitude(id + "-SA", ms, (o.Ahead, o.Left, 0), (o.AheadAccuracy, o.AheadAccuracy * Math.Abs(o.Left) / Math.Abs(o.Ahead) + 0.1, 0.1), (0, 0, 0), qualifier: EssJson.EgoQualifier());
 
     private JsonObject VisualObject(string id, long ms, Seen o) => new()
     {

@@ -451,9 +451,11 @@ if (!client && new URLSearchParams(location.search).has('world')) {      // a me
 }
 window.mmmClient = client; window.mmmCamera = camera; window.mmmDrawn = drawn; window.mmmHandAndSummary = () => handAndSummary(); window.mmmSendTo = (to, id, text) => sendTo(to, id, text); window.mmmTakeSeat = seat => takeSeat(seat); window.mmmWalls = () => { ensureWalls(); return wallScreens; }; window.mmmBoards = boards; window.mmmSeatChairs = () => seatChairs;   // for the tests: they drive the keys of a client from outside
 const HALF = 3.8;   // the Square is 8 m across
+// A yaw in (-180, 180]: the range of OSD Orientation V1.5 (the viewer keeps it in [0, 360) while it turns).
+const yaw180 = a => { const n = ((a % 360) + 360) % 360; return n > 180 ? n - 360 : n; };
 const spatial = (id, x, y, yaw) => ({ Header: 'OSD-OSA-V1.5', ObjectSpatialAttitudeID: id,
   Position: { Header: 'OSD-OPS-V1.5', PositionID: id + '-P', CartPosition: [x, y, 0] },
-  Orientation: { Header: 'OSD-OOR-V1.5', OrientationID: id + '-O', Orientation: [yaw, 0, 0] } });   // yaw, pitch, roll: degrees (provisional convention: zero looks north, positive turns to the west)
+  Orientation: { Header: 'OSD-OOR-V1.5', OrientationID: id + '-O', Orientation: [yaw180(yaw), 0, 0] } });   // yaw, pitch, roll: degrees (provisional convention: zero looks north, positive turns to the west)
 async function act(path, source, complements) {
   const rs = await fetch('/api/v2.2/' + path, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Idempotency-Key': crypto.randomUUID(), ...(client.token ? { Authorization: 'Bearer ' + client.token } : {}) },
     body: JSON.stringify({ SourceProcessID: source, Action: '', Complements: complements }) });
@@ -997,7 +999,7 @@ async function microphone() {
   client.status += ' - listening';
 }
 async function capture() {   // MM-Capture: the Things of the M-Location that this Point of View sees
-  const pov = { Header: 'OSD-OPV-V1.5', PointOfViewID: 'POV-' + client.name, CartPosition: [client.x, client.y, client.eye ?? 1.6], Orientation: [client.yaw, 0, 0] };
+  const pov = { Header: 'OSD-OPV-V1.5', PointOfViewID: 'POV-' + client.name, CartPosition: [client.x, client.y, client.eye ?? 1.6], Orientation: [yaw180(client.yaw), 0, 0] };
   const r = await act('locate/mm-capture', client.name, { At: client.at, With: [pov] });
   const scene = r.body?.complements?.With?.[0]?.ItemValueOrRef?.[0];
   if (r.http === 200 && scene) { client.things = scene.Things; for (const t of scene.Things) if (t.Kind === 'Speech') hear(t); { const sc = scene.Things.find(t => t.Kind === 'Screen' && (t.Owner !== client.name || sharing?.own) && t.Streaming); watchScreen(sc?.ID ?? null, sc?.Owner === client.name); } }

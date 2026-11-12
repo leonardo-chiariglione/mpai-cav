@@ -24,7 +24,7 @@ public static class TruthBed
         var ms = sensed.FrameMs;
         var attitude = EssJson.Attitude($"{id}-EGO{sim.StepNumber}", ms, (east, north, 0), (0.1, 0.1, 0.1),
             (me.Speed * Math.Cos(heading), me.Speed * Math.Sin(heading), 0),
-            new JsonObject { ["Header"] = "OSD-OOR-V1.5", ["OrientationID"] = $"{id}-EGO{sim.StepNumber}-O", ["Orientation"] = new JsonArray(0.0, 0.0, heading * 180 / Math.PI) });
+            new JsonObject { ["Header"] = "OSD-OOR-V1.5", ["OrientationID"] = $"{id}-EGO{sim.StepNumber}-O", ["Orientation"] = EssJson.YawPitchRoll(heading * 180 / Math.PI) });
         // The others, and the ego, as seen from it.
         var others = around.Where(a => a.Id != id).Select(a => (Id: a.Id, Lane: a.Lane - me.Lane, Distance: a.Ahead - me.Ahead - Simulation.VehicleLength, Speed: a.Speed)).ToList();
         others.Add((Id: "ego", Lane: -me.Lane, Distance: -me.Ahead - 2 * Simulation.VehicleLength, Speed: sim.EgoSpeed));
@@ -60,7 +60,7 @@ public static class TruthBed
         var ms = sensed.FrameMs;
         var attitude = EssJson.Attitude($"EGO{sim.StepNumber}", ms, ((double)ego["East"]!, (double)ego["North"]!, 0), (0.1, 0.1, 0.1),
             (speed * Math.Cos(heading), speed * Math.Sin(heading), 0),
-            new JsonObject { ["Header"] = "OSD-OOR-V1.5", ["OrientationID"] = $"EGO{sim.StepNumber}-O", ["Orientation"] = new JsonArray(0.0, 0.0, heading * 180 / Math.PI) });
+            new JsonObject { ["Header"] = "OSD-OOR-V1.5", ["OrientationID"] = $"EGO{sim.StepNumber}-O", ["Orientation"] = EssJson.YawPitchRoll(heading * 180 / Math.PI) });
         var objects = new JsonArray();
         var seen = truth["Vehicles"]!.AsArray().Select(v => (Id: (string)v!["Id"]!, Lane: (int)v["Lane"]!, Distance: (double)v["Distance"]!, Speed: (double)v["Speed"]!)).ToList();
         if (occlude) seen = seen.Where(v => !seen.Any(o => o.Lane == v.Lane && o.Distance < v.Distance)).ToList();

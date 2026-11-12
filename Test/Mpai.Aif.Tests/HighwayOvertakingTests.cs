@@ -66,7 +66,7 @@ public static class HighwayTruthBed
         var id = $"TRUTH{world.StepNumber:D6}";
         var attitude = EssJson.Attitude($"{id}-EGO", ms, (ego.X, ego.Y, 0), (0.1, 0.1, 0.1),
             (ego.Speed * Math.Cos(ego.Heading), ego.Speed * Math.Sin(ego.Heading), 0),
-            new JsonObject { ["Header"] = "OSD-OOR-V1.5", ["OrientationID"] = $"{id}-EGO-O", ["Orientation"] = new JsonArray(0.0, 0.0, ego.Heading * 180 / Math.PI) });
+            new JsonObject { ["Header"] = "OSD-OOR-V1.5", ["OrientationID"] = $"{id}-EGO-O", ["Orientation"] = new JsonArray(ego.Heading * 180 / Math.PI, 0.0, 0.0) });
         var objects = new JsonArray();
         foreach (var v in world.Others)
         {
@@ -132,7 +132,7 @@ public static class HighwayTruthBed
         var world = sim.World; var d = me.Direction;
         var id = $"{me.CavId}-{world.StepNumber:D6}";
         var attitude = EssJson.Attitude($"{id}-EGO", ms, (me.X, me.Y, 0), (0.1, 0.1, 0.1), me.Scripted ? (me.VelocityVector.X, me.VelocityVector.Y, 0) : (me.Velocity, 0, 0),
-            new JsonObject { ["Header"] = "OSD-OOR-V1.5", ["OrientationID"] = $"{id}-EGO-O", ["Orientation"] = new JsonArray(0.0, 0.0, me.Scripted ? me.Heading * 180 / Math.PI : d < 0 ? 180.0 : 0.0) });
+            new JsonObject { ["Header"] = "OSD-OOR-V1.5", ["OrientationID"] = $"{id}-EGO-O", ["Orientation"] = new JsonArray(me.Scripted ? me.Heading * 180 / Math.PI : d < 0 ? 180.0 : 0.0, 0.0, 0.0) });
         var (ch, sh) = (Math.Cos(me.Heading), Math.Sin(me.Heading));
         var objects = new JsonArray();
         foreach (var o in world.Others)

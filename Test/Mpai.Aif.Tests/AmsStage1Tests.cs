@@ -270,7 +270,8 @@ public class AmsStage1Tests
         var map = sim.Map;
         int given = 0, valid = 0, onSegment = 0, lanes = 0, placed = 0;
         var along = new List<double>();
-        foreach (var (_, _, _, json) in ports.Written)
+        // only the Full Environment Descriptors (since 2026-11-01 the AIM also writes the Basic Multimodal Scene Descriptors)
+        foreach (var (_, _, _, json) in ports.Written.Where(w => w.DataType == AmsTypes.Fed))
         {
             given++;
             using (var doc = JsonDocument.Parse(json)) lock (AIF.Metadata.PublishedSchemas.Lock) if (schema.Evaluate(doc.RootElement).IsValid) valid++;
@@ -449,7 +450,7 @@ public class AmsStage1Tests
         for (var s = 0.0; ; s += PathSelectionPlanning.Spacing)
         {
             var (e, n, h, _) = line.At(Math.Min(s, line.Length));
-            path.Add(new JsonObject { ["PointOfView"] = new JsonObject { ["CartPosition"] = new JsonArray(e, n, 0.0), ["Orientation"] = new JsonArray(0.0, 0.0, h * 180 / Math.PI) } });
+            path.Add(new JsonObject { ["PointOfView"] = new JsonObject { ["CartPosition"] = new JsonArray(e, n, 0.0), ["Orientation"] = new JsonArray(h * 180 / Math.PI, 0.0, 0.0) } });
             if (s >= line.Length) break;
         }
         return new JsonObject { ["Path"] = path };

@@ -18,8 +18,13 @@
       "ObjectType":           { "$ref": "https://schemas.mpai.community/TFA/V1.5/types/ObjectTypes.json", "description": "Type of the Object: one of Digital Human, Generic." },
       "MediaType":            { "$ref": "https://schemas.mpai.community/TFA/V1.5/types/MediaTypes.json", "description": "Media type of the Object: one of Speech, Audio, Visual, Audio-Visual, Haptic, Smell, RADAR, LiDAR, Ultrasound." } } },
 
-    "Orientation":            { "type": "array", "minItems": 3, "maxItems": 4, "items": { "type": "number" },
-                                "description": "The Object's orientation: three Euler angles (α, β, γ) in degrees, or a quaternion of four numbers. The Spatial Qualifier of the data that carry it says which, and the order of the rotations or of the numbers." },
+    "Orientation":            { "type": "array", "oneOf": [
+                                { "minItems": 3, "maxItems": 3, "prefixItems": [
+                                  { "type": "number", "exclusiveMinimum": -180, "maximum": 180, "description": "α: by default (ISO 8855) the yaw, about Z, in degrees." },
+                                  { "type": "number", "minimum":          -90,  "maximum":  90, "description": "β: by default (ISO 8855) the pitch, about Y′, in degrees." },
+                                  { "type": "number", "exclusiveMinimum": -180, "maximum": 180, "description": "γ: by default (ISO 8855) the roll, about X″, in degrees." } ] },
+                                { "minItems": 4, "maxItems": 4, "items": { "type": "number", "minimum": -1, "maximum": 1 } } ],
+                                "description": "The Object's orientation: three Euler angles (α, β, γ) or a unit quaternion of four numbers. By default (ISO 8855) the angles are degrees, intrinsic rotations first α about Z (yaw), then β about Y′ (pitch), then γ about X″ (roll), positive by the right-hand rule, α and γ in (−180, 180], β in [−90, 90]; a quaternion is (w, x, y, z) with w ≥ 0. The Spatial Qualifier of the data that carry it states another representation, order or convention." },
     "OrientAccuracy":         { "type": "array", "minItems": 3, "maxItems": 3, "items": { "type": "number" },
                                 "description": "Estimated accuracy of each Euler angle (α, β, γ) in Orientation (degrees)." },
     "OrientVelocity":         { "type": "array", "minItems": 3, "maxItems": 3, "items": { "type": "number" },

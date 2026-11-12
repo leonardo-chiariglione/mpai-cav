@@ -104,7 +104,7 @@ public sealed class PathSelectionPlanning(string instanceId, IReadOnlyDictionary
                     ["Header"] = "OSD-OPV-V1.5", ["PointOfViewID"] = $"{id}-{points.Count}",
                     ["General"] = new JsonObject { ["CoordType"] = "Cartesian", ["ObjectType"] = "Generic", ["MediaType"] = "Visual" },
                     ["CartPosition"] = new JsonArray(Math.Round(east - Math.Sin(heading) * offset, 3), Math.Round(north + Math.Cos(heading) * offset, 3), 0.0),
-                    ["Orientation"] = new JsonArray(0.0, 0.0, Math.Round(h * 180 / Math.PI, 3))
+                    ["Orientation"] = EssJson.YawPitchRoll(h * 180 / Math.PI)      // ISO 8855: yaw first
                 }
             });
             (lastHeading, lastKept, lastLegId) = (heading, at, segment.Id);

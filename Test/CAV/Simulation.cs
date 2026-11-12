@@ -272,7 +272,7 @@ public sealed class Simulation
             },
             ["Orientation"] = new JsonObject
             {
-                ["Header"] = "OSD-OOR-V1.5", ["OrientationID"] = id + "-O", ["Orientation"] = new JsonArray(0.0, 0.0, Math.Round(heading * 180 / Math.PI, 3))
+                ["Header"] = "OSD-OOR-V1.5", ["OrientationID"] = id + "-O", ["Orientation"] = new JsonArray(YawDegrees(heading), 0.0, 0.0)
             }
         }.ToJsonString();
     }
@@ -304,4 +304,11 @@ public sealed class Simulation
         },
         ["DescrMetadata"] = $"Simulated forward camera, t = {Time.ToString("0.0", CultureInfo.InvariantCulture)} s"
     }.ToJsonString();
+
+    // A yaw in degrees, in (-180, 180]: the range of OSD Orientation (ISO 8855).
+    private static double YawDegrees(double radians)
+    {
+        var a = Math.Round(Math.IEEERemainder(radians * 180 / Math.PI, 360), 3);
+        return a <= -180 ? a + 360 : a;
+    }
 }

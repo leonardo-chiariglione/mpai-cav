@@ -795,7 +795,8 @@ public sealed class MeetingServices(HttpClient http, MInstance m, Recognizer? re
     public static JsonObject SeatedAt(string id, double yaw, double x = 0, double y = 0)
     {
         var sa = Uc2.SpatialAttitude(id, x, y);
-        sa["Orientation"]!["Orientation"] = new JsonArray(yaw, 0.0, 0.0);
+        var a = Math.IEEERemainder(yaw, 360);                 // the range of OSD Orientation V1.5: (-180, 180]
+        sa["Orientation"]!["Orientation"] = new JsonArray(a <= -180 ? a + 360 : a, 0.0, 0.0);
         return sa;
     }
 }

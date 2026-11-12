@@ -5,6 +5,7 @@ using System.Threading.Channels;
 using AIF.Controller;
 using Mpai.Aif.Api;
 using Mpai.Cav.Ams;
+using Mpai.Cav.Ess;
 using Mpai.Cav.Map;
 using Mpai.Cav.Mas;
 using Mpai.Cav.Recordings;
@@ -399,7 +400,7 @@ public class MasDeliverTests
                 var heading = sim.Mechanics?.Heading ?? 0;
                 var attitude = Mpai.Cav.Ess.EssJson.Attitude($"PLAN{n}-SA", ms, (sim.Mechanics?.East ?? 0, sim.Mechanics?.North ?? 0, 0), (0.5, 0.5, 0.1),
                     (sim.EgoSpeed * Math.Cos(heading), sim.EgoSpeed * Math.Sin(heading), 0),
-                    new JsonObject { ["Header"] = "OSD-OOR-V1.5", ["OrientationID"] = $"PLAN{n}-SA-O", ["Orientation"] = new JsonArray(0.0, 0.0, Math.Round(heading * 180 / Math.PI, 3)) });
+                    new JsonObject { ["Header"] = "OSD-OOR-V1.5", ["OrientationID"] = $"PLAN{n}-SA-O", ["Orientation"] = EssJson.YawPitchRoll(heading * 180 / Math.PI) });
                 yield return (MasTypes.Message, new JsonObject
                 {
                     ["Header"] = MasTypes.Message, ["AMSMASMessageID"] = $"PLAN{n}", ["AMSMASMessageTime"] = Mpai.Cav.Ess.EssJson.SimpleTime($"PLAN{n}-T", ms),

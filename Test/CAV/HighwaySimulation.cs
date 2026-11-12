@@ -231,7 +231,7 @@ public sealed class HighwaySimulation
             },
             ["Orientation"] = new JsonObject
             {
-                ["Header"] = "OSD-OOR-V1.5", ["OrientationID"] = id + "-O", ["Orientation"] = new JsonArray(0.0, 0.0, Math.Round(heading * 180 / Math.PI, 3))
+                ["Header"] = "OSD-OOR-V1.5", ["OrientationID"] = id + "-O", ["Orientation"] = new JsonArray(YawDegrees(heading), 0.0, 0.0)
             }
         }.ToJsonString();
     }
@@ -256,7 +256,7 @@ public sealed class HighwaySimulation
         ["Header"] = "OSD-BVO-V1.5", ["BasicVisualObjectID"] = $"{prefix}{World.StepNumber:D6}",
         ["BasicVisualObjectTime"] = new JsonObject { ["Header"] = "OSD-SPT-V1.5", ["SpaceTimeID"] = $"{prefix}{World.StepNumber:D6}-ST", ["Time"] = SimpleTime($"{prefix}{World.StepNumber:D6}-T", ms),
             // Where the camera looks: its yaw from the CAV's heading.
-            ["SpatialAttitude1"] = new JsonObject { ["Orientation"] = new JsonObject { ["Orientation"] = new JsonArray(0.0, 0.0, yaw) } } },
+            ["SpatialAttitude1"] = new JsonObject { ["Orientation"] = new JsonObject { ["Orientation"] = new JsonArray(yaw, 0.0, 0.0) } } },
         ["BasicVisualObjectData"] = new JsonArray(new JsonObject { ["Data"] = Convert.ToBase64String(png) }),
         ["VisualQualifier"] = new JsonObject
         {
@@ -265,4 +265,11 @@ public sealed class HighwaySimulation
         },
         ["DescrMetadata"] = $"Simulated {what}, t = {World.Time.ToString("0.0", CultureInfo.InvariantCulture)} s"
     }.ToJsonString();
+
+    // A yaw in degrees, in (-180, 180]: the range of OSD Orientation (ISO 8855).
+    private static double YawDegrees(double radians)
+    {
+        var a = Math.Round(Math.IEEERemainder(radians * 180 / Math.PI, 360), 3);
+        return a <= -180 ? a + 360 : a;
+    }
 }

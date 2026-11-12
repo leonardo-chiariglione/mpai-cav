@@ -122,7 +122,8 @@ public sealed class MotionSelectionPlanning(string instanceId, IReadOnlyDictiona
         for (var k = 0; k < way.Count; k++)
         {
             var (t, pose, v0, a) = way[k];
-            var point = EssJson.Attitude($"{id}-{k}", ms + (long)Math.Round(t * 1000), (pose.X, pose.Y, 0), (0.5, 0.5, 0.1), (v0 * Math.Cos(pose.Heading), v0 * Math.Sin(pose.Heading), 0));
+            var point = EssJson.Attitude($"{id}-{k}", ms + (long)Math.Round(t * 1000), (pose.X, pose.Y, 0), (0.5, 0.5, 0.1), (v0 * Math.Cos(pose.Heading), v0 * Math.Sin(pose.Heading), 0),
+                qualifier: EssJson.EnuQualifier("the origin of the Offline Map of the CAV"));
             point["Position"]!["CartAccel"] = EssJson.Triple((a * Math.Cos(pose.Heading), a * Math.Sin(pose.Heading), 0));
             points.Add(new JsonObject { ["ExpectedSpaceTime"] = EssJson.SpaceTime($"{id}-{k}-ST", ms + (long)Math.Round(t * 1000), point) });
         }
@@ -181,7 +182,7 @@ public sealed class MotionSelectionPlanning(string instanceId, IReadOnlyDictiona
             var c = p!["PointOfView"]!["CartPosition"]!.AsArray();
             var (e, n) = ((double)c[0]!, (double)c[1]!);
             if (last is { } l) s += Math.Sqrt(Math.Pow(e - l.E, 2) + Math.Pow(n - l.N, 2));
-            line.Add((s, e, n, (double)p["PointOfView"]!["Orientation"]![2]! * Math.PI / 180));
+            line.Add((s, e, n, (double)p["PointOfView"]!["Orientation"]![0]! * Math.PI / 180));
             last = (e, n);
         }
         return line;
@@ -331,7 +332,8 @@ public sealed class MotionSelectionPlanning(string instanceId, IReadOnlyDictiona
             foreach (var (position, lspeed) in beyond) a = Math.Min(a, Idm(v0, CornerLimit(pos, desired), position - pos, v0 - lspeed));
             a = Math.Clamp(a, -9, acceleration);
             var (e, n, h) = At(pos);
-            var point = EssJson.Attitude($"{id}-{k}", ms + (long)Math.Round(t * 1000), (e, n, 0), (0.5, 0.5, 0.1), (v0 * Math.Cos(h), v0 * Math.Sin(h), 0));
+            var point = EssJson.Attitude($"{id}-{k}", ms + (long)Math.Round(t * 1000), (e, n, 0), (0.5, 0.5, 0.1), (v0 * Math.Cos(h), v0 * Math.Sin(h), 0),
+                qualifier: EssJson.EnuQualifier("the origin of the Offline Map of the CAV"));
             point["Position"]!["CartAccel"] = EssJson.Triple((a * Math.Cos(h), a * Math.Sin(h), 0));
             points.Add(new JsonObject { ["ExpectedSpaceTime"] = EssJson.SpaceTime($"{id}-{k}-ST", ms + (long)Math.Round(t * 1000), point) });
             var next = Math.Max(0, v0 + a * Step);

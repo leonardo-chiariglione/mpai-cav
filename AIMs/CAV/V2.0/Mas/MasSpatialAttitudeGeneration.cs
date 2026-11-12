@@ -68,7 +68,8 @@ public sealed class MasSpatialAttitudeGeneration(string instanceId, IReadOnlyDic
         var id = $"MSA{++count:D6}";
         var attitude = EssJson.Attitude(id, ms, (east, north, 0), (accuracy, accuracy, accuracy),
             (speed * Math.Cos(heading), speed * Math.Sin(heading), 0),
-            new JsonObject { ["Header"] = "OSD-OOR-V1.5", ["OrientationID"] = id + "-O", ["Orientation"] = new JsonArray(Math.Round(roll, 3), Math.Round(pitch, 3), Math.Round(heading * 180 / Math.PI, 3)) });
+            new JsonObject { ["Header"] = "OSD-OOR-V1.5", ["OrientationID"] = id + "-O", ["Orientation"] = EssJson.YawPitchRoll(heading * 180 / Math.PI, pitch, roll) },     // ISO 8855: (yaw, pitch, roll)
+            qualifier: EssJson.EnuQualifier("where the CAV was when the MAS started"));
         attitude["Position"]!["CartAccel"] = EssJson.Triple((acceleration * Math.Cos(heading), acceleration * Math.Sin(heading), 0));
         return attitude;
     }
