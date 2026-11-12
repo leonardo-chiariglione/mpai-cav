@@ -60,7 +60,7 @@ public sealed class AsrAimProcessor : IAimProcessor
         var reply  = message.Ports.ContainsKey(_replyIn);
         var television = _toRecognise.Length > 0 && message.Ports.ContainsKey(_toRecognise);
         var source = television ? _toRecognise : reply ? _replyIn : _imageIn;
-        if (!message.Ports.TryGetValue(source, out var speechJson)) return null!;
+        if (!message.Ports.TryGetValue(source, out var speechJson)) return new Message { MessageId = message.MessageId };     // only context (speaker, overlap, auxiliary text): kept for the speech to come, nothing written
         var speech = Mpai.Aif.PortData.PortObjects.ReadSpeech(speechJson);
         try { int __r7=(speech?.SpeechQualifier?.Format?.ContentFormats?.RawData?.SamplingFrequency is double __rf && __rf>0)?(int)__rf:16000; Mpai.Core.MpaiDiag.DumpPcm(speech?.Data, __r7, "7_ASR_in"); } catch {}
         try { if (speech?.Data?.Length > 0) Mpai.Core.MpaiDiag.WriteBytes("C_asr_in.wav", speech.Data); Mpai.Core.MpaiDiag.Append("trace.log", "ASR-IN bytes=" + (speech?.Data?.Length ?? -1) + System.Environment.NewLine); } catch {}

@@ -13,6 +13,15 @@ public sealed class DescriptorNode
     public string AIMName { get; init; } =
         string.Empty;
 
+    // THE INSTANCE THIS NODE IS AT RUN TIME (M3194: each composite has its own pool). The same AIM may be a
+    // Sub-AIM of two composites of one Module (MMC-ASR in MMC-VCI and in MMC-TST): each is an instance of its
+    // own, with its own Ports, its own Channels and its own state. The Controller names them when it builds the
+    // graph: the AIM name where it is the only one of its name in the Module, else the names of the composites
+    // that hold it and its own, joined by '/'. What runs, writes and is read is keyed by it; what the AIM is
+    // (its L3, settings, Access, implementation) is AIMName.
+    public string Instance { get => instance ?? AIMName; set => instance = value; }
+    private string? instance;
+
     public string ImplementerID { get; init; } =
         string.Empty;
 

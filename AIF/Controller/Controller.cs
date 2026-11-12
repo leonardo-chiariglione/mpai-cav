@@ -68,11 +68,43 @@ public sealed class Controller
 
     public DescriptorGraph RegisterAim(Identifier identifier)
     {
+        var root = BuildNode(identifier, new HashSet<Identifier>());
+        NameInstances(root);
         return new DescriptorGraph
         {
-            Root = BuildNode(identifier, new HashSet<Identifier>())
+            Root = root
         };
     }
+
+    // EACH COMPOSITE ITS OWN POOL (M3194). A Sub-AIM is an instance of the composite that declares it: the same AIM in
+    // two composites of the Module is two instances, each reached only by the Topology of its own composite. Where an
+    // AIM name is the only one of its kind among the leaves, the instance is the AIM name (as it always was); where it
+    // is not, the instance is the path of the composites below the Module that hold it, and its own name, joined by '/'
+    // (and '#2', '#3' where even that repeats: one composite held twice by the same parent).
+    private static void NameInstances(DescriptorNode root)
+    {
+        var leaves = new List<(DescriptorNode Leaf, string Path)>();
+        void Walk(DescriptorNode node, string path)
+        {
+            foreach (var child in node.Children)
+            {
+                var here = path.Length == 0 ? child.AIMName : path + "/" + child.AIMName;
+                if (child.IsComposite) Walk(child, here); else leaves.Add((child, here));
+            }
+        }
+        Walk(root, "");
+        foreach (var same in leaves.GroupBy(l => l.Leaf.AIMName).Where(g => g.Count() > 1))
+            foreach (var path in same.GroupBy(l => l.Path))
+            {
+                var k = 0;
+                foreach (var (leaf, _) in path) leaf.Instance = ++k == 1 ? path.Key : path.Key + "#" + k;
+            }
+    }
+
+    // The instance whose implementation a provider is creating now (DescriptorNode.Instance), for a provider that keeps
+    // what it made: two instances of one AIM must not be given one implementation.
+    private static readonly AsyncLocal<string?> creating = new();
+    public static string? CreatingInstance => creating.Value;
 
     private DescriptorNode BuildNode(
         Identifier identifier,
@@ -486,7 +518,8 @@ public sealed class Controller
             }
 
             var aimName = child.AIMName;
-            if (string.IsNullOrWhiteSpace(aimName) || instantiated.Contains(aimName))
+            var instance = child.Instance;
+            if (string.IsNullOrWhiteSpace(aimName) || instantiated.Contains(instance))
                 continue;
 
             // A SUB-AIM PLACED ON ANOTHER MACHINE (Relation other than Internal)
@@ -494,17 +527,24 @@ public sealed class Controller
             // stands in for it here. Its resources are the host's.
             if (placed?.Invoke(child) is { } onItsHost)
             {
-                host.RegisterRuntime(onItsHost);
-                instantiated.Add(aimName);
+                host.RegisterRuntime(onItsHost, instance);
+                instantiated.Add(instance);
                 continue;
             }
 
             CheckResources(child);
             host.BindAccess(aimName, child.AccessSources);
-            host.RegisterRuntime(
-                provider.Create(aimName, AccessEntry.Overlay(settings.For(aimName), child.AccessSources, host.AccessFor(aimName), aimName), StorageFor(moduleName, aimName, storageLocation),
-                                PrivateStorageFor(moduleName, aimName, storageLocation), moduleStorage?.Invoke(aimName), host.AccessFor(aimName)));
-            instantiated.Add(aimName);
+            creating.Value = instance;
+            try
+            {
+                // Each instance its own implementation, its own Private Storage, and writes the Shared Storage as itself.
+                host.RegisterRuntime(
+                    provider.Create(aimName, AccessEntry.Overlay(settings.For(aimName), child.AccessSources, host.AccessFor(aimName), aimName), StorageFor(moduleName, instance, storageLocation),
+                                    PrivateStorageFor(moduleName, instance, storageLocation), moduleStorage?.Invoke(instance), host.AccessFor(aimName)),
+                    instance);
+            }
+            finally { creating.Value = null; }
+            instantiated.Add(instance);
         }
     }
 

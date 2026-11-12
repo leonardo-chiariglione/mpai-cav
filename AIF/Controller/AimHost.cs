@@ -33,13 +33,17 @@ public sealed class AimHost : IDisposable
     private readonly Dictionary<string, string>       _reason  = new();
     private readonly Dictionary<string, List<string>> _reports = new();
 
-    public void RegisterRuntime(IAimProcessor processor)
+    public void RegisterRuntime(IAimProcessor processor) => RegisterRuntime(processor, processor.InstanceId);
+
+    // Under the instance the Controller names (DescriptorNode.Instance): two instances of one AIM in one Module
+    // are two runtimes, whatever InstanceId their implementation gives itself.
+    public void RegisterRuntime(IAimProcessor processor, string instance)
     {
-        _processors[processor.InstanceId] = processor;
-        _lifecycles[processor.InstanceId] = new AimLifecycle();
-        _status[processor.InstanceId]     = AimStatus.Alive;
-        _reason[processor.InstanceId]     = string.Empty;
-        _reports[processor.InstanceId]    = new List<string>();
+        _processors[instance] = processor;
+        _lifecycles[instance] = new AimLifecycle();
+        _status[instance]     = AimStatus.Alive;
+        _reason[instance]     = string.Empty;
+        _reports[instance]    = new List<string>();
     }
 
     public bool Contains(string instanceId) =>

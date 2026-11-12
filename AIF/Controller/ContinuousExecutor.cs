@@ -112,7 +112,7 @@ public sealed partial class ContinuousExecutor
         Payloads = new PayloadStore(this.clock);
         foreach (var (leaf, onDegraded) in placed)
         {
-            leaves[leaf.AIMName] = leaf;
+            leaves[leaf.Instance] = leaf;
             parent[leaf] = new DescriptorNode { AIMName = moduleInstance, OnDegraded = onDegraded };
         }
         runsHere = leaves.ContainsKey;                                  // the boundary ("") is the Controller's
@@ -180,10 +180,11 @@ public sealed partial class ContinuousExecutor
                     if (!ReferenceEquals(node, graph.Root)) continue;          // entering a nested composite: followed from outside
                     Add(new PortEnd("", from.DataType, from.PortNumber), Sinks(node, from));
                 }
-                else if (leaves.TryGetValue(from.AimName, out var leaf))
+                // A Sub-AIM end is resolved in the composite that declares the connection, and nowhere else (M3194).
+                else if (node.Children.FirstOrDefault(c => !c.IsComposite && c.AIMName == from.AimName) is { } leaf)
                 {
                     var port = OwnPort(leaf, "Output", from.DataType, from.PortNumber);
-                    Add(new PortEnd(leaf.AIMName, port?.DataType ?? from.DataType, port is null ? from.PortNumber : NumberOf(leaf, port)),
+                    Add(new PortEnd(leaf.Instance, port?.DataType ?? from.DataType, port is null ? from.PortNumber : NumberOf(leaf, port)),
                         Sinks(node, from));
                 }
                 // An output of a nested composite is followed from its inside.
@@ -198,7 +199,7 @@ public sealed partial class ContinuousExecutor
         // An AIM that reads a Bus somebody writes is fed by it, though no Topology says so.
         var onBus = leaves.Values.SelectMany(l => l.Ports.Where(p => p.Direction == "Output" && p.Transport == "Bus").Select(p => p.DataType)).ToHashSet();
         var fedByBus = leaves.Values.Where(l => l.Ports.Any(p => p.Direction == "Input" && p.AcceptedTransports?.Contains("Bus") == true && onBus.Contains(p.DataType)))
-                                    .Select(l => l.AIMName).ToHashSet();
+                                    .Select(l => l.Instance).ToHashSet();
         var silent = new HashSet<string>();
         for (var changed = true; changed;)
         {
@@ -207,9 +208,9 @@ public sealed partial class ContinuousExecutor
             fed.UnionWith(fedByBus);
             foreach (var leaf in leaves.Values)
             {
-                if (silent.Contains(leaf.AIMName) || fed.Contains(leaf.AIMName) || leaf.Period is not null || !runsHere(leaf.AIMName)) continue;
-                if (host.Processor(leaf.AIMName) is null or IAimRunner) continue;
-                silent.Add(leaf.AIMName);
+                if (silent.Contains(leaf.Instance) || fed.Contains(leaf.Instance) || leaf.Period is not null || !runsHere(leaf.Instance)) continue;
+                if (host.Processor(leaf.Instance) is null or IAimRunner) continue;
+                silent.Add(leaf.Instance);
                 changed = true;
             }
         }
@@ -255,10 +256,10 @@ public sealed partial class ContinuousExecutor
     {
         const string bus = "Bus";
         var writers = leaves.Values
-            .SelectMany(leaf => leaf.Ports.Where(p => p.Direction == "Output" && p.Transport == bus).Select(p => new PortEnd(leaf.AIMName, p.DataType, NumberOf(leaf, p))))
+            .SelectMany(leaf => leaf.Ports.Where(p => p.Direction == "Output" && p.Transport == bus).Select(p => new PortEnd(leaf.Instance, p.DataType, NumberOf(leaf, p))))
             .Where(end => !inTopology.Contains(end)).ToList();
         var readers = leaves.Values
-            .SelectMany(leaf => leaf.Ports.Where(p => p.Direction == "Input" && p.AcceptedTransports?.Contains(bus) == true).Select(p => new PortEnd(leaf.AIMName, p.DataType, NumberOf(leaf, p))))
+            .SelectMany(leaf => leaf.Ports.Where(p => p.Direction == "Input" && p.AcceptedTransports?.Contains(bus) == true).Select(p => new PortEnd(leaf.Instance, p.DataType, NumberOf(leaf, p))))
             .ToList();
 
         foreach (var group in writers.GroupBy(w => w.DataType))
@@ -283,7 +284,7 @@ public sealed partial class ContinuousExecutor
         {
             parent[child] = node;
             if (child.IsComposite) Index(child);
-            else leaves[child.AIMName] = child;
+            else leaves[child.Instance] = child;
         }
     }
 
@@ -313,7 +314,7 @@ public sealed partial class ContinuousExecutor
             else
             {
                 var port = OwnPort(child, "Input", to.DataType, to.PortNumber);
-                yield return new Terminal(child.AIMName, port?.DataType ?? to.DataType, port is null ? to.PortNumber : NumberOf(child, port));
+                yield return new Terminal(child.Instance, port?.DataType ?? to.DataType, port is null ? to.PortNumber : NumberOf(child, port));
             }
         }
     }
@@ -373,7 +374,7 @@ public sealed partial class ContinuousExecutor
                 Add(readers, reader.Reader, transport.OpenReader(spec, reader.Reader));
         }
 
-        foreach (var leaf in leaves.Values.Where(l => runsHere(l.AIMName)))
+        foreach (var leaf in leaves.Values.Where(l => runsHere(l.Instance)))
             running.Add(Task.Run(() => RunAimAsync(leaf)));
     }
 
@@ -400,7 +401,7 @@ public sealed partial class ContinuousExecutor
     public IExternalPorts? External { get; set; }
 
     // Does the Module have an AIM of this name (itself, a composite or a leaf)?
-    public bool HasAim(string name) => name == module || leaves.ContainsKey(name) || parent.Values.Any(n => n.AIMName == name);
+    public bool HasAim(string name) => name == module || leaves.ContainsKey(name) || leaves.Values.Any(l => l.AIMName == name) || parent.Values.Any(n => n.AIMName == name);
 
     // Can a Message be read from the boundary Port within the time (a Message is pending at once, or comes)?
     public async ValueTask<bool> BoundaryReadableAsync(string dataType, int portNumber, int timeoutMs)
@@ -497,7 +498,7 @@ public sealed partial class ContinuousExecutor
 
     private async Task RunAimAsync(DescriptorNode leaf)
     {
-        var aim = leaf.AIMName;
+        var aim = leaf.Instance;
         var ports = new Ports(this, leaf);
         while (!host.IsStopped && !host.IsDead(aim))
         {
@@ -537,7 +538,7 @@ public sealed partial class ContinuousExecutor
     // OnDegraded applies. True while the AIM is to go on.
     private bool Failed(DescriptorNode leaf, string reason)
     {
-        var aim = leaf.AIMName;
+        var aim = leaf.Instance;
         lock (restarts)
         {
             var n = restarts.GetValueOrDefault(aim);
@@ -556,7 +557,7 @@ public sealed partial class ContinuousExecutor
     // (M3205 5.4) - and the composite's policy applies. True while it is to go on.
     private bool Degraded(DescriptorNode leaf, string reason)
     {
-        var aim = leaf.AIMName;
+        var aim = leaf.Instance;
         host.Degrade(aim, reason);
         Console.WriteLine($"[AIF] {aim}: DEGRADED ({reason}); {parent[leaf].AIMName} OnDegraded {parent[leaf].OnDegraded}");
         OnDegradedNotice?.Invoke(aim, reason, parent[leaf].OnDegraded);
@@ -599,7 +600,7 @@ public sealed partial class ContinuousExecutor
                 if (now != last[port].Count)
                 {
                     last[port] = (now, System.Diagnostics.Stopwatch.GetTimestamp());
-                    if (silent) { silent = false; host.Succeeded(leaf.AIMName); }
+                    if (silent) { silent = false; host.Succeeded(leaf.Instance); }
                     continue;
                 }
                 if (now == 0 || silent || System.Diagnostics.Stopwatch.GetElapsedTime(last[port].At).TotalMilliseconds <= port.MaxAge!.Value) continue;
@@ -649,14 +650,14 @@ public sealed partial class ContinuousExecutor
                 // AIM DEGRADED (M3215 3.2), once until something arrives.
                 var maxAge = emptyRequired.Where(x => x.Port.MaxAge is not null).Select(x => x.Port.MaxAge!.Value).DefaultIfEmpty(-1).Min();
                 var arrival = Task.WhenAny(waitOn.SelectMany(x => x.Ends).Select(e => e.WaitAsync(host.Stopping)));
-                if (maxAge < 0 || starved.Contains(leaf.AIMName)) { await arrival; continue; }
+                if (maxAge < 0 || starved.Contains(leaf.Instance)) { await arrival; continue; }
                 if (await Task.WhenAny(arrival, Task.Delay(TimeSpan.FromMilliseconds(maxAge), host.Stopping)) == arrival) continue;
                 var late = emptyRequired.First(x => x.Port.MaxAge is not null).Port;
-                lock (starved) starved.Add(leaf.AIMName);
+                lock (starved) starved.Add(leaf.Instance);
                 if (!Degraded(leaf, $"its Port {late.DataType}#{NumberOf(leaf, late)} delivered nothing within its MaxAge of {late.MaxAge} ms"))
                     return false;
             }
-            lock (starved) starved.Remove(leaf.AIMName);
+            lock (starved) starved.Remove(leaf.Instance);
 
             foreach (var (port, ends) in inputs)
                 foreach (var end in ends)
@@ -664,7 +665,7 @@ public sealed partial class ContinuousExecutor
         }
 
         var clockAtStart = System.Diagnostics.Stopwatch.GetTimestamp();
-        var result = await host.ProcessAsync(leaf.AIMName, new Message
+        var result = await host.ProcessAsync(leaf.Instance, new Message
         {
             MessageId = Guid.NewGuid().ToString(), MessageType = module, Ports = inbox
         });
@@ -677,7 +678,7 @@ public sealed partial class ContinuousExecutor
         foreach (var (name, json) in result.Ports)
         {
             var port = leaf.Ports.FirstOrDefault(p => p.Direction == "Output" && KeyOf(leaf, p) == name);
-            if (port is null) { Console.WriteLine($"[AIF] {leaf.AIMName}: produced '{name}', which is not one of its Output Ports; dropped"); continue; }
+            if (port is null) { Console.WriteLine($"[AIF] {leaf.Instance}: produced '{name}', which is not one of its Output Ports; dropped"); continue; }
             await ports.WriteAsync(port.DataType, NumberOf(leaf, port), json, -1);
         }
         return true;
@@ -691,7 +692,7 @@ public sealed partial class ContinuousExecutor
     // AIM is not to go on.
     private bool Kept(DescriptorNode leaf, double deadline, TimeSpan took)
     {
-        var aim = leaf.AIMName;
+        var aim = leaf.Instance;
         int inARow;
         lock (misses)
         {
@@ -749,12 +750,12 @@ public sealed partial class ContinuousExecutor
         private PortEnd End(string direction, string dataType, int portNumber)
         {
             var port = OwnPort(leaf, direction, dataType, portNumber)
-                ?? throw new InvalidOperationException($"{leaf.AIMName} has no {direction} Port {dataType}#{portNumber}.");
-            return new PortEnd(leaf.AIMName, port.DataType, NumberOf(leaf, port));
+                ?? throw new InvalidOperationException($"{leaf.Instance} has no {direction} Port {dataType}#{portNumber}.");
+            return new PortEnd(leaf.Instance, port.DataType, NumberOf(leaf, port));
         }
 
         public IReadOnlyList<IChannelReader> ReadersOf(RuntimePort port) =>
-            executor.readers.TryGetValue(new PortEnd(leaf.AIMName, port.DataType, NumberOf(leaf, port)), out var ends)
+            executor.readers.TryGetValue(new PortEnd(leaf.Instance, port.DataType, NumberOf(leaf, port)), out var ends)
                 ? ends : Array.Empty<IChannelReader>();
 
         private IReadOnlyList<IChannelReader> Readers(string dataType, int portNumber) =>
@@ -876,8 +877,8 @@ public sealed partial class ContinuousExecutor
         // MPAI_AIFM_Payload_Get: NOT_AUTHORISED (here UnauthorizedAccessException) unless the caller is at the far end of the Channel; NOT_FOUND (KeyNotFoundException) if it is not held.
         public ReadOnlyMemory<byte> GetPayload(string reference)
         {
-            if (!PayloadStore.IsAtFarEnd(reference, leaf.AIMName, executor.channels))
-                throw new UnauthorizedAccessException($"{leaf.AIMName} is not at the far end of the Channel of {reference}.");
+            if (!PayloadStore.IsAtFarEnd(reference, leaf.Instance, executor.channels))
+                throw new UnauthorizedAccessException($"{leaf.Instance} is not at the far end of the Channel of {reference}.");
             return executor.Payloads.TryGet(reference, out var data)
                 ? data
                 : throw new KeyNotFoundException($"{reference} is not held: released, past its MaxAge, or not issued by this Controller.");
@@ -885,9 +886,9 @@ public sealed partial class ContinuousExecutor
 
         public void ReleasePayload(string reference)
         {
-            if (!PayloadStore.IsAtFarEnd(reference, leaf.AIMName, executor.channels))
-                throw new UnauthorizedAccessException($"{leaf.AIMName} is not at the far end of the Channel of {reference}.");
-            executor.Payloads.Release(reference, leaf.AIMName);
+            if (!PayloadStore.IsAtFarEnd(reference, leaf.Instance, executor.channels))
+                throw new UnauthorizedAccessException($"{leaf.Instance} is not at the far end of the Channel of {reference}.");
+            executor.Payloads.Release(reference, leaf.Instance);
         }
     }
 }

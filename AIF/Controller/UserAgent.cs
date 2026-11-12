@@ -562,9 +562,10 @@ public sealed class UserAgent
             AIF.SharedStorage.ISharedStorage? privateStorage,
             AIF.SharedStorage.IRuledStorage? moduleStorage)
         {
-            if (kept.TryGetValue(aimName, out var already)) return already;
+            var key = Controller.CreatingInstance ?? aimName;                // each instance of an AIM its own (M3194)
+            if (kept.TryGetValue(key, out var already)) return already;
             var made = inner.Create(aimName, settings, storage, privateStorage, moduleStorage);
-            kept[aimName] = made;
+            kept[key] = made;
             return made;
         }
 
@@ -575,9 +576,10 @@ public sealed class UserAgent
             AIF.SharedStorage.IRuledStorage? moduleStorage,
             IAccessReader? access)
         {
-            if (kept.TryGetValue(aimName, out var already)) return already;
+            var key = Controller.CreatingInstance ?? aimName;
+            if (kept.TryGetValue(key, out var already)) return already;
             var made = inner.Create(aimName, settings, storage, privateStorage, moduleStorage, access);
-            kept[aimName] = made;
+            kept[key] = made;
             return made;
         }
     }
@@ -686,7 +688,7 @@ public sealed class UserAgent
         if (Trust is { } verifier)
             foreach (var leaf in AimsOf(graph.Root).Where(l => !placement.ContainsKey(l.AIMName)))
             {
-                var instanceId = $"{hostModule}/{leaf.AIMName}";
+                var instanceId = $"{hostModule}/{leaf.Instance}";
                 var instance = verifier.IssueLocal(instanceId, leaf.AIMName, leaf.AIMName, issuer: leaf.Packaged.Count > 0);
                 // The models Access gave the AIM are those its settings name when it runs, and are measured as such.
                 var aimSettings = AccessEntry.Overlay(settings.For(leaf.AIMName), leaf.AccessSources, host.AccessFor(leaf.AIMName), leaf.AIMName);

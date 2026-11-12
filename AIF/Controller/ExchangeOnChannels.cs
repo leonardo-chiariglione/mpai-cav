@@ -106,15 +106,15 @@ public sealed partial class ContinuousExecutor
             progress = false;
             foreach (var leaf in order)
             {
-                if (done.Contains(leaf.AIMName)) continue;
+                if (done.Contains(leaf.Instance)) continue;
                 if (host.IsStopped) { stopped = true; break; }
 
                 var inputs = InputEnds(leaf);
                 if (!inputs.All(i => Settled(i.End))) continue;
 
-                done.Add(leaf.AIMName);
+                done.Add(leaf.Instance);
                 progress = true;
-                if (host.IsDead(leaf.AIMName) || !inputs.Any(i => readers[i.End].Any(e => e.Pending > 0)))
+                if (host.IsDead(leaf.Instance) || !inputs.Any(i => readers[i.End].Any(e => e.Pending > 0)))
                 {
                     run.Settle(this, Done);
                     continue;                                           // stopped, or nothing to work on: skipped
@@ -127,7 +127,7 @@ public sealed partial class ContinuousExecutor
         }
 
         // Every AIM fired or skipped, or the Module stopped: every Port settles.
-        foreach (var leaf in order) done.Add(leaf.AIMName);
+        foreach (var leaf in order) done.Add(leaf.Instance);
         run.Settle(this, _ => true);
 
         return new Message
@@ -158,35 +158,35 @@ public sealed partial class ContinuousExecutor
         Message result;
         try
         {
-            result = await host.ProcessAsync(aim.AIMName, new Message { MessageId = messageId, MessageType = module, Ports = inbox });
+            result = await host.ProcessAsync(aim.Instance, new Message { MessageId = messageId, MessageType = module, Ports = inbox });
         }
         catch (OperationCanceledException cancelled)
         {
-            return Message.Cancelled(messageId, aim.AIMName, cancelled.Message);
+            return Message.Cancelled(messageId, aim.Instance, cancelled.Message);
         }
         catch (Exception failure)
         {
             // Nothing contains it, so it has no policy: it is DEGRADED, and what to
             // do is the User Agent's decision.
-            host.Degrade(aim.AIMName, $"it threw: {failure.Message}");
-            Console.WriteLine($"[AIF] {aim.AIMName}: threw, produced no output: {failure.Message}");
+            host.Degrade(aim.Instance, $"it threw: {failure.Message}");
+            Console.WriteLine($"[AIF] {aim.Instance}: threw, produced no output: {failure.Message}");
             return new Message { MessageId = messageId, MessageType = module };
         }
 
         if (result.IsCancelled) return result;
         if (result.IsError)
         {
-            host.Degrade(aim.AIMName, $"it returned an error: {result.Payload}");
-            Console.WriteLine($"[AIF] {aim.AIMName}: error, produced no output: {result.Payload}");
+            host.Degrade(aim.Instance, $"it returned an error: {result.Payload}");
+            Console.WriteLine($"[AIF] {aim.Instance}: error, produced no output: {result.Payload}");
             return new Message { MessageId = messageId, MessageType = module };
         }
-        host.Succeeded(aim.AIMName);
+        host.Succeeded(aim.Instance);
 
         var produced = new Dictionary<string, string>();
         foreach (var (name, json) in result.Ports)
         {
             if (aim.Ports.FirstOrDefault(p => p.Direction == "Output" && KeyOf(aim, p) == name) is not { } port) continue;
-            ObjectInspector?.Invoke(aim.AIMName, port.DataType, json);
+            ObjectInspector?.Invoke(aim.Instance, port.DataType, json);
             produced[$"{port.DataType}#{NumberOf(aim, port)}"] = json;
         }
         return new Message { MessageId = messageId, MessageType = module, Ports = produced };
@@ -194,7 +194,7 @@ public sealed partial class ContinuousExecutor
 
     private List<(RuntimePort Port, PortEnd End)> InputEnds(DescriptorNode leaf) =>
         leaf.Ports.Where(p => p.Direction == "Input")
-                  .Select(p => (Port: p, End: new PortEnd(leaf.AIMName, p.DataType, NumberOf(leaf, p))))
+                  .Select(p => (Port: p, End: new PortEnd(leaf.Instance, p.DataType, NumberOf(leaf, p))))
                   .Where(x => readers.ContainsKey(x.End))
                   .ToList();
 
@@ -211,7 +211,7 @@ public sealed partial class ContinuousExecutor
         Message result;
         try
         {
-            result = await host.ProcessAsync(leaf.AIMName, new Message { MessageId = messageId, MessageType = module, Ports = inbox });
+            result = await host.ProcessAsync(leaf.Instance, new Message { MessageId = messageId, MessageType = module, Ports = inbox });
         }
         catch (OperationCanceledException)
         {
@@ -232,12 +232,12 @@ public sealed partial class ContinuousExecutor
         }
         if (result.IsError) return Degraded(leaf, $"it returned an error: {result.Payload}") || !host.IsStopped;
 
-        host.Succeeded(leaf.AIMName);
+        host.Succeeded(leaf.Instance);
         var ports = new Ports(this, leaf);
         foreach (var (name, json) in result.Ports)
         {
             var port = leaf.Ports.FirstOrDefault(p => p.Direction == "Output" && KeyOf(leaf, p) == name);
-            if (port is null) { Console.WriteLine($"[AIF] {leaf.AIMName}: produced '{name}', which is not one of its Output Ports; dropped"); continue; }
+            if (port is null) { Console.WriteLine($"[AIF] {leaf.Instance}: produced '{name}', which is not one of its Output Ports; dropped"); continue; }
             await ports.WriteAsync(port.DataType, NumberOf(leaf, port), json, -1);
         }
         return true;
