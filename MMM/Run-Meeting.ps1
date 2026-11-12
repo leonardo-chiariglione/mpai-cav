@@ -169,7 +169,26 @@ if ($Group -and $Mail -ne 'none') {
         catch { Write-Host "  Outlook could not make the emails: $($_.Exception.Message)`n  The links above are what each guest needs." }
     }
 }
-if ($Stay) { Write-Host '  The server and the tunnel stay up (-Stay).'; exit 0 }
+# THE LINKS ON TOP: the server window and the browser open over this window; it is brought to the front (made topmost and released, so it does not stay above everything).
+function Show-OnTop {
+    try {
+        Add-Type -Namespace Mmm -Name Win -MemberDefinition @'
+[DllImport("kernel32.dll")] public static extern IntPtr GetConsoleWindow();
+[DllImport("user32.dll")] public static extern bool ShowWindow(IntPtr h, int n);
+[DllImport("user32.dll")] public static extern bool SetForegroundWindow(IntPtr h);
+[DllImport("user32.dll")] public static extern bool SetWindowPos(IntPtr h, IntPtr after, int x, int y, int cx, int cy, uint flags);
+'@ -ErrorAction SilentlyContinue
+        $w = [Mmm.Win]::GetConsoleWindow()
+        if ($w -eq [IntPtr]::Zero) { return }
+        [Mmm.Win]::ShowWindow($w, 9) | Out-Null                                              # 9: restore, if minimised
+        [Mmm.Win]::SetWindowPos($w, [IntPtr](-1), 0, 0, 0, 0, 0x43) | Out-Null               # topmost (no move, no size, show)
+        [Mmm.Win]::SetWindowPos($w, [IntPtr](-2), 0, 0, 0, 0, 0x43) | Out-Null               # released: in front, not pinned
+        [Mmm.Win]::SetForegroundWindow($w) | Out-Null
+    } catch { }
+}
+if ($Stay) { Show-OnTop; Write-Host '  The server and the tunnel stay up (-Stay).'; exit 0 }
 Start-Process "$local/viewer/?world=1&mic=1&user=$HostName"
+Start-Sleep 4                                                                                 # the browser takes the front when it opens; the links come back over it
+Show-OnTop
 Read-Host 'Enter to take the meeting off the internet (the server has its own window)' | Out-Null
 if ($Via -eq 'funnel') { & $ts funnel reset | Out-Null } else { Get-Process cloudflared -ErrorAction SilentlyContinue | Stop-Process -Force }

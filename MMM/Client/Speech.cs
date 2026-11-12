@@ -150,6 +150,46 @@ public sealed class WhisperAsr : IDisposable
         process!.OutputDataReceived += (_, _) => { };
         process.ErrorDataReceived += (_, _) => { };
         process.BeginOutputReadLine(); process.BeginErrorReadLine();
+        KillWithMe.Add(process);
+    }
+
+    // WHISPER ENDS WITH ITS SERVER (2026-11-12): a server whose window was closed left its whisper-server running - three of them after one meeting, one taking 6 cores, and the next
+    // server's requests went to it, seconds behind. The process is put in a Windows Job that ends it when this process ends, however it ends (Dispose is not called when a window is closed).
+    private static class KillWithMe
+    {
+        private static IntPtr job;
+        [System.Runtime.InteropServices.DllImport("kernel32.dll", CharSet = System.Runtime.InteropServices.CharSet.Unicode)] private static extern IntPtr CreateJobObject(IntPtr attributes, string? name);
+        [System.Runtime.InteropServices.DllImport("kernel32.dll")] private static extern bool SetInformationJobObject(IntPtr job, int infoClass, ref ExtendedLimits info, int length);
+        [System.Runtime.InteropServices.DllImport("kernel32.dll")] private static extern bool AssignProcessToJobObject(IntPtr job, IntPtr process);
+
+        [System.Runtime.InteropServices.StructLayout(System.Runtime.InteropServices.LayoutKind.Sequential)]
+        private struct ExtendedLimits
+        {
+            public long PerProcessUserTimeLimit, PerJobUserTimeLimit; public uint LimitFlags; public UIntPtr MinimumWorkingSetSize, MaximumWorkingSetSize; public uint ActiveProcessLimit;
+            public UIntPtr Affinity; public uint PriorityClass, SchedulingClass;
+            public ulong ReadOperationCount, WriteOperationCount, OtherOperationCount, ReadTransferCount, WriteTransferCount, OtherTransferCount;
+            public UIntPtr ProcessMemoryLimit, JobMemoryLimit, PeakProcessMemoryUsed, PeakJobMemoryUsed;
+        }
+
+        public static void Add(Process p)
+        {
+            if (!OperatingSystem.IsWindows()) return;
+            try
+            {
+                lock (typeof(KillWithMe))
+                {
+                    if (job == IntPtr.Zero)
+                    {
+                        var j = CreateJobObject(IntPtr.Zero, null);
+                        var info = new ExtendedLimits { LimitFlags = 0x2000 };                // JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE: the handle closes when this process ends
+                        if (j == IntPtr.Zero || !SetInformationJobObject(j, 9, ref info, System.Runtime.InteropServices.Marshal.SizeOf<ExtendedLimits>())) return;      // 9: extended limits
+                        job = j;                                                              // kept open for the life of this process, on purpose
+                    }
+                    AssignProcessToJobObject(job, p.Handle);
+                }
+            }
+            catch { }
+        }
     }
 
     // Waits for the model to load (a few seconds) and asks the server the first time.

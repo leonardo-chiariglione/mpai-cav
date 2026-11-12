@@ -992,6 +992,9 @@ async function microphone() {
       current = begin(pre.concat(f)); pre = []; silent = 0; return;
     }
     if (current.dead) { current = null; return; }
+    // THE SECRETARY BUTTON CUTS THE SPEECH (2026-11-12): a speech begun before it was pressed went on to the room, with the request in it, as long as the person did not pause - the room
+    // heard "share my screen" and the Secretary nothing. Pressed (or released), the speech under way ends there and what follows is a new one, to the Secretary (or to the room).
+    if (current.dialogue !== !!client.dialogue) { finish(current); current = loud ? begin(f) : null; silent = 0; return; }
     feed(current, f); silent = loud ? 0 : silent + f.length;
     if (silent >= HANG) { finish(current); current = null; }
   };

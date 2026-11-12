@@ -159,6 +159,7 @@ public sealed class MeetingServices(HttpClient http, MInstance m, Recognizer? re
     public Interpreter? Interpret { get; set; }
     private readonly Queue<(string User, string Words)> dialogueAsked = new();
     private readonly HashSet<string> dialogueIds = new();                      // the pieces sent to the ASR Service that are a dialogue with the Secretary, not the meeting
+    private bool RemoveDialogue(string id) { lock (dialogueIds) return dialogueIds.Remove(id); }
     private readonly SemaphoreSlim dialogueOne = new(1, 1);
     private sealed class Preference { public string Language = "en", Form = "written"; public bool Voice; public int Sequence; }      // text is the default; the voice is an option
     private readonly Dictionary<string, Preference> preferences = new();
@@ -300,9 +301,9 @@ public sealed class MeetingServices(HttpClient http, MInstance m, Recognizer? re
                     if (minutes.Count > 0) await Publish(user);          // a participant that comes late is given the minutes so far
                 }
                 else if (from == Meeting.Avs && text.StartsWith("left;user=", StringComparison.Ordinal)) participants.Remove(text[(text.IndexOf('=') + 1)..]);
-                else if (from == Meeting.Asr && id.StartsWith("Words-", StringComparison.Ordinal) && dialogueIds.Remove(id["Words-".Length..]) && asked.Remove(id["Words-".Length..], out var talker))
+                else if (from == Meeting.Asr && id.StartsWith("Words-", StringComparison.Ordinal) && RemoveDialogue(id["Words-".Length..]) && asked.Remove(id["Words-".Length..], out var talker))
                 {
-                    if (text != NoWords) lock (dialogueAsked) dialogueAsked.Enqueue((talker.Speaker, text));            // what was said to the Secretary is not the meeting: not in the minutes
+                    lock (dialogueAsked) dialogueAsked.Enqueue((talker.Speaker, text == NoWords ? "" : text));          // what was said to the Secretary is not the meeting: not in the minutes; no words recognised: it is answered too (2026-11-12)
                 }
                 else if (from == Meeting.Asr && id.StartsWith("Words-", StringComparison.Ordinal) && asked.Remove(id["Words-".Length..], out var who))
                 {
@@ -336,7 +337,7 @@ public sealed class MeetingServices(HttpClient http, MInstance m, Recognizer? re
     private async Task Forward(string id, string speaker, JsonObject item, bool dialogue = false)
     {
         var forward = $"Forward-{id}";
-        if (dialogue) dialogueIds.Add(forward);
+        if (dialogue) lock (dialogueIds) dialogueIds.Add(forward);
         var pcm = Speech.PcmOf(item);
         asked[forward] = (speaker, Stopwatch.GetTimestamp(), Speech.DurationMs(item), pcm.Length > 0 ? pcm.Length / 32 : Speech.DurationMs(item));      // 16 kHz, 16 bits: 32 bytes a millisecond
         await secretary.PerformAsync("MM-Send", Uc2.C(forward, to: Meeting.Asr, with: (JsonObject)item["ItemValueOrRef"]![0]!.DeepClone()));
@@ -416,9 +417,15 @@ public sealed class MeetingServices(HttpClient http, MInstance m, Recognizer? re
         await asrOne.WaitAsync();
         try
         {
-            foreach (var (id, from) in await asr.InboxAsync())
+            // What is said to the Secretary is recognised first: Whisper on this PC's processor takes seconds a piece, and behind the room's speech a request waited minutes (2026-11-12).
+            // The inbox is read again after each piece, so a request that comes in meanwhile goes ahead of the room's pieces already waiting.
+            while (true)
             {
-                if (!handled.Add($"{Meeting.Asr}|{id}")) continue;
+                var waiting = (await asr.InboxAsync()).Where(m => !handled.Contains($"{Meeting.Asr}|{m.Item1}")).ToList();
+                if (waiting.Count == 0) break;
+                List<string> toSecretary; lock (dialogueIds) toSecretary = dialogueIds.ToList();
+                var (id, from) = waiting.OrderBy(m => toSecretary.Contains(m.Item1) ? 0 : 1).First();
+                handled.Add($"{Meeting.Asr}|{id}");
                 var item = (await asr.ReadAsync(id)).Item;
                 if (!Speech.Is(item)) continue;
                 var words = recognize is null ? "" : await recognize(Speech.PcmOf(item));
@@ -561,6 +568,11 @@ public sealed class MeetingServices(HttpClient http, MInstance m, Recognizer? re
     {
         if (!participants.Contains(user)) return;                              // the Secretary speaks with the participants of the meeting
         var pref = preferences.TryGetValue(user, out var p0) ? p0 : preferences[user] = new Preference();
+        if (string.IsNullOrWhiteSpace(words))                                  // the request was not heard (Whisper gave no words): the participant is told, never left without an answer
+        {
+            await Reply(user, "Sorry, I did not hear you. Please say it again, a little louder.", null, pref);
+            return;
+        }
         if (closing.Remove(user))                                              // it asked to be sure: a plain yes or no is the answer
         {
             if (Says(words, Yes) && !Says(words, No)) { await Reply(user, "Closing the meeting.", null, pref); await EndAsync(); return; }
