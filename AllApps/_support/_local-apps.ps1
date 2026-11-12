@@ -1,7 +1,7 @@
-# THALIA'S LOCAL APPS: the seven icons of Thalia's desktop that stand for the Apps on this PC start those Apps.
+# THE MAS APP'S LOCAL APPS: the seven icons of the MAS App's desktop that stand for the Apps on this PC start those Apps.
 # This listens on this PC only (http://localhost:5016/) and starts, on POST /launch/{id}, the standalone launcher of that App
-# in this folder - and nothing else. It does not touch the Service, the Store or the Thalia browser server.
-$Host.UI.RawUI.WindowTitle = 'Thalia local apps'
+# in this folder - and nothing else. It does not touch the Service, the Store or the MAS App browser server.
+$Host.UI.RawUI.WindowTitle = 'MAS App local apps'
 $apps = @{
     'AMQ' = '..\MMC\AMQ.bat'
     'NPR' = '..\MMC\NPR.bat'
@@ -13,13 +13,13 @@ $apps = @{
 }
 $port = 5016
 if (Get-NetTCPConnection -State Listen -LocalPort $port -ErrorAction SilentlyContinue) {
-    Write-Host "Thalia local apps is already running on port $port." -ForegroundColor Yellow
+    Write-Host "MAS App local apps is already running on port $port." -ForegroundColor Yellow
     return
 }
 $listener = New-Object System.Net.HttpListener
 $listener.Prefixes.Add("http://localhost:$port/")
 $listener.Start()
-Write-Host "THALIA LOCAL APPS - http://localhost:$port/ - close this window to stop it" -ForegroundColor Cyan
+Write-Host "MAS APP LOCAL APPS - http://localhost:$port/ - close this window to stop it" -ForegroundColor Cyan
 while ($listener.IsListening) {
     $ctx = $listener.GetContext()
     $req = $ctx.Request; $res = $ctx.Response

@@ -15,7 +15,7 @@ Each standard is a folder; the Apps of a standard are the files in it, named as 
 | `MMM` | `MMM demo`, `MMM world`, `MMM meeting` | the metaverse meeting: the demo, a conference with people outside this network, personal links |
 | `AIH` | `HSP demo` | the first slice of AIH-HSP, narrated |
 | `AIF` | `Store service`, `Store app` | the repository of AIMs; submit an AIM |
-| `MAS` | `Thalia desktop client`, `Thalia browser server`, `Stop Thalia and the Service`, `Thalia local apps` | Thalia, the MAS launcher: you choose an App in its window; `Thalia local apps` lets its icons start the standalone MMC Apps |
+| `MAS` | `MAS App desktop client`, `MAS App browser server`, `Stop the MAS App and the Service`, `MAS App local apps` | The MAS App, the MAS launcher: you choose an App in its window; `MAS App local apps` lets its icons start the standalone MMC Apps |
 | `_retired` | `ASM typed (old window)` | the first ASM window, typed commands; it cannot be built any more |
 
 The address of the Service is in `_support\_settings.bat`.
