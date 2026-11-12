@@ -799,8 +799,6 @@ function ensureWalls() {
   }
   return true;
 }
-function watchScreen(id, own = false) {          // the shared screen of the room; its sharer sees it too when it shares a window (without the sound: it has that already)
-  if ((watching?.id ?? null) === id) return;
 // FULL SCREEN: a click on a wall where the shared screen is shown puts the picture on the whole display (the browser's full screen); a click or Esc goes back to the room. The sound and
 // everything else go on as they were: only what this client shows changes.
 const screenView = document.getElementById('screenView'), screenImg = document.getElementById('screenImg');
@@ -828,6 +826,8 @@ function closeScreenView() {
 screenView.addEventListener('click', closeScreenView);
 document.addEventListener('fullscreenchange', () => { if (!document.fullscreenElement) closeScreenView(); });
 addEventListener('keydown', e => { if (e.key === 'Escape') closeScreenView(); });
+function watchScreen(id, own = false) {          // the shared screen of the room; its sharer sees it too when it shares a window (without the sound: it has that already)
+  if ((watching?.id ?? null) === id) return;
   if (watching) { try { watching.ws.close(); } catch { } watching = null; }
   ensureWalls();
   const show = on => { for (const w of wallScreens.walls) w.mesh.visible = on; for (const sb of signBoards) if (sb.userData.mmmSign) sb.visible = !on; if (!on) closeScreenView(); };      // the logo gives way to the screen
@@ -1005,9 +1005,9 @@ async function capture() {   // MM-Capture: the Things of the M-Location that th
 }
 
 // THE BAR, THE HAND AND THE SUMMARY (M3283: MC-3, MC-4, MC-5).
+setInterval(() => document.body.classList.toggle('inMeetingRoom', client?.at === 'MeetingRoom'), 300);      // where the meeting buttons are shown
 const barAdd = (el, order) => { el.style.order = order; document.getElementById('bar').appendChild(el); return el; };
 const sendTo = (to, id, text) => act('communicate/mm-send', client.name, { Nil: id, To: to, With: [message(id, text)] });
-setInterval(() => document.body.classList.toggle('inMeetingRoom', client?.at === 'MeetingRoom'), 300);      // where the meeting buttons are shown
 const readMessage = async id => { const rs = await fetch(`/api/v2.2/items/${encodeURIComponent(id)}`, { headers: { Authorization: 'Bearer ' + client.token } }); return rs.ok ? (await rs.json()).ItemValueOrRef?.[0]?.MessageData?.[0]?.MessageData : null; };
 const wait = ms => new Promise(r => setTimeout(r, ms));
 let roomMaster = null;       // everything heard from the room goes through this gain: a spoken summary takes the place of it, for the User that asked, and nobody else
@@ -1140,9 +1140,9 @@ function startSecretary() {
     if (d.Display === 'StopReading') client.summary?.stop();
     if (d.Microphone) client.setMute?.(d.Microphone === 'Off');
     if (d.Screen === 'Stop') stopShare();
+    if (d.Screen === 'Share' && !sharing) startShare(false);       // by voice: through the screen helper, which asks what to share; without it the browser wants a click (Share screen)
     if (d.Mode === 'meeting') set(false);
   };
-    if (d.Screen === 'Share' && !sharing) startShare(false);       // by voice: through the screen helper, which asks what to share; without it the browser wants a click (Share screen)
   setInterval(async () => {
     if (!ready) return;
     const told = await readMessage(`Secretary-${client.name}-${next}`);
@@ -1411,9 +1411,9 @@ function clickPoint(e) {         // where in the world a click on the picture is
   addEventListener('pointerup', e => {
     if (!down) return; const d = down; down = null;
     if (d.moved || !client || client.ghost || e.target !== renderer.domElement) return;
+    if (wallScreenAt(e)) { openScreenView(); return; }            // a click on the shared screen: full screen, no walking
     const p = clickPoint(e); if (p) goTo(p.x, p.y);
   });
-    if (wallScreenAt(e)) { openScreenView(); return; }            // a click on the shared screen: full screen, no walking
 }
 
 function driveGhost(dt) {   // the camera of a User out of its body
