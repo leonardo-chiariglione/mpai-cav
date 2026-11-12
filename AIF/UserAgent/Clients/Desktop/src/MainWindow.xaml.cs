@@ -93,10 +93,10 @@ public partial class MainWindow : Window
         // CHOOSING IS AN ACT, NOT A SELECTION. A list that runs an App the moment
         // a row is touched gives no chance to read the next line.
         // STOP ENDS THE APP THAT RUNS; ONLY A SECOND, LATER STOP ENDS THE LAUNCHER. A double click, or a second click made while the App is
-        // still closing, must not take the launcher down with the App: Thalia would then have nothing to ask "another App?" with.
+        // still closing, must not take the launcher down with the App: the MAS App would then have nothing to ask "another App?" with.
         StopButton.Click  += (_, _) =>
         {
-            // WHEN THE LAUNCHER HAS ENDED (the person said no, or stopped it) THE BUTTON SAYS START, and starts it again: Thalia welcomes and offers the Apps.
+            // WHEN THE LAUNCHER HAS ENDED (the person said no, or stopped it) THE BUTTON SAYS START, and starts it again: the MAS App welcomes and offers the Apps.
             if (StopButton.Content as string == "Start")
             {
                 StopButton.Content = "Stop";
@@ -178,9 +178,9 @@ public partial class MainWindow : Window
     // It offers one Text datum and names no AIM. That the Module renders it with
     // Response and Scene Rendering, and that RSR sends it on to both Text-To-
     // Speech and Generative Face Description, is the Module's business.
-    private const string MasModule = "1MAS-APP-V1.0-I01";
+    private const string MasModule = "1MAS-APP-V1.1-I01";
 
-    // THE AVATAR THIS CLIENT HOLDS: the model it draws (Thalia, Ready Player Me),
+    // THE AVATAR THIS CLIENT HOLDS: the model it draws (the MAS App, Ready Player Me),
     // by its identifier. A Module that renders with Response and Scene Rendering
     // takes it as its Avatar input, animates it and gives it a voice; the client
     // draws it with what comes back.

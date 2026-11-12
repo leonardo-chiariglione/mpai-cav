@@ -30,7 +30,7 @@ public partial class MainWindow : Window
     private const string SEL = "OSD-SEL-V1.5";
     private const string B3O = "OSD-B3O-V1.5";
     private const string PAV = "PAF-PAV-V1.6";
-    private const string MachineName = "Thalia";
+    private const string MachineName = "MPAI as a Service";
 
     // The languages the speech engines speak and hear.
     private static readonly (string Code, string Name)[] Languages =

@@ -21,7 +21,7 @@ public class StandInTests
         ("1MMC-AMQ-V2.5-I01", [("OSD-BVO-V1.5", 1, "picture"), ("OSD-BSO-V1.5", 1, "question")]),
         ("1MMC-AMQ-V2.5-I01", [("OSD-BVO-V1.5", 1, "picture"), ("OSD-BTO-V1.5", 1, "welcome")]),
         ("1PAF-RSR-V1.6-I01", [("OSD-BTO-V1.5", 1, "words"), ("OSD-BTO-V1.5", 2, "words"), ("OSD-B3O-V1.5", 1, "avatar")]),
-        ("1MAS-APP-V1.0-I01", [("OSD-BTO-V1.5", 1, "hello"), ("OSD-B3O-V1.5", 1, "avatar")])
+        ("1MAS-APP-V1.1-I01", [("OSD-BTO-V1.5", 1, "hello"), ("OSD-B3O-V1.5", 1, "avatar")])
     };
 
     [Fact]

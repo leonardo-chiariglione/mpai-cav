@@ -40,7 +40,7 @@ public class NprModuleTests
         var inputs = new List<ControllerApi.Datum>
         {
             new("OSD-BVO-V1.5", 1, MpaiJson.ToJson(BasicVisualObject.FromFile("npr-page.png", File.ReadAllBytes(Path.Combine(Folder, "npr-page.png")), "Picture"))),
-            new("string", 1, "\"Thalia\"")
+            new("string", 1, "\"MPAI as a Service\"")
         };
         if (x is not null)
             inputs.Add(new("OSD-PNT-V1.5", 1, $"{{\"Header\":\"OSD-PNT-V1.5\",\"Coordinates\":{{\"X\":{x},\"Y\":{y}}}}}"));
@@ -145,7 +145,7 @@ public class NprModuleTests
             {
                 new ControllerApi.Datum("OSD-BVO-V1.5", 1, MpaiJson.ToJson(BasicVisualObject.FromFile("npr-page.png", File.ReadAllBytes(Path.Combine(Folder, "npr-page.png")), "Picture"))),
                 new ControllerApi.Datum("OSD-PNT-V1.5", 1, "{\"Header\":\"OSD-PNT-V1.5\",\"Coordinates\":{\"X\":560,\"Y\":472}}"),
-                new ControllerApi.Datum("string", 1, "\"Thalia\"")
+                new ControllerApi.Datum("string", 1, "\"MPAI as a Service\"")
             });
             Assert.True(r.Ok, r.Error.ToString());
             var pav = JsonNode.Parse(r.ByType("PAF-PAV-V1.6") ?? "{}") as JsonObject;
@@ -170,7 +170,7 @@ public class NprModuleTests
             {
                 new ControllerApi.Datum("OSD-BVO-V1.5", 1, MpaiJson.ToJson(BasicVisualObject.FromFile("page.png", File.ReadAllBytes(page), "Picture"))),
                 new ControllerApi.Datum("OSD-PNT-V1.5", 1, "{\"Header\":\"OSD-PNT-V1.5\",\"Coordinates\":{\"X\":596,\"Y\":994}}"),
-                new ControllerApi.Datum("string", 1, "\"Thalia\"")
+                new ControllerApi.Datum("string", 1, "\"MPAI as a Service\"")
             });
             Assert.True(r.Ok, r.Error.ToString());
             var pav = JsonNode.Parse(r.ByType("PAF-PAV-V1.6") ?? "{}") as JsonObject;
@@ -196,7 +196,7 @@ public class NprModuleTests
             {
                 new ControllerApi.Datum("OSD-BVO-V1.5", 1, MpaiJson.ToJson(BasicVisualObject.FromFile("npr-page.png", File.ReadAllBytes(Path.Combine(Folder, "npr-page.png")), "Picture"))),
                 new ControllerApi.Datum("OSD-PNT-V1.5", 1, "{\"Header\":\"OSD-PNT-V1.5\",\"Coordinates\":{\"X\":560,\"Y\":1500}}"),
-                new ControllerApi.Datum("string", 1, "\"Thalia\"")
+                new ControllerApi.Datum("string", 1, "\"MPAI as a Service\"")
             });
             Assert.True(r.Ok, r.Error.ToString());
             Assert.Equal("en", AvatarUtterance.LanguageOfPortableAvatar(r.ByType("PAF-PAV-V1.6")));
@@ -219,7 +219,7 @@ public class NprModuleTests
             {
                 new ControllerApi.Datum("OSD-BVO-V1.5", 1, MpaiJson.ToJson(BasicVisualObject.FromFile("page.jpg", File.ReadAllBytes(page), "Picture"))),
                 new ControllerApi.Datum("OSD-PNT-V1.5", 1, "{\"Header\":\"OSD-PNT-V1.5\",\"Coordinates\":{\"X\":1662,\"Y\":1431}}"),
-                new ControllerApi.Datum("string", 1, "\"Thalia\"")
+                new ControllerApi.Datum("string", 1, "\"MPAI as a Service\"")
             });
             Assert.True(r.Ok, r.Error.ToString());
             var pav = JsonNode.Parse(r.ByType("PAF-PAV-V1.6") ?? "{}") as JsonObject;
@@ -240,7 +240,7 @@ public class NprModuleTests
         using var http = new HttpClient { Timeout = TimeSpan.FromSeconds(3), BaseAddress = new Uri("https://localhost:5105/") };
         try { http.GetAsync("MPAI/AIFU/Apps").Wait(); } catch { Skip.If(true, "no Service on 5105"); }
         using var api = new Mpai.Mas.Client.RemoteControllerApi("https://localhost:5105/");
-        const string mas = "1MAS-APP-V1.0-I01";
+        const string mas = "1MAS-APP-V1.1-I01";
         Assert.Equal(AifError.OK, api.StartFlow(mas));
         try
         {

@@ -67,7 +67,7 @@ public class HmcEndToEndTests(Xunit.Abstractions.ITestOutputHelper output)
             Assert.Equal(AifError.OK, api.InputWrite(Cec, "OSD-BVO-V1.5", 1, Face("happy")));
             Assert.Equal(AifError.OK, api.InputWrite(Cec, "OSD-BTO-V1.5", 1, MpaiJson.ToJson(BasicTextObject.FromText("I am so excited about the concert tonight! Do you know what time it starts?"))));
             Assert.Equal(AifError.OK, api.InputWrite(Cec, "OSD-SEL-V1.5", 1, "{\"Header\":\"OSD-SEL-V1.5\",\"InputMedia\":\"Text\",\"InputLanguage\":\"en\",\"OutputLanguage\":\"fr\"}"));
-            Assert.Equal(AifError.OK, api.InputWrite(Cec, "string", 1, "\"Thalia\""));
+            Assert.Equal(AifError.OK, api.InputWrite(Cec, "string", 1, "\"MPAI as a Service\""));
             var wait = int.TryParse(Environment.GetEnvironmentVariable("HMC_E2E_WAIT_MS"), out var ms) ? ms : 900_000;      // the night run waits as long as the models need
             var avatar = api.OutputRead(Cec, "PAF-PAV-V1.6", 1, wait);
             Assert.True(avatar.Error == AifError.OK, avatar.Error + Environment.NewLine + string.Join(Environment.NewLine, trace));
@@ -94,7 +94,7 @@ public class HmcEndToEndTests(Xunit.Abstractions.ITestOutputHelper output)
             Assert.Equal(AifError.OK, api.InputWrite(Cec, "OSD-BVO-V1.5", 1, Face("happy")));
             Assert.Equal(AifError.OK, api.InputWrite(Cec, "OSD-BAO-V1.5", 1, Microphone(File.ReadAllBytes(Path.Combine(MpaiPaths.TestData, "question.wav")))));
             Assert.Equal(AifError.OK, api.InputWrite(Cec, "OSD-SEL-V1.5", 1, "{\"Header\":\"OSD-SEL-V1.5\",\"InputMedia\":\"Speech\",\"InputLanguage\":\"en\",\"OutputLanguage\":\"fr\"}"));
-            Assert.Equal(AifError.OK, api.InputWrite(Cec, "string", 1, "\"Thalia\""));
+            Assert.Equal(AifError.OK, api.InputWrite(Cec, "string", 1, "\"MPAI as a Service\""));
             var wait = int.TryParse(Environment.GetEnvironmentVariable("HMC_E2E_WAIT_MS"), out var ms) ? ms : 900_000;
             var avatar = api.OutputRead(Cec, "PAF-PAV-V1.6", 1, wait);
             var text = api.OutputRead(Cec, "OSD-BTO-V1.5", 1, 1_000);

@@ -32,7 +32,7 @@ namespace Mpai.Cae.AsmUa;
 public partial class MainWindow : Window
 {
     private static readonly string AmdDir = MpaiPaths.Amds, SettingsPath = MpaiPaths.Settings, AssetsDir = MpaiPaths.Assets;
-    private const string MachineName = "Thalia";
+    private const string MachineName = "MPAI as a Service";
 
     private IControllerApi? _north;                     // the Controller API of the Controller (a program of its own): the User Agent holds no Controller, no Module and no AIM
     private const string AsmModule = "1CAE-ASM-V1.0-I01";

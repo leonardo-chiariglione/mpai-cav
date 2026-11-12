@@ -1,5 +1,5 @@
-@* THALIA'S DESKTOP: where a person chooses among the Apps the Service offers and reaches the MPAI Store.
-   The picture behind the icons is any picture (the Host serves it from /thalia/wallpaper); the icons are the
+@* THE MAS APP'S DESKTOP: where a person chooses among the Apps the Service offers and reaches the MPAI Store.
+   The picture behind the icons is any picture (the Host serves it from /mas/wallpaper); the icons are the
    Apps of the Service as they are; the two Store icons open windows on what the Store really has. *@
 @using Mpai.RcaWeb.Mas
 @using System.IO
@@ -103,7 +103,7 @@
   }
 
   <div class="taskbar">
-    <button class="start">Thalia</button>
+    <button class="start">MAS App</button>
     <span class="grow"></span>
     <span class="@(serviceUp ? "up" : "down")">@(serviceUp ? "AIF running" : "AIF not answering")</span>
     <span class="@(storeUp ? "up" : "down")">@(storeUp ? "Store connected" : "Store not reachable")</span>
@@ -139,7 +139,7 @@
     {
         try
         {
-            using var doc = JsonDocument.Parse(await Http.GetStringAsync("thalia/status"));
+            using var doc = JsonDocument.Parse(await Http.GetStringAsync("mas/status"));
             serviceUp = doc.RootElement.GetProperty("service").GetBoolean();
             storeUp = doc.RootElement.GetProperty("store").GetBoolean();
         }
@@ -188,7 +188,7 @@
         if (adminKey.Length == 0) { submitOk = false; submitResult = "Enter the administrator key, or submit signed with your own key using the Store app."; return; }
         try
         {
-            using var request = new HttpRequestMessage(HttpMethod.Post, "thalia/store/L3") { Content = new StringContent(l3Text, Encoding.UTF8, "application/json") };
+            using var request = new HttpRequestMessage(HttpMethod.Post, "mas/store/L3") { Content = new StringContent(l3Text, Encoding.UTF8, "application/json") };
             request.Headers.Add("MPAI-Admin", adminKey);
             using var response = await Http.SendAsync(request);
             var body = await response.Content.ReadAsStringAsync();

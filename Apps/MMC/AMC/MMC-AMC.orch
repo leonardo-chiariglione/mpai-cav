@@ -37,7 +37,7 @@ on Start:
         }
         offer UserFace (OSD-BVO-V1.5)
         offer AvatarModel (OSD-B3O-V1.5:1)
-        offer MachineID (string:1) = "Thalia"
+        offer MachineID (string:1) = "MPAI as a Service"
         ask   Memory (MMC-SUM-V2.5), MachinePortableAvatar (PAF-PAV-V1.6)
         present MachinePortableAvatar
 

@@ -37,8 +37,8 @@ aside h2 { margin: 4px 0 10px; font-size: 16px; }
 .row button { width: 90px; height: 30px; }
 footer { font-family: Consolas, monospace; font-size: 11px; color: #667788; min-height: 1.2em; }
 
-/* THALIA'S DESKTOP */
-.desk { position: fixed; inset: 0; z-index: 10; background: #10243E url(/thalia/wallpaper) center / cover no-repeat; color: #10243E; }
+/* THE MAS APP'S DESKTOP */
+.desk { position: fixed; inset: 0; z-index: 10; background: #10243E url(/mas/wallpaper) center / cover no-repeat; color: #10243E; }
 .desk .icons { position: absolute; right: 14px; top: 14px; display: grid; grid-template-columns: repeat(2, 112px); gap: 6px; max-height: calc(100vh - 70px); }
 .desk .icon { width: 112px; padding: 6px 4px; text-align: center; border-radius: 6px; border: 1px solid transparent; user-select: none; outline: none; }
 .desk .icon.sel, .desk .icon:focus { background: rgba(14,140,152,.35); border-color: rgba(255,255,255,.7); }

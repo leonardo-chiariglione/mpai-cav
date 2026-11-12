@@ -15,7 +15,7 @@
 #  the Controller is not asked to start it, since nothing is asked of it.
 # =============================================================================
 
-workflow MPAI-AboutMPAI over 1MAS-APP-V1.0-I01
+workflow MPAI-AboutMPAI over 1MAS-APP-V1.1-I01
 
 on Start:
 

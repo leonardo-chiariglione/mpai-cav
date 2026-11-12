@@ -76,6 +76,6 @@ public class NprWorkflowTests
         Assert.Equal(new[] { "start 1MMC-NPR-V2.5-I01", "advance 1MMC-NPR-V2.5-I01", "stop 1MMC-NPR-V2.5-I01" }, api.Calls);
         Assert.Contains(api.Offered, d => d.DataType == "OSD-BVO-V1.5");
         Assert.Contains(api.Offered, d => d.DataType == "OSD-PNT-V1.5" && d.Json.Contains("\"X\":10"));
-        Assert.Contains(api.Offered, d => d.DataType == "string" && d.Json == "\"Thalia\"");
+        Assert.Contains(api.Offered, d => d.DataType == "string" && d.Json == "\"MPAI as a Service\"");
     }
 }

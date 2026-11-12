@@ -64,7 +64,7 @@ public class MtsWorkflowTests
         {
             Assert.Contains(turn, d => d.DataType == "OSD-SEL-V1.5");
             Assert.Contains(turn, d => d.DataType == "OSD-B3O-V1.5" && d.PortNumber == 1);
-            Assert.Contains(turn, d => d.DataType == "string" && d.Json == "\"Thalia\"");
+            Assert.Contains(turn, d => d.DataType == "string" && d.Json == "\"MPAI as a Service\"");
         }
         Assert.Contains(api.Turns[0], d => d.DataType == "OSD-BTO-V1.5" && d.PortNumber == 1 && d.Json.Contains("sentence 1"));
         Assert.Contains(api.Turns[1], d => d.DataType == "OSD-BTO-V1.5" && d.PortNumber == 1 && d.Json.Contains("sentence 2"));

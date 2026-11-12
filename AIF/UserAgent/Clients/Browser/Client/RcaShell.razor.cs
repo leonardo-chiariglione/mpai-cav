@@ -56,7 +56,7 @@ public partial class RcaShell : ComponentBase
 
     // WHAT TO DO WHEN THE BROWSER REFUSES A DEVICE, in words anyone can follow.
     private const string MicrophoneBlocked =
-        "Thalia cannot hear you: your browser has blocked the microphone. Click the padlock to the left of the web address, " +
+        "The MAS App cannot hear you: your browser has blocked the microphone. Click the padlock to the left of the web address, " +
         "switch Microphone to Allow, then reload the page. Meanwhile, you can type your questions and press Enter.";
     private const string CameraBlocked =
         "The avatar cannot see your face: your browser has blocked the camera. To allow it, click the padlock to the left " +
@@ -225,7 +225,7 @@ public partial class RcaShell : ComponentBase
 
     // ---- she speaks: what a workflow prompts, and the words of a Portable Avatar that carries no speech -----------------------
 
-    private const string MasModule = "1MAS-APP-V1.0-I01";
+    private const string MasModule = "1MAS-APP-V1.1-I01";
 
     // The voices that speak: English, French, German, Spanish, Portuguese, Italian, Greek. The Japanese and Chinese voices do not speak yet.
     private static readonly HashSet<string> SpokenLanguages = new(StringComparer.OrdinalIgnoreCase) { "en", "fr", "de", "es", "pt", "it", "el" };
@@ -471,7 +471,7 @@ public partial class RcaShell : ComponentBase
             await SpeakingTimeAsync(TimeSpan.FromSeconds(SpeechPackaging.WavSeconds(wav) + 0.8));
         });
 
-        // THE AVATAR, AS AN INPUT: the model this client holds and draws (Thalia,
+        // THE AVATAR, AS AN INPUT: the model this client holds and draws (the MAS App,
         // Ready Player Me), by its identifier, for the Module to animate.
         devices.RegisterAcquire("OSD-B3O-V1.5", (_, _) =>
             Task.FromResult<string?>(AvatarUtterance.AvatarDatum("cav-avatar.glb")));

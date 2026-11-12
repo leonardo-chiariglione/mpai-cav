@@ -29,7 +29,7 @@ public partial class MainWindow : Window
     private const string BVO = "OSD-BVO-V1.5";
     private const string B3O = "OSD-B3O-V1.5";
     private const string PAV = "PAF-PAV-V1.6";
-    private const string MachineName = "Thalia";
+    private const string MachineName = "MPAI as a Service";
 
     private static readonly string AmdDir       = Mpai.Core.MpaiPaths.Amds;
     private static readonly string SettingsPath = Mpai.Core.MpaiPaths.Settings;

@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 namespace Mpai.RcaWeb.Mas;
 
 // WHAT THE MPAI STORE HAS APPROVED, read from the page through this origin
-// (the Host passes /thalia/store/... on to the Store). The Store lists its L3s;
+// (the Host passes /mas/store/... on to the Store). The Store lists its L3s;
 // each L3 says what the AIM is and who made it. What a person sees is made of
 // that and nothing else: no price, no rating - the Store does not have them.
 public sealed class WebStore
@@ -23,21 +23,21 @@ public sealed class WebStore
     // Whether the Store answers at all.
     public async Task<bool> ReachableAsync()
     {
-        try { using var r = await http.GetAsync("thalia/store/L3"); return r.IsSuccessStatusCode; }
+        try { using var r = await http.GetAsync("mas/store/L3"); return r.IsSuccessStatusCode; }
         catch { return false; }
     }
 
     // Every L3 of the Store, latest version, with what the L3 says of itself.
     public async Task<IReadOnlyList<Entry>> ListAsync()
     {
-        using var index = JsonDocument.Parse(await http.GetStringAsync("thalia/store/L3"));
+        using var index = JsonDocument.Parse(await http.GetStringAsync("mas/store/L3"));
         var rows = index.RootElement.EnumerateArray().Select(e => (
             Id: Str(e, "id"), Version: Int(e, "version"), Errors: Int(e, "errors"), Warnings: Int(e, "warnings"))).ToList();
         var entries = await Task.WhenAll(rows.Select(async r =>
         {
             try
             {
-                using var doc = JsonDocument.Parse(await http.GetStringAsync($"thalia/store/L3/{Uri.EscapeDataString(r.Id)}"));
+                using var doc = JsonDocument.Parse(await http.GetStringAsync($"mas/store/L3/{Uri.EscapeDataString(r.Id)}"));
                 return Describe(r.Id, r.Version, r.Errors, r.Warnings, doc.RootElement);
             }
             catch { return new Entry(r.Id, r.Id, "", false, "", r.Version, r.Errors, r.Warnings, Array.Empty<string>()); }

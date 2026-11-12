@@ -1,5 +1,5 @@
 {
-  "AIF/UserAgent/Orchestration/MPAI-MAS.orch": "Module 1MAS-APP-V1.0-I01: 11 offers, 6 asks; every Port declared",
+  "AIF/UserAgent/Orchestration/MPAI-MAS.orch": "Module 1MAS-APP-V1.1-I01: 11 offers, 6 asks; every Port declared",
   "Apps/ABV/VMS/PAF-VMS.orch": "Module 1PAF-VMS-V1.6-I01: 2 offers, 2 asks; every Port declared",
   "Apps/AIH/HSP/HBE.orch": "Module 1AIH-HBE-V1.1-I01: 11 offers, 10 asks; every Port declared",
   "Apps/AIH/HSP/HFE.orch": "Module 1AIH-HFE-V1.1-I01: 4 offers, 3 asks; every Port declared",
@@ -15,8 +15,8 @@
   "Apps/CAE/SRS/SRS.orch": "Module 1CAE-SRS-V2.5-I01: 4 offers, 1 asks; every Port declared",
   "Apps/CAV/CAO/CAV.orch": "Module 1CAV-CAO-V2.0-I01: 11 offers, 8 asks; every Port declared",
   "Apps/CUI/CPP/CUI-CPP.orch": "Module 1CUI-CPP-V2.1-I01: 6 offers, 4 asks; every Port declared",
-  "Apps/MAS/AboutMPAI/MPAI-AboutMPAI.orch": "Module 1MAS-APP-V1.0-I01: 0 offers, 0 asks; every Port declared",
-  "Apps/MAS/MPAI-MAS.orch": "Module 1MAS-APP-V1.0-I01: 11 offers, 6 asks; every Port declared",
+  "Apps/MAS/AboutMPAI/MPAI-AboutMPAI.orch": "Module 1MAS-APP-V1.1-I01: 0 offers, 0 asks; every Port declared",
+  "Apps/MAS/MPAI-MAS.orch": "Module 1MAS-APP-V1.1-I01: 11 offers, 6 asks; every Port declared",
   "Apps/MMC/ACR/OSD-ACR.orch": "Module 1OSD-ACR-V1.5-I01: 11 offers, 4 asks; every Port declared",
   "Apps/MMC/AMC/MMC-AMC.orch": "Module 1MMC-AMC-V2.5-I01: 6 offers, 2 asks; every Port declared",
   "Apps/MMC/AMQ/MMC-AMQ.orch": "Module 1MMC-AMQ-V2.5-I01: 4 offers, 1 asks; every Port declared",

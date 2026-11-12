@@ -160,12 +160,12 @@ app.Map("/MPAI/AIFU/{**rest}", async (HttpContext http) =>
     await response.Content.CopyToAsync(http.Response.Body, http.RequestAborted);
 });
 
-// THALIA'S DESKTOP (what the page shows around the Apps), through this origin.
+// THE MAS APP'S DESKTOP (what the page shows around the Apps), through this origin.
 //
-//   /thalia/wallpaper       the picture behind the icons: the Wallpaper setting, else
-//                           %LOCALAPPDATA%\MPAI\Thalia\wallpaper.(jpg|png); none if there is none
-//   /thalia/status          whether the Service and the MPAI Store answer
-//   /thalia/store/{...}     a GET passed on to the MPAI Store (the Store setting, default
+//   /mas/wallpaper       the picture behind the icons: the Wallpaper setting, else
+//                           %LOCALAPPDATA%\MPAI\MAS\wallpaper.(jpg|png); none if there is none
+//   /mas/status          whether the Service and the MPAI Store answer
+//   /mas/store/{...}     a GET passed on to the MPAI Store (the Store setting, default
 //                           http://127.0.0.1:5020/): what the Store has approved, read from the page
 var storeUri = new Uri((builder.Configuration["Store"] ?? "http://127.0.0.1:5020/").TrimEnd('/') + "/");
 var storeHttp = new HttpClient { BaseAddress = storeUri, Timeout = TimeSpan.FromSeconds(10) };
@@ -173,11 +173,11 @@ var storeHttp = new HttpClient { BaseAddress = storeUri, Timeout = TimeSpan.From
 string? WallpaperFile()
 {
     if (builder.Configuration["Wallpaper"] is { Length: > 0 } configured && File.Exists(configured)) return configured;
-    var folder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "MPAI", "Thalia");
+    var folder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "MPAI", "MAS");
     return new[] { "wallpaper.jpg", "wallpaper.png" }.Select(f => Path.Combine(folder, f)).FirstOrDefault(File.Exists);
 }
 
-app.MapGet("/thalia/wallpaper", (HttpContext ctx) =>
+app.MapGet("/mas/wallpaper", (HttpContext ctx) =>
 {
     ctx.Response.Headers.CacheControl = "no-cache";
     return WallpaperFile() is { } file
@@ -185,7 +185,7 @@ app.MapGet("/thalia/wallpaper", (HttpContext ctx) =>
         : Results.NotFound();
 });
 
-app.MapGet("/thalia/status", async () =>
+app.MapGet("/mas/status", async () =>
 {
     async Task<bool> Answers(HttpClient client, string path)
     {
@@ -198,7 +198,7 @@ app.MapGet("/thalia/status", async () =>
 });
 
 // A SUBMISSION to the Store, passed on with the two headers the Store knows (the administrator key; an Implementer's signature).
-app.MapPost("/thalia/store/L3", async (HttpContext http) =>
+app.MapPost("/mas/store/L3", async (HttpContext http) =>
 {
     try
     {
@@ -221,7 +221,7 @@ app.MapPost("/thalia/store/L3", async (HttpContext http) =>
     }
 });
 
-app.MapGet("/thalia/store/{**rest}", async (string rest, HttpContext http) =>
+app.MapGet("/mas/store/{**rest}", async (string rest, HttpContext http) =>
 {
     try
     {

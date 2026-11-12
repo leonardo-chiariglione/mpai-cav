@@ -102,6 +102,7 @@
   "HMC/V2.2/AIMs/EntityAndContextUnderstanding.json": "valid",
   "HMC/V2.2/AIMs/MultimodalSceneIntegrationAndDescription.json": "valid",
   "MAS/V1.0/AIMs/MASApp.json": "valid",
+  "MAS/V1.1/AIMs/MASApp.json": "valid",
   "MMC/V2.5/AIMs/AffectiveMultimodalConversation.json": "valid",
   "MMC/V2.5/AIMs/AnswerToMultimodalQuestion.json": "valid",
   "MMC/V2.5/AIMs/AnswerToQuestionModule.json": "valid",

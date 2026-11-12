@@ -30,7 +30,7 @@ public partial class MainWindow : Window
     private const string BSO = "OSD-BSO-V1.5";   // speech object (the spoken question)
     private const string BTO = "OSD-BTO-V1.5";   // text object (typed question, typed yes or no)
     private const string PAV = "PAF-PAV-V1.6";
-    private const string MachineName = "Thalia"; // the machine's ID: the Portable Avatar the Module gives is this machine's
+    private const string MachineName = "MPAI as a Service"; // the machine's ID: the Portable Avatar the Module gives is this machine's
 
     private static readonly string AmdDir       = Mpai.Core.MpaiPaths.Amds;
     private static readonly string SettingsPath = Mpai.Core.MpaiPaths.Settings;

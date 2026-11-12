@@ -55,7 +55,7 @@ public class NewspaperPagesTests
             {
                 new ControllerApi.Datum("OSD-BVO-V1.5", 1, MpaiJson.ToJson(BasicVisualObject.FromFile(Path.GetFileName(image), File.ReadAllBytes(image), "Picture"))),
                 new ControllerApi.Datum("OSD-PNT-V1.5", 1, $"{{\"Header\":\"OSD-PNT-V1.5\",\"Coordinates\":{{\"X\":{point[0]},\"Y\":{point[1]}}}}}"),
-                new ControllerApi.Datum("string", 1, "\"Thalia\"")
+                new ControllerApi.Datum("string", 1, "\"MPAI as a Service\"")
             });
             Assert.True(r.Ok, $"{page} column {column + 1}: {r.Error}");
             var pav = JsonNode.Parse(r.ByType("PAF-PAV-V1.6") ?? "{}") as JsonObject;

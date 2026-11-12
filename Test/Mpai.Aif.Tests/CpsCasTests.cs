@@ -67,7 +67,7 @@ public class CpsCasTests
             Assert.Equal(AifError.OK, api.InputWrite(Cps, "OSD-BVO-V1.5", 1, Face("happy")));
             Assert.Equal(AifError.OK, api.InputWrite(Cps, "OSD-BTO-V1.5", 1, MpaiJson.ToJson(BasicTextObject.FromText("I am so excited about the concert tonight! Do you know what time it starts?"))));
             Assert.Equal(AifError.OK, api.InputWrite(Cps, "OSD-SEL-V1.5", 1, "{\"Header\":\"OSD-SEL-V1.5\",\"InputMedia\":\"Text\"}"));
-            Assert.Equal(AifError.OK, api.InputWrite(Cps, "string", 1, "\"Thalia\""));
+            Assert.Equal(AifError.OK, api.InputWrite(Cps, "string", 1, "\"MPAI as a Service\""));
             var avatar = api.OutputRead(Cps, "PAF-PAV-V1.6", 1, 600_000);
             Assert.True(avatar.Error == AifError.OK, avatar.Error + Environment.NewLine + string.Join(Environment.NewLine, trace));
             Assert.Contains("PAF-PAV-V1.6", avatar.Json!);
@@ -90,7 +90,7 @@ public class CpsCasTests
             Assert.Equal(AifError.OK, api.InputWrite(Cas, "OSD-BVO-V1.5", 1, Face("neutral")));
             Assert.Equal(AifError.OK, api.InputWrite(Cas, "OSD-BSO-V1.5", 1, speech));
             Assert.Equal(AifError.OK, api.InputWrite(Cas, "OSD-BSO-V1.5", 2, speech));
-            Assert.Equal(AifError.OK, api.InputWrite(Cas, "string", 1, "\"Thalia\""));
+            Assert.Equal(AifError.OK, api.InputWrite(Cas, "string", 1, "\"MPAI as a Service\""));
             var avatar = api.OutputRead(Cas, "PAF-PAV-V1.6", 1, 600_000);
             Assert.True(avatar.Error == AifError.OK, avatar.Error + Environment.NewLine + string.Join(Environment.NewLine, trace));
             Assert.Contains("PAF-PAV-V1.6", avatar.Json!);

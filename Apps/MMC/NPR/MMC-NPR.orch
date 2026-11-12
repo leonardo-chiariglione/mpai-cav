@@ -38,7 +38,7 @@ on Start:
 
         offer Page (OSD-BVO-V1.5)
         offer Column (OSD-PNT-V1.5)
-        offer MachineID (string:1) = "Thalia"
+        offer MachineID (string:1) = "MPAI as a Service"
 
         # --- and gives the text of the column, as the machine's Portable Avatar ---
 

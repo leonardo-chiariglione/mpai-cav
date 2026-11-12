@@ -54,7 +54,7 @@ public class McaWorkflowTests
         // Turn 1: the words, the model and the machine's ID, and no memory yet. Turn 2: the memory the Module gave in turn 1.
         Assert.Contains(api.Turns[0], d => d.DataType == "OSD-BTO-V1.5" && d.PortNumber == 1 && d.Json.Contains("words 1"));
         Assert.Contains(api.Turns[0], d => d.DataType == "OSD-B3O-V1.5" && d.PortNumber == 1);
-        Assert.Contains(api.Turns[0], d => d.DataType == "string" && d.Json == "\"Thalia\"");
+        Assert.Contains(api.Turns[0], d => d.DataType == "string" && d.Json == "\"MPAI as a Service\"");
         Assert.DoesNotContain(api.Turns[0], d => d.DataType == "MMC-SUM-V2.5");
         Assert.Contains(api.Turns[1], d => d.DataType == "OSD-BTO-V1.5" && d.Json.Contains("words 2"));
         Assert.Contains(api.Turns[1], d => d.DataType == "MMC-SUM-V2.5" && d.Json.Contains("after 1"));

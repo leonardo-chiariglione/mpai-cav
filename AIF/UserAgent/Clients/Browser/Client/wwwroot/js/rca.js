@@ -15,7 +15,7 @@ window.rca = (() => {
 
   const START = 0.015, QUIET = 0.012, PAUSE_MS = 900, MAX_MS = 20000, PREROLL_MS = 1000;
 
-  // THE TIMES OF A TURN, in the console (the author, 2026/09/30: Thalia answers
+  // THE TIMES OF A TURN, in the console (the author, 2026/09/30: the MAS App answers
   // late - where do the seconds go?): the local clock, as the Service's trace has it.
   function stamp(what) {
     const d = new Date(), p = (n, w) => String(n).padStart(w, '0');

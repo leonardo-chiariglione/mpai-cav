@@ -36,7 +36,7 @@ on Start:
             offer UserSpeech (OSD-BSO-V1.5)
         }
         offer AvatarModel (OSD-B3O-V1.5:1)
-        offer MachineID (string:1) = "Thalia"
+        offer MachineID (string:1) = "MPAI as a Service"
         ask   TranslatedText (OSD-BTO-V1.5), MachinePortableAvatar (PAF-PAV-V1.6)
         display TranslatedText
         present MachinePortableAvatar

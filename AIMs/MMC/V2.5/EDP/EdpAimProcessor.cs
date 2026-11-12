@@ -66,12 +66,12 @@ public sealed class EdpAimProcessor : IAimProcessor
     private string? _cavState;               // where no Private Storage is given
     private const string CavKey = "cav-dialogue";
 
-    // WHO SPEAKS: the persona interacting with the person - Thalia in MPAI as a
-    // Service, the CAV in the car. Given by the provider, which knows where EDP runs.
+    // WHO SPEAKS: the persona interacting with the person - MPAI as a Service when EDP runs
+    // there, the CAV in the car. Given by the provider, which knows where EDP runs.
     private readonly string _persona;
 
     public EdpAimProcessor(string instanceId, OllamaClient llm, AimPortReader ports, ISharedStorage? privateStorage = null,
-                           string persona = "Thalia", string avatarModel = "cav-avatar.glb")
+                           string persona = "MPAI as a Service", string avatarModel = "cav-avatar.glb")
     {
         _persona          = persona;
         _private          = privateStorage;

@@ -58,7 +58,7 @@ public class AmqWorkflowTests
         Assert.Single(api.Turns);
         Assert.Contains(api.Turns[0], d => d.DataType == "OSD-BVO-V1.5");
         Assert.Contains(api.Turns[0], d => d.DataType == "OSD-BTO-V1.5" && d.PortNumber == 1 && d.Json.Contains("What is this?"));
-        Assert.Contains(api.Turns[0], d => d.DataType == "string" && d.Json == "\"Thalia\"");
+        Assert.Contains(api.Turns[0], d => d.DataType == "string" && d.Json == "\"MPAI as a Service\"");
         Assert.True(why.Length > 0);
     }
 }

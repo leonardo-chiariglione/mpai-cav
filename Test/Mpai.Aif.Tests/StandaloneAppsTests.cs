@@ -33,7 +33,7 @@ public class StandaloneAppsTests
     }
 
     private static ControllerApi.Datum Avatar => new("OSD-B3O-V1.5", 1, AvatarUtterance.AvatarDatum("cav-avatar.glb"));
-    private static ControllerApi.Datum Machine => new("string", 1, "\"Thalia\"");
+    private static ControllerApi.Datum Machine => new("string", 1, "\"MPAI as a Service\"");
     private static ControllerApi.Datum Words(int port, string text) => new("OSD-BTO-V1.5", port, MpaiJson.ToJson(BasicTextObject.FromText(text)));
 
     private static string Why(ControllerApi api, string module)
