@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- The traffic simulation of request N-19 (night of 2026-11-12): typical traffic contexts,
+       each with variants, in which the new driving core (AIMs/CAV/V2.0/Driving) drives the CAV.
+       Each run is kept as a record (scene, inference and its error, decisions, outcome). -->
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\AIMs\CAV\V2.0\Driving\Mpai.Cav.Driving.csproj" />
+  </ItemGroup>
+
+</Project>

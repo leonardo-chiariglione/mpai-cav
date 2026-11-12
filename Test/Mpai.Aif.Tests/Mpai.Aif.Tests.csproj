@@ -38,6 +38,8 @@
     <ProjectReference Include="..\..\AIMs\CAV\V2.0\Ess\Mpai.Cav.Ess.csproj" />
     <ProjectReference Include="..\..\AIMs\CAV\V2.0\Ams\Mpai.Cav.Ams.csproj" />
     <ProjectReference Include="..\..\AIMs\CAV\V2.0\Mas\Mpai.Cav.Mas.csproj" />
+    <ProjectReference Include="..\..\AIMs\CAV\V2.0\Driving\Mpai.Cav.Driving.csproj" />
+    <ProjectReference Include="..\CavDriving\Mpai.Cav.DrivingSim.csproj" />
     <ProjectReference Include="..\..\AIMs\MMC\V2.5\EDP\Mpai.Mmc.Edp.csproj" />
     <ProjectReference Include="..\..\AIMs\MMC\V2.5\JSI\Mpai.Mmc.Jsi.csproj" />
     <ProjectReference Include="..\..\AIMs\CAV\V2.0\Hci\Mpai.Cav.Hci.csproj" />

@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- A new driving core for the CAV (night of 2026-11-12, request N-19), built apart
+       from the earlier planners. Three steps, each its own code:
+         SceneDescription.cs  - describe the scene from what the CAV senses (the work of
+                                Full Environment Description, CAV-FED);
+         MotionInference.cs   - infer where each other road user will be, with how sure
+                                the CAV is (our implementation; the standard says no more);
+         Driving.cs           - reach the destination without collisions, else stop (the
+                                decision of Trajectory Planning and Decision, CAV-TPD).
+       Not yet placed in the AIMs of the AMS: a library the tests and the simulation use. -->
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+</Project>
