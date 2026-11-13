@@ -34,7 +34,7 @@ public class AihModelAimTests : IDisposable
     // The AIM as the Controller builds it: its L3 from the repository, its model from Access (obtained as the L3 says, checked against its SHA-256, given as ModelPath).
     private IAimProcessor Build(AimRepository repository, string aim) => BuildWithAccess(repository.Folder, aim, Path.Combine(folder, "access"));
 
-    internal static IAimProcessor BuildWithAccess(string amdFolder, string aim, string accessFolder)
+    internal static IAimProcessor BuildWithAccess(string amdFolder, string aim, string accessFolder, AIF.Security.SecurityApi? security = null)
     {
         var amds = new AmdStore(amdFolder); amds.Scan();
         using var l3 = JsonDocument.Parse(File.ReadAllText(Directory.EnumerateFiles(amdFolder, aim + ".json", SearchOption.AllDirectories).First()));
@@ -44,7 +44,27 @@ public class AihModelAimTests : IDisposable
         foreach (var e in entries)
             if (fetcher.Ensure(e, aim, out var why) != AccessOutcome.OK) throw new InvalidOperationException($"NOT_OBTAINED: '{e.Name}' of {aim}: {why}");
         var settings = AccessEntry.Overlay(new Dictionary<string, string>(), entries, new BoundAccess(store.As(new AIF.SharedStorage.StorageHolder("M", aim)), entries, fetcher, aim), aim);
-        return new AihProvider(amds).Create(aim, settings, null);
+        return new AihProvider(amds) { Security = security }.Create(aim, settings, null);
+    }
+
+    // A SECURE MODEL AIM (2026-11-13): a Back End that serves Secure Front Ends publishes its model AIMs as Secure Implementations (APIProfile Secure): the L3
+    // conforms to the L2; a Controller obtains it, and it is built only with the Security API of the party it executes in; a Basic Front End is given none.
+    [Fact]
+    public void TheBackEndPublishesASecureModelAimBuiltOnlyWithTheSecurityApi()
+    {
+        var store = new ModelAimPublisher(Path.Combine(folder, "store"), Path.Combine(folder, "back-end"), l3 => conformance.Check(l3)) { ApiProfile = "Secure" };
+        var aim = store.Upload(Model("model-secure", 0.4f, 2));
+        using (var l3 = JsonDocument.Parse(File.ReadAllText(Path.Combine(folder, "store", aim + ".json"))))
+        {
+            Assert.Equal("Secure", l3.RootElement.GetProperty("APIProfile").GetString());
+            Assert.Empty(conformance.Check(l3.RootElement));
+        }
+        var repository = new AimRepository(Repo);
+        Assert.True(repository.Obtain(aim, Source()));
+        Assert.Contains("declares the Secure Profile", Assert.Throws<InvalidOperationException>(() => BuildWithAccess(repository.Folder, aim, Path.Combine(folder, "access"))).Message);
+        using var security = new AIF.Security.SecurityApi(new SecurityApiTests.TestRoot(), Path.Combine(folder, "security"));
+        Assert.IsType<NnmAimProcessor>(BuildWithAccess(repository.Folder, aim, Path.Combine(folder, "access"), security));
+        Assert.Contains("no model AIM of the Secure Profile", Assert.Throws<InvalidOperationException>(() => store.PublishFrontEnd(File.ReadAllText(Path.Combine(Repository.Amds, "1AIH-HFE-V1.1-I01.json")), aim)).Message);
     }
 
     private static async Task<string> Judge(IAimProcessor aim, byte[] ecg)

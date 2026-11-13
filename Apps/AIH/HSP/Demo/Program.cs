@@ -125,7 +125,7 @@ internal static class Program
         Say($"  audit of user-2: {unlicensed.Count} unlicensed operation(s): {string.Join(", ", unlicensed.Select(u => u!["AIHDataID"]))}");
 
         Step("Federated Learning: the Back End publishes the Neural Network Model AIM with its first model; the Front Ends start again and take it");
-        Say($"  the AIM {hbe.PublishModel(Mpai.Aih.Hfl.FrontEndTrainer.ModelObject("model-0", new float[] { 0f, 0f }, "the Back End's first model"))} and the Front End version {hbe.FrontEndVersion} are in the MPAI Store");
+        Say($"  the AIM {hbe.PublishModel(Mpai.Aih.Hfl.FrontEndTrainer.ModelObject("model-0", new float[] { 0f, 0f }, "the Back End's first model"))} ({Store.ApiProfile} Implementation) and the Front End version {hbe.FrontEndVersion} are in the MPAI Store");
         one = Restart(one, "user-1"); two = Restart(two, "user-2");
         Say("  the Neural Network Model processes new Health Data of each End User, and learns");
         one.Acquire(HealthData("user-1", 190), Licence("user-1", "ahd-5", licenseThirdParty: false));
@@ -168,7 +168,7 @@ internal static class Program
     private static readonly AIF.Trust.TrustAuthority Organisation = new("hbe-organisation");
     private static Mpai.Aih.Nnm.ModelAimPublisher? store;
     private static Mpai.Aih.Nnm.ModelAimPublisher Store => store ??= new(Path.Combine(Work, "mpai-store"), Path.Combine(Work, "hbe-implementations"),
-        l3 => new AIF.Metadata.L2Conformance(Path.Combine(Root, "schemas"), _ => null).Check(l3));
+        l3 => new AIF.Metadata.L2Conformance(Path.Combine(Root, "schemas"), _ => null).Check(l3)) { ApiProfile = Secure ? "Secure" : "Basic" };   // in the Profile of the Front Ends
 
     // The Front End's L3 as the Back End has it: its AIMs executing apart from the Controller.
     // In the Secure Profile its AIMs execute in the area of its Secure Controller: they stay Internal.

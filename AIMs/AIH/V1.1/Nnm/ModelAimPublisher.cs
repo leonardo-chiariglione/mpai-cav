@@ -28,6 +28,10 @@ public sealed class ModelAimPublisher
 
     private MpaiStore _store => _library ?? throw new InvalidOperationException("This publisher submits to the Store Service.");
 
+    // THE PROFILE OF WHAT IT PUBLISHES (2026-11-13): Basic, or Secure - the model AIMs a Back End publishes for Secure Front Ends (1AIH-HFE-V1.1-I02) are Secure
+    // Implementations too, built only where the party they execute in has the Security API. A Front End of one Profile is given no model AIM of the other.
+    public string ApiProfile { get; init; } = "Basic";
+
     // folder: the MPAI Store's (L3s and approvals only). implementations: where the Back End keeps what it implemented, the models. conformance: the Store's check of an L3
     // against its L2 (AIF.Metadata.L2Conformance.Check). implementerId: the Back End's own Implementer ID - never MPAI's "1", whose reference L3s of this AIM
     // (1AIH-NNM-V1.1-I01, Basic; -I02, Secure) wrap the initial model (2026-11-13, author: "Back End own Implementer").
@@ -85,7 +89,7 @@ public sealed class ModelAimPublisher
         var l3 = new JsonObject
         {
             ["Identifier"] = new JsonObject { ["ImplementerID"] = implementerId, ["ImplementationID"] = implementation, ["AIMName"] = aim },
-            ["Header"] = Type, ["APIProfile"] = "Basic",
+            ["Header"] = Type, ["APIProfile"] = ApiProfile,
             ["Description"] = $"This AIM wraps the Neural Network Model {model["MLModelObjectID"]} and processes AIH Data with it: AIH Data in, the AIH Data resulting from the processing out.",
             ["InternalTypes"] = new JsonArray(new JsonObject { ["Name"] = "AIHData", ["DataType"] = AihJson.AihData }, new JsonObject { ["Name"] = "NNModel", ["DataType"] = "AIP-MLO-V1.0" }),
             ["ExternalPorts"] = new JsonArray(
@@ -136,6 +140,8 @@ public sealed class ModelAimPublisher
     public string PublishFrontEnd(string frontEndL3, string modelAim)
     {
         var l3 = JsonNode.Parse(frontEndL3)!.AsObject();
+        if (((string?)l3["APIProfile"] ?? "Basic") != ApiProfile)
+            throw new InvalidOperationException($"A Front End of the {(string?)l3["APIProfile"]} Profile is given no model AIM of the {ApiProfile} Profile: publish the model AIM in the Profile of the Front End.");
         // As an Implementer of the Store Service the Back End publishes the Front End as its own Implementation (its Implementer ID in the Identifier).
         if (_service is not null)
         {

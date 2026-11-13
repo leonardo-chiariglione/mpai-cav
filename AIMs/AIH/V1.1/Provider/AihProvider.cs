@@ -82,11 +82,24 @@ public sealed class AihProvider : IAimProvider, ISecurityAware
     }
 
     // AIH Data Processing keeps AIH Data in the Private Storage of the Module (moduleStorage), the handle the Controller binds to it; the other AIMs keep nothing.
+    // WHETHER AN AIM IS A SECURE IMPLEMENTATION: what its L3 declares (APIProfile Secure) - the reference L3s I02, and the model AIMs a Back End publishes in the
+    // Secure Profile under its own Implementer ID; where the L3 is not at hand, its name.
+    private bool DeclaresSecure(string aimName)
+    {
+        if (_amds.FindByAimName(aimName) is { } id)
+        {
+            var l3 = _amds.GetAMD(id);                                             // the store's own document: not disposed here
+            if (l3.RootElement.TryGetProperty("APIProfile", out var profile) && profile.ValueKind == System.Text.Json.JsonValueKind.String)
+                return profile.GetString() == "Secure";
+        }
+        return IsSecure(aimName);
+    }
+
     public IAimProcessor Create(string aimName, IReadOnlyDictionary<string, string> settings, ISharedStorage? storage, ISharedStorage? privateStorage, IRuledStorage? moduleStorage)
     {
         var ports = AimPortReader.Load(_amds, aimName);
         SecurityCaller? security = null;
-        if (IsSecure(aimName))
+        if (DeclaresSecure(aimName))
         {
             if (Security is not { Opened: true } api)
                 throw new InvalidOperationException($"{aimName} declares the Secure Profile: it is built only where the party it executes in gives it the Security API, opened (a Secure Controller, or an AIM host with a root of trust).");
