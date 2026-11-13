@@ -7,6 +7,10 @@ using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
 
 using AIF.Controller;
+using AIF.RootOfTrust;
+using AIF.SecureProfile;
+using AIF.Security;
+using AIF.Trust;
 using Mpai.Aif.Api;
 using Mpai.Aih;
 using Mpai.Aih.Chain;
@@ -18,19 +22,29 @@ namespace Mpai.Aih.Demo;
 // User. Each Front End and the Back End is a Controller with its Module whose AIMs run on an AIM host of their own: three Controllers, three AIM hosts, three User
 // Agents, one program. Nothing is kept: the storage is a temporary folder.
 //
-//   AihDemo
+// IN THE SECURE PROFILE (--secure, 2026-11-13): the Secure Implementations (the L3s 1AIH-*-V1.1-I02). Each Controller is split (AIF\SecureProfile): its Secure
+// Controller, on a root of trust of its own (a simulated TPM 2.0 in WSL, ports 2461 and up), holds the Controller and the Security API, and the Module's AIMs
+// execute in its area; its User Agent reaches it through a Non-Secure Controller, after verifying its Attestation (MPAI_AIFU_Controller_Initialize_Secure), with a
+// key the Non-Secure Controller never has. AIH Data Processing seals the Vault and the Secure Storage with keys of its own; De-Identification makes its
+// pseudonyms with a key that never leaves the root of trust.
+//
+//   AihDemo [--secure]
 internal static class Program
 {
     private static readonly string Root = FindRoot();
     private static readonly List<IDisposable> Cleanup = [];
     private static readonly string Work = Path.Combine(Path.GetTempPath(), "aih-demo-" + Guid.NewGuid().ToString("N"));
+    private static bool Secure;
+    private static string I => Secure ? "I02" : "I01";
+    private static string Hfe => "1AIH-HFE-V1.1-" + I;
 
     private static void Say(string text) => Console.WriteLine(text);
     private static void Step(string text) { Console.WriteLine(); Console.WriteLine("== " + text); }
 
-    private static int Main()
+    private static int Main(string[] args)
     {
-        Say("AIH-HSP V1.1 - the Health Secure Platform: the first slice");
+        Secure = args.Contains("--secure");
+        Say("AIH-HSP V1.1 - the Health Secure Platform: the first slice" + (Secure ? ", in the Secure Profile" : ""));
         Say($"Software tree: {Root}");
         try
         {
@@ -40,7 +54,19 @@ internal static class Program
         }
         catch (Exception ex)
         {
-            Console.WriteLine(); Console.WriteLine("FAILED: " + ex.Message); if (Environment.GetEnvironmentVariable("AIH_DEMO_TRACE") == "1") Console.WriteLine(ex.ToString());
+            Console.WriteLine(); Console.WriteLine("FAILED: " + ex.Message);
+            if (Environment.GetEnvironmentVariable("AIH_DEMO_TRACE") == "1")
+            {
+                Console.WriteLine(ex.ToString());
+                // What each Controller's Module says of its AIMs: their status and their reports.
+                foreach (var (name, controller) in Controllers)
+                    foreach (var module in new[] { Hfe, "1AIH-HBE-V1.1-" + I })
+                    {
+                        var st = controller.Status(module);
+                        if (st.Error != AifError.NotStarted) Console.WriteLine($"  [{name}] {module}: {st.Error}{(st.Stopped ? ", stopped" : "")}");
+                        foreach (var a in st.Aims) Console.WriteLine($"  [{name}] {a.Aim}: {a.Status} {a.Reason} {string.Join(" | ", a.Reports.TakeLast(4))}");
+                    }
+            }
             return 1;
         }
         finally
@@ -54,7 +80,7 @@ internal static class Program
     {
         var chain = new HashChainBlockchain();
 
-        Step("The Health Back End starts: a Controller, and its Module on an AIM host");
+        Step(Secure ? "The Health Back End starts: its Secure Controller, with its Module, on a root of trust of its own" : "The Health Back End starts: a Controller, and its Module on an AIM host");
         var hbe = new HbeUserAgent(Controller("hbe", "BackEnd"), chain, Orch("HBE.orch"), Path.Combine(Work, "hbe", "secure-storage"), models: Store, frontEndL3: FrontEndL3());
         Cleanup.Add(hbe);
         Hbe = hbe;
@@ -125,14 +151,16 @@ internal static class Program
     private static HfeUserAgent Restart(HfeUserAgent ua, string user)
     {
         ua.Dispose();
-        var again = new HfeUserAgent(Controllers["hfe-" + user], user, Orch("HFE.orch"), Path.Combine(Work, "hfe-" + user, "secure-data-vault"),
+        var again = new HfeUserAgent(Apis["hfe-" + user], user, Orch("HFE.orch"), Path.Combine(Work, "hfe-" + user, "secure-data-vault"),
                                      ("AIH-HBE", Hbe!.Anchor!, Hbe.Rendezvous!, "hfe-" + user.Split('-')[1]));
         Cleanup.Add(again);
-        Say($"  Front End of {user}: started again, as version {Controllers["hfe-" + user].Repository!.VersionOf("1AIH-HFE-V1.1-I01")}.");
+        Say($"  Front End of {user}: started again, as version {Controllers["hfe-" + user].Repository!.VersionOf(Hfe)}.");
         return again;
     }
 
     private static readonly Dictionary<string, ControllerApi> Controllers = [];
+    // What each User Agent holds: its Controller (Basic Profile), or the client of its Secure Controller, through the Non-Secure Controller (Secure Profile).
+    private static readonly Dictionary<string, IControllerApi> Apis = [];
 
     // THE MPAI STORE (the test one): the Back End publishes in it the AIMs that wrap its models and the Front End versions that have them; it publishes only what conforms to the L2.
     // The Back End's organisation is a Trust Anchor; the Store signs with a key the Front Ends' Controllers know.
@@ -143,7 +171,9 @@ internal static class Program
         l3 => new AIF.Metadata.L2Conformance(Path.Combine(Root, "schemas"), _ => null).Check(l3));
 
     // The Front End's L3 as the Back End has it: its AIMs executing apart from the Controller.
-    private static string FrontEndL3() => Apart(File.ReadAllText(Path.Combine(Root, "AIMs", "AMDs", "1AIH-HFE-V1.1-I01.json")), FrontEndAims);
+    // In the Secure Profile its AIMs execute in the area of its Secure Controller: they stay Internal.
+    private static string FrontEndL3() => Secure ? File.ReadAllText(Path.Combine(Root, "AIMs", "AMDs", Hfe + ".json"))
+                                                  : Apart(File.ReadAllText(Path.Combine(Root, "AIMs", "AMDs", Hfe + ".json")), FrontEndAims);
     private static string Apart(string text, IEnumerable<string> aims)
     {
         foreach (var aim in aims) text = Regex.Replace(text, "(\"AIMName\"\\s*:\\s*\"" + aim + "\"\\s*,\\s*\"Relation\"\\s*:\\s*)\"Internal\"", "$1\"External\"");
@@ -159,14 +189,99 @@ internal static class Program
         return ua;
     }
 
-    private static string Orch(string name) => Path.Combine(Root, "Apps", "AIH", "HSP", name);
+    // The workflow of a User Agent. In the Secure Profile it runs the Secure Implementation of its Module: the same workflow, over the I02 L3 it names.
+    private static string Orch(string name)
+    {
+        var file = Path.Combine(Root, "Apps", "AIH", "HSP", name);
+        if (!Secure) return file;
+        var secure = Path.Combine(Work, "secure-" + name);
+        if (!File.Exists(secure))
+        {
+            var text = File.ReadAllText(file);
+            var replaced = Regex.Replace(text, @"^(workflow \w+ over 1AIH-[A-Z]{3}-V1\.1)-I01\b", "$1-I02", RegexOptions.Multiline);
+            if (replaced == text) throw new InvalidOperationException($"{name} names no Module of AIH-HSP V1.1 I01.");
+            Directory.CreateDirectory(Work);
+            File.WriteAllText(secure, replaced);
+        }
+        return secure;
+    }
 
-    private static readonly string[] BackEndAims = ["1AIH-HDP-V1.1-I01", "1AIH-ARA-V1.1-I01", "1AIH-DIA-V1.1-I01", "1AIH-ADT-V1.1-I01", "1AIH-HFL-V1.1-I01"];
-    private static readonly string[] FrontEndAims = ["1AIH-MDL-V1.1-I01", "1AIH-HDP-V1.1-I01", "1AIH-ARA-V1.1-I01"];
+    private static string[] BackEndAims => [$"1AIH-HDP-V1.1-{I}", $"1AIH-ARA-V1.1-{I}", $"1AIH-DIA-V1.1-{I}", $"1AIH-ADT-V1.1-{I}", $"1AIH-HFL-V1.1-{I}"];
+    private static string[] FrontEndAims => [$"1AIH-MDL-V1.1-{I}", $"1AIH-HDP-V1.1-{I}", $"1AIH-ARA-V1.1-{I}"];
     private const string Key = "aih-demo-key";
 
+    // What the User Agent of a party holds.
+    private static IControllerApi Controller(string name, string role)
+    {
+        var api = Secure ? SecureControllerOf(name, role) : BasicController(name, role);
+        Apis[name] = api;
+        return api;
+    }
+
+    // THE SECURE PROFILE: the Controller split. The Secure Controller of the party, on a TPM of its own, holds the Controller - whose Module's AIMs execute in the
+    // same area, Internal to the composite, built by the AIH provider with the party's Security API - and its User Agent's client verifies its Attestation and
+    // agrees a key with it through the Non-Secure Controller. A Front End's Controller follows the MPAI Store as in the Basic Profile.
+    private static readonly Lazy<SimulatedManufacturer> Manufacturer = new(() => SimulatedManufacturer.Make("the demo's TPM manufacturer"));
+    private static int nextTpmPort = 2461;
+
+    private static IControllerApi SecureControllerOf(string name, string role)
+    {
+        var folder = Path.Combine(Work, name); Directory.CreateDirectory(folder);
+        var settings = Path.Combine(folder, "aim-settings.json");
+        File.WriteAllText(settings, new JsonObject
+        {
+            [$"1AIH-HDP-V1.1-{I}"] = new JsonObject { ["Role"] = role, ["BackEndId"] = "hbe-1" }, [$"1AIH-ADT-V1.1-{I}"] = new JsonObject { ["BackEndId"] = "hbe-1" }
+        }.ToJsonString());
+        var amds = Path.Combine(folder, "amds"); Directory.CreateDirectory(amds);
+        foreach (var file in Directory.EnumerateFiles(Path.Combine(Root, "AIMs", "AMDs"), "*.json")) File.Copy(file, Path.Combine(amds, Path.GetFileName(file)));
+        AIF.Store.AimRepository? repository = null;
+        AIF.Store.StoreAimSource? source = null;
+        if (role == "FrontEnd")
+        {
+            var admission = Organisation.Admit(name, TimeSpan.FromDays(30));
+            repository = new AIF.Store.AimRepository(amds)
+            {
+                Identity = new AIF.Store.AimLicences.ControllerIdentity(name, admission.Credential, admission.Anchor.Object(), [], a => a == Organisation.Anchor.AnchorId ? Organisation.Anchor.PublicKey : null),
+                StoreKeys = id => id == "store-key-1" ? StoreKey : null
+            };
+            source = new AIF.Store.StoreAimSource(Path.Combine(Work, "mpai-store"), Organisation.Anchor.AnchorId, new AIF.Store.AimLicences.Issuer(StoreKey, "store-key-1", "mpai-store", "P7D"));
+        }
+
+        // Its root of trust: a TPM of its own, enrolled by the demo's manufacturer; its code measured before the Security API opens.
+        var tpmPort = nextTpmPort; nextTpmPort += 10;
+        var (host, port) = TpmSimulators.At(tpmPort);
+        var partyFile = Path.Combine(folder, "party.json");
+        TpmParty.Provision(partyFile, name, host, port, Manufacturer.Value, DateTimeOffset.UtcNow.AddHours(-1), DateTimeOffset.UtcNow.AddDays(1));
+        var (anchor, tpm) = TpmParty.Load(partyFile);
+        Cleanup.Add(tpm);
+        PartyCode.MeasureInto(tpm, AppContext.BaseDirectory);
+        var security = new SecurityApi(tpm, Path.Combine(folder, "security"));
+        Cleanup.Add(security);
+
+        var api = new ControllerApi(amds, settings, store => repository is not null ? new AihProvider(store, repository) { Security = security } : new AihProvider(store) { Security = security });
+        if (repository is not null) { api.Repository = repository; api.Source = source; api.FollowNewerVersions = true; }
+        Controllers[name] = api;
+        Cleanup.Add(api);
+
+        var userAgent = System.Security.Cryptography.ECDsa.Create(System.Security.Cryptography.ECCurve.NamedCurves.nistP256);
+        Cleanup.Add(userAgent);
+        var served = userAgent.ExportSubjectPublicKeyInfo();
+        var secure = new SecureController(api, security, id => id.AsSpan().SequenceEqual(served));
+        Cleanup.Add(secure);
+        var area = new FrameServer(secure);
+        Cleanup.Add(area);
+        var link = new TcpFrameLink(area.Port);
+        Cleanup.Add(link);
+        var code = PartyCode.Of(AppContext.BaseDirectory).ToDictionary(c => c.File, c => c.Sha256, StringComparer.Ordinal);
+        var client = new SecureControllerClient(new NonSecureController(link), userAgent, anchor.PublicKey, new Attestation.Policy(Manufacturer.Value.Root, m => PartyCode.Approve(code, m)));
+        if (client.MPAI_AIFU_Controller_Initialize_Secure() != AifError.OK)
+            throw new InvalidOperationException($"{name}: the User Agent did not switch the Secure Profile on: {client.Refusal}");
+        Say($"  {name}: its Secure Controller on the TPM at port {tpmPort}; its User Agent verified its Attestation and agreed a key the Non-Secure Controller does not have.");
+        return client;
+    }
+
     // A Controller whose Module's AIMs run on an AIM host of their own: the composite's L3 places them External, the host runs them, the Controller holds no AIM.
-    private static ControllerApi Controller(string name, string role)
+    private static ControllerApi BasicController(string name, string role)
     {
         var folder = Path.Combine(Work, name); Directory.CreateDirectory(folder);
         var settings = Path.Combine(folder, "aim-settings.json");

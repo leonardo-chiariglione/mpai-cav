@@ -32,6 +32,12 @@ dotnet Apps\AIH\HSP\Demo\bin\Debug\net10.0\AihDemo.dll
 ```
 
 or double-click `AllApps\AIH\HSP demo.bat`, which does the same. For Release, use `-c Release` and `bin\Release`.
+
+In the Secure Profile, add `--secure`: the Secure Implementations (the L3s `1AIH-*-V1.1-I02`), each Controller split into a Secure Controller on a TPM 2.0 of its own and a Non-Secure Controller that relays what it cannot read (`AIF\SecureProfile`). It needs the TPM simulator built in WSL (`~/mpai-tpm`, as for the TPM tests); the demo starts one per party on ports 2461, 2471, 2481 and 2491.
+
+```
+dotnet Apps\AIH\HSP\Demo\bin\Debug\net10.0\AihDemo.dll --secure
+```
 The AIH tests: `dotnet test Test\Mpai.Aif.Tests --filter FullyQualifiedName~Aih`.
 
 ### On Linux

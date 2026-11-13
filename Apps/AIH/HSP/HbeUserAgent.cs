@@ -18,7 +18,8 @@ namespace Mpai.Aih.Hsp;
 public sealed class HbeUserAgent : IDisposable
 {
     // The Health Back End Module. The policy of its service is the workflow's (HBE.orch: 'ask Controller to admit by').
-    public const string Module = "1AIH-HBE-V1.1-I01";
+    // The Module the workflow runs: 1AIH-HBE-V1.1-I01 (Basic) or -I02 (Secure).
+    public string Module => s.Module;
 
     private readonly IControllerApi api;
     private readonly ModuleSession s;

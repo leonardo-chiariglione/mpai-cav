@@ -19,6 +19,8 @@
     <ProjectReference Include="..\..\..\..\AIMs\AIH\V1.1\Chain\Mpai.Aih.Chain.csproj" />
     <ProjectReference Include="..\..\..\..\AIF\Controller\AIF.Controller.csproj" />
     <ProjectReference Include="..\..\..\..\AIF\ControllerApi\Mpai.Aif.Api.csproj" />
+    <ProjectReference Include="..\..\..\..\AIF\SecureProfile\AIF.SecureProfile.csproj" />
+    <ProjectReference Include="..\..\..\..\AIF\RootOfTrust\AIF.RootOfTrust.csproj" />
     <ProjectReference Include="..\..\..\..\AIF\AimHost\AIF.AimHost.csproj" ReferenceOutputAssembly="false" />
   </ItemGroup>
 

@@ -27,7 +27,7 @@ public sealed class SecureControllerClient : IControllerApi
     private string? session;
     private byte[]? key;
     private long nextOut;
-    private long lastIn = -1;
+    private SeenSequences replies = new();
 
     // identity: the User Agent's own identity key, which signs its Hello; the Secure Controller serves only the User Agents it was given.
     public SecureControllerClient(IFrameLink nonSecureController, ECDsa identity, ECDsa secureControllerIdentity, Attestation.Policy policy)
@@ -78,7 +78,7 @@ public sealed class SecureControllerClient : IControllerApi
             session = (string)welcome["Session"]!;
             key = derived;
             nextOut = 0;
-            lastIn = -1;
+            replies = new SeenSequences();
         }
         Refusal = null;
         return AifError.OK;
@@ -110,17 +110,15 @@ public sealed class SecureControllerClient : IControllerApi
         catch (Exception) { Refusal = "the reply is not well formed"; return null; }
         if (data.Length < 16) { Refusal = "the reply is not well formed"; return null; }
         var plain = new byte[data.Length - 16];
-        lock (gate)
+        try
         {
-            if (inSeq <= lastIn) { Refusal = "a reply already received (replay)"; return null; }
-            try
-            {
-                using var gcm = new AesGcm(k, 16);
-                gcm.Decrypt(Frames.Nonce(Frames.ToUserAgent, inSeq), data.AsSpan(0, data.Length - 16), data.AsSpan(data.Length - 16), plain, Frames.Associated(id, Frames.ToUserAgent));
-            }
-            catch (CryptographicException) { Refusal = "the reply is not of this session, or was altered"; return null; }
-            lastIn = inSeq;
+            using var gcm = new AesGcm(k, 16);
+            gcm.Decrypt(Frames.Nonce(Frames.ToUserAgent, inSeq), data.AsSpan(0, data.Length - 16), data.AsSpan(data.Length - 16), plain, Frames.Associated(id, Frames.ToUserAgent));
         }
+        catch (CryptographicException) { Refusal = "the reply is not of this session, or was altered"; return null; }
+        SeenSequences seen;
+        lock (gate) seen = replies;
+        if (!seen.Accept(inSeq)) { Refusal = "a reply already received (replay)"; return null; }
         return JsonNode.Parse(plain)!.AsObject();
     }
 

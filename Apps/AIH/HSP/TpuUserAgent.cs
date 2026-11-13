@@ -10,7 +10,8 @@ namespace Mpai.Aih.Hsp;
 // Controller only; the request and the answer travel between the Controllers. It makes no AIH Data and asks for nothing else.
 public sealed class TpuUserAgent : IDisposable
 {
-    public const string Module = HfeUserAgent.Module;
+    // The Module the workflow runs (a Health Front End).
+    public string Module => s.Module;
 
     private readonly ModuleSession s;
     private JsonObject? tokens;

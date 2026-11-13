@@ -26,7 +26,7 @@ public sealed class SecureController : IFrameLink, IDisposable
     private sealed class Session
     {
         public uint Key;
-        public long LastIn = -1;
+        public readonly SeenSequences Seen = new();
         public long NextOut;
     }
 
@@ -122,14 +122,11 @@ public sealed class SecureController : IFrameLink, IDisposable
         try { seq = (long)f["Seq"]!; data = Convert.FromBase64String((string)f["Data"]!); }
         catch (Exception) { return Frames.Refused("a Sealed frame needs a Seq and Data"); }
 
+        // Opened first, then its number counted: a frame that does not open uses up no number.
         var plain = new byte[Math.Max(0, data.Length - 16)];
-        lock (s)
-        {
-            if (seq <= s.LastIn) return Frames.Refused("a request already received (replay)");
-            var e = security.MPAI_AIFAEAD_Decrypt(new AeadState(), s.Key, Algorithm.Gcm, Frames.Nonce(Frames.ToSecure, seq), Frames.Associated(id!, Frames.ToSecure), data, plain, out _);
-            if (e != AifError.OK) return Frames.Refused("the request is not of this session, or was altered");
-            s.LastIn = seq;
-        }
+        var e = security.MPAI_AIFAEAD_Decrypt(new AeadState(), s.Key, Algorithm.Gcm, Frames.Nonce(Frames.ToSecure, seq), Frames.Associated(id!, Frames.ToSecure), data, plain, out _);
+        if (e != AifError.OK) return Frames.Refused("the request is not of this session, or was altered");
+        if (!s.Seen.Accept(seq)) return Frames.Refused("a request already received (replay)");
 
         JsonObject reply;
         try { reply = Execute(JsonNode.Parse(plain)!.AsObject()); }

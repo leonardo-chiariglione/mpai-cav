@@ -13,7 +13,8 @@ namespace Mpai.Aih.Hsp;
 // provides, hears the alert, asks for the AIH Data of the Secure Data Vault, and sends it to the Back End. The Front End talks to the Back End only.
 public sealed class HfeUserAgent : IDisposable
 {
-    public const string Module = "1AIH-HFE-V1.1-I01";
+    // The Module the workflow runs: 1AIH-HFE-V1.1-I01 (Basic) or -I02 (Secure).
+    public string Module => s.Module;
 
     private readonly IControllerApi api;
     private readonly ModuleSession s;

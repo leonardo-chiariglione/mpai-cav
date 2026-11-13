@@ -51,30 +51,63 @@ public static class Frames
 }
 
 // A FRAME LINK OVER LOOPBACK TCP: four bytes of length (big endian), then the frame; one reply per frame. The Secure Controller in its own process serves
-// itself with FrameServer; the Non-Secure Controller reaches it with TcpFrameLink.
+// itself with FrameServer; the Non-Secure Controller reaches it with TcpFrameLink. Several requests may be in flight at once - a read that waits for an Output
+// does not hold the others back: each takes a connection of its own (kept for the next request when it is done).
 public sealed class TcpFrameLink : IFrameLink, IDisposable
 {
-    private readonly TcpClient client;
-    private readonly NetworkStream stream;
-    private readonly object gate = new();
+    private readonly int port;
+    private readonly System.Collections.Concurrent.ConcurrentBag<TcpClient> idle = [];
+    private readonly System.Collections.Concurrent.ConcurrentBag<TcpClient> all = [];
 
     public TcpFrameLink(int port)
     {
-        client = new TcpClient();
+        this.port = port;
+        idle.Add(Connect());                                                       // the Secure Controller is reached now, or the link fails now
+    }
+
+    private TcpClient Connect()
+    {
+        var client = new TcpClient();
         client.Connect(IPAddress.Loopback, port);
-        stream = client.GetStream();
+        all.Add(client);
+        return client;
     }
 
     public byte[] Send(byte[] frame)
     {
-        lock (gate)
-        {
-            FrameServer.Write(stream, frame);
-            return FrameServer.Read(stream) ?? throw new IOException("the Secure Controller closed the link");
-        }
+        var client = idle.TryTake(out var free) ? free : Connect();
+        var stream = client.GetStream();
+        FrameServer.Write(stream, frame);
+        var reply = FrameServer.Read(stream);
+        if (reply is null) { client.Dispose(); throw new IOException("the Secure Controller closed the link"); }
+        idle.Add(client);
+        return reply;
     }
 
-    public void Dispose() { stream.Dispose(); client.Dispose(); }
+    public void Dispose() { foreach (var c in all) c.Dispose(); }
+}
+
+// WHICH SEQUENCE NUMBERS A RECEIVER HAS SEEN: requests in flight at once may arrive out of order; each number is accepted once, and none further back than a
+// window (Freshness of Zero Trust and Profiles 2.6: a reader rejects a sequence it has seen).
+public sealed class SeenSequences
+{
+    private const long Window = 4096;
+    private readonly HashSet<long> seen = [];
+    private long highest = -1;
+
+    public bool Accept(long seq)
+    {
+        lock (seen)
+        {
+            if (seq < 0 || seq <= highest - Window || !seen.Add(seq)) return false;
+            if (seq > highest)
+            {
+                highest = seq;
+                seen.RemoveWhere(s => s <= highest - Window);
+            }
+            return true;
+        }
+    }
 }
 
 public sealed class FrameServer : IDisposable

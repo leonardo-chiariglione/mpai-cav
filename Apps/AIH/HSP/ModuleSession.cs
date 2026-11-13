@@ -65,11 +65,15 @@ public sealed class ModuleSession : IDisposable
     private readonly string[] names;
     private Task? running;
 
+    // The Module the workflow runs (its 'over' clause): an Implementation of the AIM - the Basic one (I01) or the Secure one (I02) - is the workflow's choice.
+    public string Module { get; }
+
     // devices: the name of each device the workflow binds, and the Data Type of what it streams to the Module (its Data Type matters only for those).
     // trusted: a Trust Authority the User decided to trust - its service, its anchor, where it is reached - and the name this User Agent's Controller is known by there; a workflow joins it by name.
     public ModuleSession(IControllerApi api, string workflowFile, string storageLocation, (string Service, string Anchor, string Rendezvous, string KnownAs)? trusted, params (string Device, string DataType)[] devices)
     {
         this.api = api; this.workflowFile = workflowFile; storage = storageLocation; this.trusted = trusted;
+        Module = new WorkflowReader().Read(File.ReadAllText(workflowFile)).Modules.Single();
         names = devices.Select(d => d.Device).ToArray();
         foreach (var (name, type) in devices) this.devices[name] = new ChannelDevice(type);
     }
