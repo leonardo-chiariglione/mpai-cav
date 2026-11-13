@@ -113,3 +113,8 @@ MMM/tools/Microsoft-Rocketbox/
 MPAIStore/Packages/*.zip
 Test/Data/Music/cache16k/
 Test/Data/Music/dataset/
+
+# N-22 (2026-11-13): NIH ChestX-ray14 images and the CheXpert DenseNet-121 (large, downloaded)
+Test/Data/ChestXray/
+Test/Data/Fl/txv/
+Test/Data/Fl/chex-densenet121-features.onnx*
