@@ -68,7 +68,6 @@ public class AsmVoiceWorkflowTests
         public readonly ControllerApi Api;
         public readonly PushDevice Voice = new("OSD-BSO-V1.5"), SoundIn = new("CAE-UCM-V1.0");
         public readonly RecordDevice HeardText = new(), ReplyText = new(), ReplySpeech = new(), Scene = new(), Unused = new();
-        public readonly List<string> Prompts = new();
         private readonly CancellationTokenSource _stop = new();
         private Task? _run;
         public string Said = "";
@@ -104,7 +103,7 @@ public class AsmVoiceWorkflowTests
                    // The other User Command Ports of the Module (CAE-UCM Ports 2 to 5: scene, speech, speech scene and multimodal commands and their reports), which ASM-VCI.orch binds too.
                    .RegisterDevice("SceneCommand", new PushDevice("CAE-UCM-V1.0")).RegisterDevice("SpeechCommand", new PushDevice("CAE-UCM-V1.0")).RegisterDevice("SceneReport", new RecordDevice()).RegisterDevice("SpeechReport", new RecordDevice())
                    .RegisterDevice("SpeechSceneRep", new RecordDevice()).RegisterDevice("MultimodalRep", new RecordDevice());
-            devices.RegisterPresent("screen", data => { if (data.TryGetValue("Prompt", out var p)) lock (Prompts) Prompts.Add(p); return Task.CompletedTask; });
+            devices.RegisterPresent("screen", _ => Task.CompletedTask);
             var workflow = new WorkflowReader().Read(File.ReadAllText(Orch));
             var interpreter = new WorkflowInterpreter(Api.Async(), devices, line => { lock (this) Said += line + "\n"; });
             _run = Task.Run(async () => { try { await interpreter.RunAsync(workflow, _stop.Token); } catch (OperationCanceledException) { } });
@@ -317,7 +316,8 @@ public class AsmVoiceWorkflowTests
         Assert.Equal([1.0, 2.0, 0.0], rig.Positions()["drums"]);
 
         Assert.False(first);
-        Assert.Contains("Hello", rig.Prompts.First());                      // the workflow's own words, shown and said by the device
+        // The welcome (ASM-VCI.orch since 2026-11-02): the workflow offers "Hello." to the Module, whose answer is its first reply, shown by the ReplyText device.
+        Assert.Contains("Hello", MpaiJson.FromJson<BasicTextObject>(rig.ReplyText.All()[0])!.GetText());
         Assert.NotEmpty(rig.Spoken);                                        // the machine's replies were spoken
     }
 }
