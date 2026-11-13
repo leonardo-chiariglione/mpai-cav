@@ -15,11 +15,11 @@
 
     "Trajectory":           { "type": "array", "description": "Data in the Trajectory.",
                               "items": { "type": "object", "additionalProperties": false, "properties": {
-      "Confidence": { "type": "number", "minimum": 0, "maximum": 1, "description": "How likely it is that the CAV will be at the Expected Space-Time." },
+      "Confidence":         { "type": "number", "minimum": 0, "maximum": 1, "description": "How likely it is that the CAV will be at the Expected Space-Time." },
       "ExpectedSpaceTime":  { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SpaceTime.json", "description": "Expected Spatial Attitude and Time of a Trajectory segment." },
       "ActualSpaceTime":    { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SpaceTime.json", "description": "Actual Spatial Attitude and Time of a Trajectory segment." } } } },
 
-    "SpatialQualifier": { "$ref": "https://schemas.mpai.community/TFA/V1.5/data/SpatialQualifier.json", "description": "Spatial Qualifier stating the conventions of the Spatial Attitudes of the Trajectory, stated once for all of them. A Qualifier of an inner Data Type overrides this one." },
+    "SpatialQualifier":     { "$ref": "https://schemas.mpai.community/TFA/V1.5/data/SpatialQualifier.json", "description": "Spatial Qualifier stating the conventions of the Spatial Attitudes of the Trajectory, stated once for all of them. A Qualifier of an inner Data Type overrides this one." },
     "DataXMData":           { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json",
                               "description": "MPAI-PTF Data Exchange Metadata providing provenance, authorisation, legal, security, and confidence information associated with this Trajectory instance in a trusted data exchange context." },
     "DescrMetadata":        { "type": "string", "maxLength": 2048, "description": "Human-readable descriptive metadata of the Trajectory instance (plain text, max 2048 characters)." } } }
