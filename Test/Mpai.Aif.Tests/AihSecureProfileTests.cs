@@ -12,7 +12,7 @@ using Mpai.Aif.Api;
 
 namespace Mpai.Aif.Tests;
 
-// AIH-HSP IN THE SECURE PROFILE (2026-11-13): the Secure L3s 1AIH-*-V1.1-I02. The Health Back End runs in a Secure Controller (AIF\SecureProfile) on the
+// AIH-HSP IN THE SECURE PROFILE (2026-11-13): the Secure L3s 1AIH-*-V1.1-I02. The Health Back End - and, in the last test, the Health Front End - runs in a Secure Controller (AIF\SecureProfile) on the
 // simulated TPM 2.0 - its AIMs, Internal to the composite, execute in the same area - and its User Agent reaches it through the Non-Secure Controller after
 // verifying its Attestation (MPAI_AIFU_Controller_Initialize_Secure). AIH Data Processing keeps the AIH Data and the registrations in the Private Storage of
 // the Module sealed with a key of its own in the Security API; De-Identification and Anonymisation makes its pseudonyms with an HMAC key of its own that never
@@ -44,9 +44,10 @@ public class AihSecureProfileTests : IDisposable
         return file;
     }
 
-    // The Back End in its Secure Controller, and its User Agent's client through a Non-Secure Controller.
-    private sealed class SecureBackEnd : IDisposable
+    // A Module (the Back End, the Front End) in its Secure Controller, and its User Agent's client through a Non-Secure Controller.
+    private sealed class SecureModule : IDisposable
     {
+        private readonly string module;
         public readonly ControllerApi Controller;
         public readonly SecurityApi Security;
         public readonly SecureController Secure;
@@ -55,8 +56,9 @@ public class AihSecureProfileTests : IDisposable
         public readonly NonSecureController NonSecure;
         public readonly SecureControllerClient Client;
 
-        public SecureBackEnd(SimulatedTpm tpm, ECDsa anchor, string work, string settings, ECDsa userAgent)
+        public SecureModule(SimulatedTpm tpm, ECDsa anchor, string work, string settings, ECDsa userAgent, string module = Hbe, string storage = "secure-storage")
         {
+            this.module = module;
             Security = new SecurityApi(tpm, Path.Combine(work, "security"));
             var security = Security;
             Controller = new ControllerApi(Repository.Amds, settings, store => new AihProvider(store) { Security = security });
@@ -68,22 +70,22 @@ public class AihSecureProfileTests : IDisposable
             var policy = new Attestation.Policy(manufacturer.Value.Root, m => PartyCode.Approve(PartyCode.Of(Bin).ToDictionary(c => c.File, c => c.Sha256, StringComparer.Ordinal), m));
             Client = new SecureControllerClient(NonSecure, userAgent, anchor, policy);
             Assert.Equal(AifError.OK, Client.MPAI_AIFU_Controller_Initialize_Secure());
-            Assert.Equal(AifError.OK, Client.StartFlow(Hbe));
-            Assert.Equal(AifError.OK, Client.SharedStorageInit(Hbe, Path.Combine(work, "secure-storage")));
+            Assert.Equal(AifError.OK, Client.StartFlow(module));
+            Assert.Equal(AifError.OK, Client.SharedStorageInit(module, Path.Combine(work, storage)));
         }
 
         public void Dispose()
         {
-            Client.StopFlow(Hbe);
+            Client.StopFlow(module);
             Link.Dispose(); Area.Dispose(); Secure.Dispose(); Controller.Dispose(); Security.Dispose();
         }
     }
 
-    private static void Write(IControllerApi api, string type, int n, JsonNode json) => Assert.Equal(AifError.OK, api.InputWrite(Hbe, type, n, json.ToJsonString(), 10_000));
+    private static void Write(IControllerApi api, string type, int n, JsonNode json, string module = Hbe) => Assert.Equal(AifError.OK, api.InputWrite(module, type, n, json.ToJsonString(), 10_000));
 
-    private static JsonObject Read(IControllerApi api, string type, int n, int ms = 15_000)
+    private static JsonObject Read(IControllerApi api, string type, int n, int ms = 15_000, string module = Hbe)
     {
-        var read = api.OutputRead(Hbe, type, n, ms);
+        var read = api.OutputRead(module, type, n, ms);
         Assert.True(read.Error == AifError.OK, $"nothing at {type}#{n}: {read.Error}");
         return JsonNode.Parse(read.Json!)!.AsObject();
     }
@@ -118,7 +120,7 @@ public class AihSecureProfileTests : IDisposable
         {
             PartyCode.MeasureInto(tpm, Bin);
             JsonObject tokens;
-            using (var hbe = new SecureBackEnd(tpm, anchor.PublicKey, work, settings, userAgent))
+            using (var hbe = new SecureModule(tpm, anchor.PublicKey, work, settings, userAgent))
             {
                 var api = hbe.Client;
                 // Registered; the AIH Data uploaded, its Smart Contract made; a de-identified copy made in the Module.
@@ -146,7 +148,7 @@ public class AihSecureProfileTests : IDisposable
             Assert.Empty(Directory.GetFiles(work, "pseudonym-key*", SearchOption.AllDirectories));
 
             // The Secure Controller started again on the same root of trust and code: the Back End still knows the End User and gives the AIH Data back.
-            using (var again = new SecureBackEnd(tpm, anchor.PublicKey, work, settings, userAgent))
+            using (var again = new SecureModule(tpm, anchor.PublicKey, work, settings, userAgent))
             {
                 Write(again.Client, AihJson.Process, 1, AihBackEndModuleTests.Request("user-1", "Store", tokens, "ahd-1"));
                 var back = AihJson.ResponseOf(Read(again.Client, AihJson.Process, 2))!;
@@ -161,5 +163,76 @@ public class AihSecureProfileTests : IDisposable
         try { refused = basic.StartFlow(Hbe).ToString(); }
         catch (InvalidOperationException e) { refused = e.Message; }
         Assert.Contains("declares the Secure Profile", refused);
+    }
+
+    private const string Hfe = "1AIH-HFE-V1.1-I02";
+
+    // Health Data of an electrocardiogram with a beat every `period` samples at 250 Hz.
+    private static JsonObject HealthData(int period)
+    {
+        var health = AihSamples.HealthData();
+        health["HealthDataData"] = new JsonArray(new JsonObject
+        {
+            ["Data"] = Convert.ToBase64String(Enumerable.Range(0, 2500).SelectMany(i => BitConverter.GetBytes((short)(i % period == 0 ? 12000 : 10))).ToArray())
+        });
+        return health;
+    }
+
+    // What the End User asks of its Front End: the AIH Data of its Vault, by identifier.
+    private static JsonObject? Kept(IControllerApi api, string id)
+    {
+        var ask = new JsonObject
+        {
+            ["Header"] = "AIH-AHP-V1.1", ["UserID"] = "user-1", ["AIHDataProcessID"] = AihJson.NewId("ahp"), ["AIHDataProcessTime"] = AihJson.Time(),
+            ["AIHDataProcess"] = new JsonArray(new JsonObject { ["Request"] = new JsonObject { ["AIHDataOrAIHDataID"] = new JsonArray(id), ["ProcessingType"] = "Store", ["Tokens"] = AihSamples.Tokens() } })
+        };
+        Write(api, AihJson.Process, 1, ask, Hfe);
+        return AihJson.ResponseOf(Read(api, AihJson.Process, 2, module: Hfe))!["AIHDataOrAIHDataID"]![0] as JsonObject;
+    }
+
+    // THE SECURE FRONT END (1AIH-HFE-V1.1-I02) through the split: the End User's Health Data and Model Licence make AIH Data, which Anomaly and Risk Alerting
+    // judges (the alert leaves at the boundary) and AIH Data Processing keeps in the Secure Data Vault, sealed; the End User's registration goes to the Back End
+    // as it came. Nothing of the End User in clear in what the Non-Secure Controller relayed or in the files of the Front End; after a restart the AIH Data is
+    // given back.
+    [SkippableFact]
+    public void TheSecureFrontEndKeepsTheVaultSealedAndAnswersThroughTheSplit()
+    {
+        var (host, at) = TpmSimulators.At(TpmSimulators.Alone);
+        var file = Path.Combine(work, "party.json");
+        TpmParty.Provision(file, "health-front-end", host, at, manufacturer.Value, DateTimeOffset.UtcNow.AddHours(-1), DateTimeOffset.UtcNow.AddDays(1));
+        var (anchor, tpm) = TpmParty.Load(file);
+        using var userAgent = ECDsa.Create(ECCurve.NamedCurves.nistP256);
+        var settings = Path.Combine(work, "aim-settings.json");
+        File.WriteAllText(settings, new JsonObject { ["1AIH-HDP-V1.1-I02"] = new JsonObject { ["Role"] = "FrontEnd" } }.ToJsonString());
+        using (tpm)
+        {
+            PartyCode.MeasureInto(tpm, Bin);
+            using (var hfe = new SecureModule(tpm, anchor.PublicKey, work, settings, userAgent, Hfe, "secure-data-vault"))
+            {
+                var api = hfe.Client;
+                // A beat every half second (120 a minute): a risk, Yellow. The alert leaves at the boundary; the AIH Data is kept and given back.
+                Write(api, AihJson.HealthData, 1, HealthData(125), Hfe);
+                Write(api, AihJson.ModelLicence, 1, AihSamples.ModelLicence("user-1", "ahd-1"), Hfe);
+                Assert.Equal("Yellow", Read(api, AihJson.AraData, 1, module: Hfe)["ARAData"]!["Risk"]!.ToString());
+                Assert.Equal("Yellow", Kept(api, "ahd-1")!["AIHData"]!["ARAData"]!["ARAData"]!["Risk"]!.ToString());
+
+                // The registration goes to the Back End (at the boundary Output) as the End User wrote it.
+                var register = AihSamples.RegisterRequest("user-1");
+                Write(api, AihJson.Register, 1, register, Hfe);
+                Assert.Equal(register.ToJsonString(), Read(api, AihJson.Register, 1, module: Hfe).ToJsonString());
+
+                var relayed = string.Join('\n', hfe.NonSecure.Seen.Select(Encoding.UTF8.GetString));
+                foreach (var word in new[] { "user-1", "ahd-1", "Yellow", "HealthDataData", AihJson.HealthData }) Assert.DoesNotContain(word, relayed);
+            }
+
+            foreach (var f in Directory.GetFiles(work, "*", SearchOption.AllDirectories).Where(f => !f.EndsWith("aim-settings.json") && !f.EndsWith("party.json")))
+            {
+                var content = Encoding.UTF8.GetString(File.ReadAllBytes(f));
+                Assert.False(content.Contains("user-1") || content.Contains("AIHDataID") || content.Contains("HealthData"), $"in clear in {f}");
+            }
+
+            using (var again = new SecureModule(tpm, anchor.PublicKey, work, settings, userAgent, Hfe, "secure-data-vault"))
+                Assert.Equal("Yellow", Kept(again.Client, "ahd-1")!["AIHData"]!["ARAData"]!["ARAData"]!["Risk"]!.ToString());
+        }
     }
 }
