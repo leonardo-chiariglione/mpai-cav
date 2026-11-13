@@ -14,7 +14,7 @@ Claude never deletes a request. A request that needs a decision from you is mark
 
 ## Requests
 
-ORDER FOR THE NIGHT OF 2026-11-13/14 (author): N-21 first (run AihFirstSliceTests, then AihDemo --secure), then N-23 (the Secure mode of FlDemo), then the other requests from the top as usual.
+ORDER FOR THE NIGHT OF 2026-11-13/14 (author): N-21 first (run AihFirstSliceTests, then AihDemo --secure), then N-23 (the Secure mode of FlDemo), then N-22 (the federated round on the NIH chest X-rays), then the other requests from the top as usual.
 
 ### N-1 Federated learning demo, step 1: training in the End User's Health Front End
 Status: done
