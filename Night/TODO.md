@@ -14,7 +14,7 @@ Claude never deletes a request. A request that needs a decision from you is mark
 
 ## Requests
 
-ORDER FOR THE NIGHT OF 2026-11-13/14 (author): N-21 first (run AihFirstSliceTests), then the other requests from the top as usual.
+ORDER FOR THE NIGHT OF 2026-11-13/14 (author): N-21 first (run AihFirstSliceTests, then AihDemo --secure), then the other requests from the top as usual.
 
 ### N-1 Federated learning demo, step 1: training in the End User's Health Front End
 Status: done
@@ -309,6 +309,8 @@ ALSO A7 (same day, late): the NNM model is data of Access (AccessSources of the 
 ALSO A4 (same day): AIH Data is kept in the Private Storage of the Module (RuledStorage, Category "AIH Data", writer alone reads) instead of the Shared Storage: TheFirstSlice (restart of a Front End: the AIH Data must still be found by HDP after the restart) and the demo exercise it.
 ALSO (2026-11-13 night, before the run): since the notes above - everything committed and pushed (up to bee6749b). The 10 AIF licence tests of A7 are FIXED (AIM Licence names the L3 hash). The Back End publishes its model AIMs as Implementer hbe1 (hbe1AIH-NNM-V1.1-I0n; TheFirstSlice updated); MPAI's reference NNM L3s are 1AIH-NNM-V1.1-I01/I02. AihProvider now decides a Secure AIM from the APIProfile of its L3 (TheFirstSlice runs the Basic I01: nothing of it should be Secure). The User Agents take their Module from the workflow ('over' clause) instead of a constant. By day: the AIH group (excluding TheFirstSlice), Metadata, Security API and Secure Profile tests pass (237); the AIH demo runs in both Profiles (AihDemo, AihDemo --secure). To do tonight: dotnet test Test\Mpai.Aif.Tests --filter FullyQualifiedName~AihFirstSliceTests (alone); report in Downloads
 ight-2026-11-14.md, with the failure messages; fix only what today's changes broke, and say what was fixed.
+ALSO (author, 2026-11-13 night: "Run the Front End demo with --secure tonight too" = the AIH demo in the Secure Profile): after AihFirstSliceTests, build and run the AIH demo in both Profiles - dotnet build Apps\AIH\HSP\Demo\AihDemo.csproj, then dotnet Apps\AIH\HSP\Demoin\Debug
+et10.0\AihDemo.dll and the same with --secure (it starts TPM simulators in WSL on ports 2461-2491; with AIH_DEMO_TRACE=1 it prints each Module's AIMs on a failure). Put both outputs in the report. By day both completed ("Done: every step did what it should", the Secure one with "(Secure Implementation)" for the model AIM).
 
 ### N-22 AIH-HSP: the first federated round on real NIH chest X-rays, and how good the NNM is after it
 Status: todo (network chosen and downloaded 2026-11-13 evening, see NOTE)
