@@ -54,7 +54,7 @@ public class AimLicenceSchemaTests
         licence["AIM"] = new JsonObject
         {
             ["AIMName"] = "1AIH-NNM-V1.1-I02", ["Versions"] = new JsonObject { ["From"] = "1.1", ["To"] = "1.9" },
-            ["Implementations"] = new JsonArray(new JsonObject { ["BinaryName"] = "1AIH-NNM-V1.1-I02.model.json", ["HashAlgorithm"] = "PTF-ALGO-HASH-SHA256", ["Hash"] = new string('A', 64) })
+            ["L3"] = new JsonObject { ["HashAlgorithm"] = "PTF-ALGO-HASH-SHA256", ["Hash"] = new string('A', 64) }
         };
         licence["ParentLicence"] = new JsonObject { ["ImplementerID"] = "1", ["HashAlgorithm"] = "PTF-ALGO-HASH-SHA256", ["OfferHash"] = new string('C', 64) };   // the Implementer's offer it is under
         licence["Licensor"] = new JsonObject { ["LicensorID"] = "mpai-store" };                            // the MPAI Store grants
@@ -204,12 +204,14 @@ public class AimLicenceSchemaTests
     }
 
     [Fact]
-    public void WhatAnIssuedAimLicenceCoversIsNamedByFingerprint()
+    public void WhatAnIssuedAimLicenceCoversIsTheAimMetadataNamedByItsHash()
     {
-        var copy = Issued(); ((JsonArray)copy["AIM"]!["Implementations"]!).Clear();
-        Assert.Equal("not valid", Check(copy));                                                          // at least one file
-        var bad = Issued(); bad["AIM"]!["Implementations"]![0]!["Hash"] = "not hexadecimal";
+        var copy = Issued(); copy["AIM"]!.AsObject().Remove("L3");
+        Assert.Equal("not valid", Check(copy));                                                          // the Metadata it covers is named
+        var bad = Issued(); bad["AIM"]!["L3"]!["Hash"] = "not hexadecimal";
         Assert.Equal("not valid", Check(bad));
+        var files = Issued(); files["AIM"]!["Implementations"] = new JsonArray();                        // the files are not listed: the Metadata names them
+        Assert.Equal("not valid", Check(files));
     }
 
     [Fact]

@@ -13,9 +13,9 @@ using AIF.Store;
 namespace Mpai.Aih.Nnm;
 
 // A NEURAL NETWORK MODEL AS AN AIM, PUBLISHED. What the Health Back End publishes, and the Controllers of the Health Front Ends obtain, is not the model but the AIM that wraps
-// it (AIH-NNM-V1.1). The MPAI Store does not hold the AIM: it validates it. The Back End - the Implementer - keeps the model file where it says (the ImplementationURI of the
-// AIM's L3) and submits the L3, which the Store checks against its L2 and publishes, and the model, of which it records the SHA-256 as submitted and approved. A Controller
-// gets the L3 and the fingerprint from the Store (AIF.Store.StoreAimSource), the model from the Back End's location, and checks it against the fingerprint the Store approved.
+// it (AIH-NNM-V1.1). The MPAI Store does not hold the AIM: it validates its L3 against the L2 and publishes it. THE MODEL IS DATA OF ACCESS (AIF V3.0 Storage 6.5): the Back End
+// keeps the model file where it says, and the L3 names it in AccessSources by that URI and pins it with its SHA-256; the Controller of a Front End obtains it from there when
+// the Module starts, refuses it if its SHA-256 is another, and gives it to the AIM as its ModelPath. The L3 is what the Store approved, so the pin is the Store's too.
 public sealed class ModelAimPublisher
 {
     public const string Type = "AIH-NNM-V1.1";
@@ -75,22 +75,33 @@ public sealed class ModelAimPublisher
         var aim = implementerId + implementation;
         var modelFile = Path.Combine(_implementations, aim + ".model.json");
         File.WriteAllText(modelFile, model.ToJsonString());
+        var sha256 = Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(File.ReadAllBytes(modelFile)));
+        // THE CODE OF THE AIM: the Back End is its Implementer too, and keeps the binary where it implements; the L3 names that file, and the Store approves its fingerprint.
+        var code = Path.Combine(_implementations, "Mpai.Aih.Nnm.dll");
+        var built = typeof(NnmAimProcessor).Assembly.Location;
+        if (!File.Exists(code) || !File.ReadAllBytes(code).AsSpan().SequenceEqual(File.ReadAllBytes(built))) File.Copy(built, code, overwrite: true);
 
         var l3 = new JsonObject
         {
             ["Identifier"] = new JsonObject { ["ImplementerID"] = implementerId, ["ImplementationID"] = implementation, ["AIMName"] = aim },
             ["Header"] = Type, ["APIProfile"] = "Basic",
-            ["Description"] = $"This AIM wraps the Neural Network Model {model["MLModelObjectID"]}: AIH Data in, ARA Data out.",
-            ["InternalTypes"] = new JsonArray(new JsonObject { ["Name"] = "AIHData", ["DataType"] = AihJson.AihData }, new JsonObject { ["Name"] = "ARAData", ["DataType"] = AihJson.AraData }, new JsonObject { ["Name"] = "NNModel", ["DataType"] = "AIP-MLO-V1.0" }),
+            ["Description"] = $"This AIM wraps the Neural Network Model {model["MLModelObjectID"]} and processes AIH Data with it: AIH Data in, the AIH Data resulting from the processing out.",
+            ["InternalTypes"] = new JsonArray(new JsonObject { ["Name"] = "AIHData", ["DataType"] = AihJson.AihData }, new JsonObject { ["Name"] = "NNModel", ["DataType"] = "AIP-MLO-V1.0" }),
             ["ExternalPorts"] = new JsonArray(
-                new JsonObject { ["Name"] = "AIHData", ["Direction"] = "Input", ["DataType"] = AihJson.AihData, ["Depth"] = 8, ["Technology"] = "Software", ["Protocol"] = "", ["IsRemote"] = false },
-                new JsonObject { ["Name"] = "ARAData", ["Direction"] = "Output", ["DataType"] = AihJson.AraData, ["Technology"] = "Software", ["Protocol"] = "", ["IsRemote"] = false },
+                new JsonObject { ["Name"] = "AIHDataIn", ["Direction"] = "Input", ["DataType"] = AihJson.AihData, ["Depth"] = 8, ["Technology"] = "Software", ["Protocol"] = "", ["IsRemote"] = false },
                 new JsonObject { ["Name"] = "NNModelIn", ["Direction"] = "Input", ["IsOptional"] = true, ["DataType"] = "AIP-MLO-V1.0", ["Depth"] = 8, ["Technology"] = "Software", ["Protocol"] = "", ["IsRemote"] = false },
+                new JsonObject { ["Name"] = "AIHDataOut", ["Direction"] = "Output", ["DataType"] = AihJson.AihData, ["Technology"] = "Software", ["Protocol"] = "", ["IsRemote"] = false },
                 new JsonObject { ["Name"] = "NNModelOut", ["Direction"] = "Output", ["DataType"] = "AIP-MLO-V1.0", ["Technology"] = "Software", ["Protocol"] = "", ["IsRemote"] = false }),
             ["SubAIMs"] = new JsonArray(), ["Topology"] = new JsonArray(),
             ["Implementations"] = new JsonArray(
-                new JsonObject { ["ImplementationURI"] = "https://github.com/leonardo-chiariglione/mpai-cav/tree/main/AIMs/AIH/V1.1/Nnm", ["MASPort"] = 443, ["BinaryName"] = "Mpai.Aih.Nnm", ["Architecture"] = "x86-64", ["OperatingSystem"] = "Windows", ["Version"] = "1.1", ["Source"] = "MPAIStore" },
-                new JsonObject { ["ImplementationURI"] = new Uri(modelFile).AbsoluteUri, ["BinaryName"] = Path.GetFileName(modelFile), ["Architecture"] = "x86-64", ["OperatingSystem"] = "Windows", ["Version"] = "1.1", ["Source"] = "AIMURL" }),
+                new JsonObject { ["ImplementationURI"] = new Uri(code).AbsoluteUri, ["MASPort"] = 443, ["BinaryName"] = "Mpai.Aih.Nnm", ["Architecture"] = "x86-64", ["OperatingSystem"] = "Windows", ["Version"] = "1.1", ["Source"] = "AIMURL" }),
+            // The model: data of Access, by the URI where the Back End keeps it and its SHA-256, given to the AIM as the file of its ModelPath setting.
+            ["AccessSources"] = new JsonArray(new JsonObject
+            {
+                ["Name"] = "nn-model", ["Uri"] = new Uri(modelFile).AbsoluteUri, ["Sha256"] = sha256, ["Setting"] = "ModelPath", ["AsFile"] = aim + ".model.json",
+                ["Terms"] = new JsonObject { ["Licence"] = "Only for the processing of AIH Data (AIH-HSP V1.1)", ["Uri"] = "https://mpai.community/standards/mpai-aih/hsp/v1-1/ai-modules/neural-network-model/" },
+                ["Description"] = $"The Neural Network Model {model["MLModelObjectID"]} the AIM wraps (an ML Model Object, AIP-MLO-V1.0)."
+            }),
             ["ResourcePolicies"] = new JsonArray(
                 new JsonObject { ["Name"] = "Memory", ["Minimum"] = "0.5 GB", ["Request"] = "1 GB", ["Maximum"] = "2 GB" },
                 new JsonObject { ["Name"] = "CPU:Class", ["Minimum"] = "Low", ["Request"] = "Medium", ["Maximum"] = "High" }),
@@ -102,7 +113,7 @@ public sealed class ModelAimPublisher
         if (_service is not null)
         {
             try { Submit(l3); } catch { File.Delete(modelFile); throw; }
-            return aim;                                                              // the Service read the model and recorded its fingerprint
+            return aim;
         }
         var published = _store.Publish(l3.ToJsonString());
         if (!published.WasPublished)
@@ -110,8 +121,8 @@ public sealed class ModelAimPublisher
             File.Delete(modelFile);
             throw new InvalidOperationException($"The Store did not publish {aim}: {string.Join("; ", published.Errors)}");
         }
-        // The Store approves what it is submitted - the model - and records its fingerprint; it does not keep the file.
-        _store.Approve(aim, new Dictionary<string, string> { [Path.GetFileName(modelFile)] = modelFile });
+        // The Store approves the code it was submitted and records its fingerprint; the model is pinned by the SHA-256 the L3 gives. The Store keeps neither file.
+        _store.Approve(aim, new Dictionary<string, string> { ["Mpai.Aih.Nnm"] = code });
         return aim;
     }
 
@@ -140,9 +151,10 @@ public sealed class ModelAimPublisher
         var hdp = ((JsonArray)l3["SubAIMs"]!).Select(s => (string)s!["Identifier"]!["AIMName"]!).First(n => n.Contains("AIH-HDP-V1.1", StringComparison.Ordinal));
         var topology = (JsonArray)l3["Topology"]!;
         topology.Add(new JsonObject { ["Output"] = new JsonObject { ["AIMName"] = hdp, ["DataType"] = AihJson.AihData }, ["Input"] = new JsonObject { ["AIMName"] = modelAim, ["DataType"] = AihJson.AihData } });
-        topology.Add(new JsonObject { ["Output"] = new JsonObject { ["AIMName"] = modelAim, ["DataType"] = AihJson.AraData }, ["Input"] = new JsonObject { ["AIMName"] = hdp, ["DataType"] = AihJson.AraData } });
-        // The ARA Data it finds is also what the Front End gives at its boundary: the alert is the ARA Data (as Anomaly and Risk Alerting's is).
-        topology.Add(new JsonObject { ["Output"] = new JsonObject { ["AIMName"] = modelAim, ["DataType"] = AihJson.AraData }, ["Input"] = new JsonObject { ["AIMName"] = "", ["DataType"] = AihJson.AraData } });
+        // The AIH Data resulting from the processing goes back to AIH Data Processing on its Input AIH Data 2, which keeps it (the L2 HealthFrontEnd.json says the same).
+        topology.Add(new JsonObject { ["Output"] = new JsonObject { ["AIMName"] = modelAim, ["DataType"] = AihJson.AihData }, ["Input"] = new JsonObject { ["AIMName"] = hdp, ["DataType"] = AihJson.AihData, ["PortNumber"] = 2 } });
+        // The model it holds, trained, goes to AIH Data Processing, which returns it in the answer to a Federated Learn request (L2 HealthFrontEnd.json).
+        topology.Add(new JsonObject { ["Output"] = new JsonObject { ["AIMName"] = modelAim, ["DataType"] = "AIP-MLO-V1.0" }, ["Input"] = new JsonObject { ["AIMName"] = hdp, ["DataType"] = "AIP-MLO-V1.0" } });
         var implementation = l3["Implementations"]![0]!;
         // The next version after the one the Store has (the base's, the first time).
         var held = _service is not null ? Text($"MPAI/Store/L3/{name}") : _store.Exists(name) ? _store.Retrieve(name) : null;

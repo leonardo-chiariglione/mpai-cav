@@ -23,6 +23,20 @@ public sealed record Message
     // Port-keyed routing (current routing model).
     public Dictionary<string, string> Ports { get; init; } = new();
 
+    // FURTHER MESSAGES AT A PORT: where an AIM gives more than one Message at one of its Output Ports from one input, the first is in Ports and the others here, in the order
+    // they are to be sent (a Module run continuously sends them all, one after the other; a Module run per exchange gives one Message per Port, that of Ports).
+    public Dictionary<string, List<string>> More { get; init; } = new();
+
+    // What the AIM gives at each Output Port, in order: the Message of Ports, then the further ones.
+    public IEnumerable<(string Port, string Json)> AllOutputs()
+    {
+        foreach (var (name, json) in Ports)
+        {
+            yield return (name, json);
+            if (More.TryGetValue(name, out var more)) foreach (var next in more) yield return (name, next);
+        }
+    }
+
     // Lifecycle context — injected by AimHost, consumed by the AIM processor.
     // AimContext.None when no lifecycle management is needed (e.g. unit tests).
     public AimContext Context { get; init; } = AimContext.None;

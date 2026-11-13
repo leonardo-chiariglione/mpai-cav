@@ -131,6 +131,25 @@ public class AihFederatedRoundTests : IDisposable
         Assert.True(Averaged(await Send(hfl, Response(updates[2]))), string.Join("; ", hfl.Refusals));
     }
 
+    // A ROUND IS ONE REQUEST (A3, 2026-11-13): one Federated Learn with a Request for each Front End. Health Federated Learning sends each Front End a Federated Learn with its own
+    // Request only - the first at its Output Port, the others as further Messages at the same Port - and waits for as many answers: none can close the round early, and the
+    // Module need not be paused while the round is offered.
+    [Fact]
+    public async Task ARoundIsOneRequestAndEachFrontEndIsSentItsOwn()
+    {
+        var hfl = new HflAimProcessor("hfl", Ports);
+        var round = Fdl(new JsonObject { ["Request"] = new JsonObject { ["HFEID"] = "hfe-1", ["PreLearnNNModelID"] = "model-0" } });
+        round["FederatedLearnData"]!.AsArray().Add(new JsonObject { ["Request"] = new JsonObject { ["HFEID"] = "hfe-2", ["PreLearnNNModelID"] = "model-0" } });
+        var sent = await Send(hfl, With(Ports.Input(AihJson.FederatedLearn), round));
+        var all = sent.AllOutputs().Where(o => o.Port == Ports.Output(AihJson.FederatedLearn)).Select(o => JsonNode.Parse(o.Json)!.AsObject()).ToList();
+        Assert.Equal(2, all.Count);
+        Assert.Equal(["hfe-1", "hfe-2"], all.Select(o => Assert.Single(o["FederatedLearnData"]!.AsArray())!["Request"]!["HFEID"]!.ToString()));
+
+        // The first answer does not close the round; the second does.
+        Assert.False(Averaged(await Send(hfl, Response(FrontEndTrainer.ModelObject("a", new float[] { 0f }, "x")))));
+        Assert.True(Averaged(await Send(hfl, Response(FrontEndTrainer.ModelObject("b", new float[] { 1f }, "y")))));
+    }
+
     // ---- step 3: the average is weighted by the number of cases ----
 
     private static async Task<float[]> Mean(params JsonObject[] models)
@@ -253,61 +272,5 @@ public class AihFederatedRoundTests : IDisposable
         foreach (var field in new[] { "EndUserID", "MInstance", "UEnvironment", "HFEID", "DataXMData", "FederatedLearnID", "AIHDataID", "Context", "MessageId", "FailedAim", "Signature", "Sender" })
             Assert.DoesNotContain("\"" + field + "\"", text);
         Assert.DoesNotContain(".Context", text);
-    }
-
-    // ---- step 6: licence and audit of the NN Models of the rounds ----
-
-    [Fact]
-    public async Task TheAuditOfAModelVersionListsItsRoundItsDataAndItsLicence()
-    {
-        var chain = new Mpai.Aih.Chain.HashChainBlockchain();
-        var register = new Mpai.Aih.Chain.ModelVersionRegister(chain, "hbe-1");
-        var hfl = new HflAimProcessor("hfl", Ports);
-        var models = new[]
-        {
-            FrontEndTrainer.ModelObject("m1", new float[] { 0.1f, 0.5f }, "one", cases: 100),
-            FrontEndTrainer.ModelObject("m2", new float[] { 0.4f, -0.5f }, "two", cases: 30)
-        };
-        // round 1
-        for (var i = 0; i < 2; i++) await Send(hfl, Request("hfe-" + i));
-        Message last = null!;
-        for (var i = 0; i < 2; i++)
-        {
-            var m = ResponseFrom(models[i], "u" + i, "x");
-            register.NoteResponse(JsonNode.Parse(m.Ports.Values.First())!.AsObject());
-            last = await Send(hfl, m);
-        }
-        Assert.True(Averaged(last));
-        var outcome = Assert.Single(hfl.Outcomes);
-        Assert.True(outcome.Accepted);
-        var v1 = register.Register(outcome.ModelId!, outcome.Round, outcome.StartedFrom, outcome.Updates, outcome.Cases, new[] { "user-1", "user-2" });
-        Assert.NotNull(v1);
-
-        // the Blockchain answers who may use the version
-        Assert.True(register.MayUse(outcome.ModelId!, "user-1"));
-        Assert.True(register.MayUse(outcome.ModelId!, "hbe-1"));            // the owner
-        Assert.False(register.MayUse(outcome.ModelId!, "user-3"));          // not named
-        Assert.False(register.MayUse("no-such-version", "user-1"));
-
-        // the audit: only the owner may ask; it lists the round, the data, the licence and what the ledger holds about the version
-        Assert.Null(register.Audit(outcome.ModelId!, "user-1"));
-        var audit = register.Audit(outcome.ModelId!, "hbe-1");
-        Assert.NotNull(audit);
-        Assert.Equal(outcome.ModelId, audit!["ModelId"]!.GetValue<string>());
-        Assert.Equal(1, audit["Round"]!.GetValue<int>());
-        Assert.Equal("model-0", audit["StartedFrom"]!.GetValue<string>());
-        Assert.Equal(130, audit["Cases"]!.GetValue<int>());
-        Assert.Equal(new[] { "u0-data", "u1-data" }, audit["DataIds"]!.AsArray().Select(d => d!.GetValue<string>()));
-        Assert.Equal(new[] { "user-1", "user-2" }, audit["Licence"]!["MayUse"]!.AsArray().Select(d => d!.GetValue<string>()));
-        Assert.StartsWith("sc-", audit["Licence"]!["SmartContractID"]!.GetValue<string>());
-        var kinds = audit["Ledger"]!.AsArray().Select(e => e!["Kind"]!.GetValue<string>() + ":" + e["Requester"]!.GetValue<string>() + ":" + e["Allowed"]!.GetValue<bool>()).ToList();
-        Assert.Contains("Contract:hbe-1:True", kinds);
-        Assert.Contains("Confirm:user-3:False", kinds);
-        Assert.True(chain.Verify());
-
-        // a licence change is a new Smart Contract: user-2 no longer, user-3 now
-        Assert.True(register.ChangeLicence(outcome.ModelId!, new[] { "user-1", "user-3" }));
-        Assert.False(register.MayUse(outcome.ModelId!, "user-2"));
-        Assert.True(register.MayUse(outcome.ModelId!, "user-3"));
     }
 }

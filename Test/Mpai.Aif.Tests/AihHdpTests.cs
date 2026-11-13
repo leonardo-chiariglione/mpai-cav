@@ -21,8 +21,13 @@ public class AihHdpTests : IDisposable
     public AihHdpTests() { store.Scan(); Directory.CreateDirectory(work); }
     public void Dispose() { try { Directory.Delete(work, true); } catch { } }
 
+    // THE PRIVATE STORAGE OF THE MODULE, as the Controller binds it to an AIM of the Module (AIF V3.0 Storage 1-3): a datum for which no reader is named is read by its writer alone.
+    private AIF.SharedStorage.RuledStore? moduleStore;
+    private AIF.SharedStorage.RuledStore ModuleStore => moduleStore ??= new(() => Path.Combine(work, "private", "module"), () => DateTimeOffset.UtcNow, everyoneReads: false, centralControl: null);
+    private AIF.SharedStorage.IRuledStorage HandleOf(string aim) => ModuleStore.For(new AIF.SharedStorage.StorageHolder("1AIH-HBE-V1.1-I01", aim), "m", "s");
+
     private IAimProcessor Hdp(string role) =>
-        new AihProvider(store).Create(AihProvider.Hdp, new Dictionary<string, string> { ["Role"] = role }, new FileSharedStorage(work, "aih-test", "hdp"));
+        new AihProvider(store).Create(AihProvider.Hdp, new Dictionary<string, string> { ["Role"] = role }, new FileSharedStorage(work, "aih-test", "hdp"), null, HandleOf(AihProvider.Hdp));
 
     private static readonly AimPortReader Ports = AimPortReader.Load(new AmdStoreOf().Store, AihProvider.Hdp);
     private sealed class AmdStoreOf { public AmdStore Store { get; } = Scan(); private static AmdStore Scan() { var s = new AmdStore(Repository.Amds); s.Scan(); return s; } }
@@ -89,6 +94,37 @@ public class AihHdpTests : IDisposable
         var (response, tokens) = await Registered(hdp, Register(AihSamples.ThirdPartyRegisterRequest("tpu-1"), "AIHDataProcessing", "Store", "Auditing"));
         Assert.True(response["RegisterData"]![0]!["Response"]!["Success"]!.GetValue<bool>());
         Assert.Equal(["AIHDataProcessing"], AihJson.ServicesOf(tokens));
+    }
+
+    // A9 (2026-11-13): THE REGISTRATIONS OUTLIVE A RUN. They are kept in the Private Storage of the Module (Category "Registration"): an AIH Data Processing started again on the
+    // same storage knows who registered and what was granted - the Back End serves an audit the Tokens grant; the Front End of a Third-Party User still refuses to store.
+    [Fact]
+    public async Task ABackEndStartedAgainKnowsWhoRegistered()
+    {
+        var (_, tokens) = await Registered(Hdp("BackEnd"), Register(AihSamples.RegisterRequest("user-1"), "Store", "Auditing"));
+        var again = Hdp("BackEnd");                                                                  // the Module started again: a new instance, the same Private Storage
+        var audit = new JsonObject
+        {
+            ["Header"] = AihJson.Audit, ["UserID"] = "user-1", ["AuditID"] = "adt-1", ["AuditTime"] = AihJson.Time(),
+            ["Audit"] = new JsonObject { ["Request"] = new JsonObject { ["AuditPeriod"] = AihJson.Time(), ["ProcessingOperations"] = new JsonArray(), ["Tokens"] = tokens.DeepClone() } }
+        };
+        var served = await Send(again, With((In(AihJson.Audit, 1), audit.ToJsonString())));
+        Assert.True(served.Ports.ContainsKey(Out(AihJson.Audit, 1)), "the audit goes to Auditing: the registration was kept");
+        var key = Assert.Single(HandleOf(AihProvider.Hdp).MPAI_AIFM_RuledStorage_List("Registration"));
+        Assert.Equal(AIF.SharedStorage.StorageOutcome.NotAuthorised, HandleOf(AihProvider.Adt).MPAI_AIFM_RuledStorage_Get(key, out _));   // AIH Data Processing alone reads it
+    }
+
+    [Fact]
+    public async Task AFrontEndStartedAgainKeepsTheProfileItRegisteredWith()
+    {
+        var register = AihSamples.RegisterRequest("ada");
+        register["RegisterData"]![0]!["Request"]!["UserProfile"]!["UserProfileData"]![0]!["Human"]!["Membership"] = new JsonArray(new JsonObject { ["CompanyName"] = "Cardio Research Ltd" });
+        await Send(Hdp("FrontEnd"), With((In(AihJson.Register, 1), register.ToJsonString())));
+        var again = Hdp("FrontEnd");
+        var store = Request("ada", "Store", AihSamples.Tokens(), UploadData("ahd-9")).ToJsonString();
+        var answer = await Send(again, With((In(AihJson.Process, 2), store)));
+        Assert.False(answer.Ports.ContainsKey(Out(AihJson.Process, 1)));                                  // not sent to the Back End
+        Assert.False(AihJson.ResponseOf(JsonNode.Parse(answer.Ports[Out(AihJson.Process, 2)])!.AsObject())!["ProcessingStatus"]!.GetValue<bool>());
     }
 
     [Fact]
@@ -251,28 +287,56 @@ public class AihHdpTests : IDisposable
         Assert.Equal(upload, (await Send(hdp, With((In(AihJson.Process, 2), upload)))).Ports[Out(AihJson.Process, 1)]);
     }
 
+    // THE AIH DATA RESULTING FROM A PROCESSING (2026-11-13): an AIM that wraps a Neural Network Model gives it on Input AIH Data 2; the Front End keeps it in the Vault and gives it
+    // to no AIM (it would come back to be processed again), and it is not trained on (the End User's AIH Data is).
     [Fact]
-    public async Task TheBackEndKeepsWhatItUploadsAndGivesItToItsEndUserAndToTheBackEnd()
+    public async Task TheFrontEndKeepsTheAihDataResultingFromAProcessing()
     {
-        var hdp = new AihProvider(store).Create(AihProvider.Hdp, new Dictionary<string, string> { ["Role"] = "BackEnd", ["BackEndId"] = "hbe-1" }, new FileSharedStorage(work, "aih-test", "hdp-be"));
+        var hdp = Hdp("FrontEnd");
+        var processed = UploadData("ahd-7-nnm");
+        processed["AIHData"]!["ParentAIHDataID"] = "ahd-7";
+        var given = await Send(hdp, With((In(AihJson.AihData, 2), processed.ToJsonString())));
+        Assert.Empty(given.Ports);
+        var back = await Send(hdp, With((In(AihJson.Process, 2), Request("user-1", "Store", AihJson.TokensFor("user-1", ["Store"]), "ahd-7-nnm").ToJsonString())));
+        var result = AihJson.ResponseOf(JsonNode.Parse(back.Ports[Out(AihJson.Process, 2)])!.AsObject())!;
+        Assert.True(result["ProcessingStatus"]!.GetValue<bool>());
+        Assert.Equal("ahd-7", result["AIHDataOrAIHDataID"]![0]!["AIHData"]!["ParentAIHDataID"]!.ToString());
+    }
+
+    [Fact]
+    public async Task TheBackEndKeepsWhatItUploadsGivesItToItsEndUserAndToAuditingAndNotToTheUserAgent()
+    {
+        var hdp = new AihProvider(store).Create(AihProvider.Hdp, new Dictionary<string, string> { ["Role"] = "BackEnd", ["BackEndId"] = "hbe-1" }, new FileSharedStorage(work, "aih-test", "hdp-be"), null, HandleOf(AihProvider.Hdp));
         var (_, tokens) = await Registered(hdp, Register(AihSamples.RegisterRequest("user-1"), "Store"));
 
         // An upload, its Smart Contract made: kept.
         await Send(hdp, With((In(AihJson.Process, 2), Request("user-1", "Store", tokens, UploadData("ahd-4")).ToJsonString())));
-        await Send(hdp, With((In(AihJson.Blockchain), AihJson.BlockchainResponse("user-1", "ahd-4", "sc-4", true).ToJsonString())));
+        var kept = await Send(hdp, With((In(AihJson.Blockchain), AihJson.BlockchainResponse("user-1", "ahd-4", "sc-4", true).ToJsonString())));
+        Assert.Equal("ahd-4", JsonNode.Parse(kept.Ports[Out(AihJson.AihData, 3)])!["AIHDataID"]!.ToString());          // Auditing sees what is kept, on its Channel
 
         var asked = await Send(hdp, With((In(AihJson.Process, 2), Request("user-1", "Store", tokens, "ahd-4").ToJsonString())));
         var mine = AihJson.ResponseOf(JsonNode.Parse(asked.Ports[Out(AihJson.Process, 2)])!.AsObject())!;
         Assert.True(mine["ProcessingStatus"]!.GetValue<bool>());
         Assert.Equal("sc-4", mine["AIHDataOrAIHDataID"]![0]!["AIHData"]!["SmartContractID"]!.ToString());
 
-        // The Back End itself is not a user and has no Tokens: it is given what it keeps, for De-Identification and for Auditing.
+        // The Back End's User Agent is not given AIH Data: it carries nothing between the AIMs of the Module (AIF V3.0 COM-1, UA-2; 2026-11-13).
         var backEnd = await Send(hdp, With((In(AihJson.Process, 2), Request("hbe-1", "Store", new JsonObject(), "ahd-4").ToJsonString())));
-        Assert.True(AihJson.ResponseOf(JsonNode.Parse(backEnd.Ports[Out(AihJson.Process, 2)])!.AsObject())!["ProcessingStatus"]!.GetValue<bool>());
+        Assert.False(AihJson.ResponseOf(JsonNode.Parse(backEnd.Ports[Out(AihJson.Process, 2)])!.AsObject())!["ProcessingStatus"]!.GetValue<bool>());
 
         // Another End User, even registered, is not given it.
         var (_, otherTokens) = await Registered(hdp, Register(AihSamples.RegisterRequest("user-2"), "Store"));
         var other = await Send(hdp, With((In(AihJson.Process, 2), Request("user-2", "Store", otherTokens, "ahd-4").ToJsonString())));
         Assert.False(AihJson.ResponseOf(JsonNode.Parse(other.Ports[Out(AihJson.Process, 2)])!.AsObject())!["ProcessingStatus"]!.GetValue<bool>());
+
+        // WHERE AND UNDER WHICH RULES IT IS KEPT (A4, AIF V3.0 Storage 3, STO-3): in the Private Storage of the Module, Category "AIH Data", no reader named - so AIH Data
+        // Processing, its writer, alone reads it: not another AIM of the Module, not the User Agent. The Trace names the writer; the time is none (kept until it is deleted).
+        var key = Assert.Single(HandleOf(AihProvider.Hdp).MPAI_AIFM_RuledStorage_List("AIH Data"));
+        Assert.Equal(AIF.SharedStorage.StorageOutcome.OK, HandleOf(AihProvider.Hdp).MPAI_AIFM_RuledStorage_Trace(key, out var trace));
+        Assert.Equal("AIH Data", trace!.Category);
+        Assert.Null(trace.Readers);
+        Assert.Contains(AihProvider.Hdp, trace.Writer);
+        Assert.Equal(AIF.SharedStorage.StorageOutcome.OK, HandleOf(AihProvider.Hdp).MPAI_AIFM_RuledStorage_Get(key, out _));
+        Assert.Equal(AIF.SharedStorage.StorageOutcome.NotAuthorised, HandleOf(AihProvider.Dia).MPAI_AIFM_RuledStorage_Get(key, out _));
+        Assert.Equal(AIF.SharedStorage.StorageOutcome.NotAuthorised, ModuleStore.For(AIF.SharedStorage.StorageHolder.UserAgent, "m", "s").MPAI_AIFM_RuledStorage_Get(key, out _));
     }
 }

@@ -62,10 +62,11 @@ public class StoreLicenceServiceTests
     private static AimRepository Repo(string folder, AimLicences.ControllerIdentity identity, HttpAimSource source) =>
         new(folder) { Identity = identity, StoreKeys = source.StoreKey, Clock = () => DateTimeOffset.UtcNow };
 
+    // The AIM as the Controller builds it: its AIM Licence checked, its model from Access.
     private static IAimProcessor Build(AimRepository repository, string aim)
     {
-        var amds = new AmdStore(repository.Folder); amds.Scan();
-        return new AihProvider(amds, repository).Create(aim, new Dictionary<string, string>(), null);
+        repository.CheckLicence(aim);
+        return AihModelAimTests.BuildWithAccess(repository.Folder, aim, Path.Combine(repository.Folder, "access"));
     }
 
     [SkippableFact]

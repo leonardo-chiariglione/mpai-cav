@@ -675,7 +675,7 @@ public sealed partial class ContinuousExecutor
         if (result.IsCancelled) throw new OperationCanceledException(result.Payload);
         if (result.IsError) throw new InvalidOperationException($"it returned an error: {result.Payload}");
 
-        foreach (var (name, json) in result.Ports)
+        foreach (var (name, json) in result.AllOutputs())
         {
             var port = leaf.Ports.FirstOrDefault(p => p.Direction == "Output" && KeyOf(leaf, p) == name);
             if (port is null) { Console.WriteLine($"[AIF] {leaf.Instance}: produced '{name}', which is not one of its Output Ports; dropped"); continue; }

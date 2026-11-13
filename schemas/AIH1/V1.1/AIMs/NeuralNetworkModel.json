@@ -7,15 +7,15 @@
   "Header":           "AIH-NNM-V1.1",
 
   "APIProfile":       "Basic",
-  "Description":      "This AIM wraps a Neural Network Model: the Health Back End uploads it to the MPAI Store and the Health Front Ends download it. It takes AIH Data and gives ARA Data.",
+  "Description":      "This AIM wraps a Neural Network Model and processes AIH Data with it: it takes AIH Data and gives the AIH Data resulting from the processing. The Neural Network Model learns as the AIM processes AIH Data. The AIM is what is exchanged: the Health Back End uploads it to the MPAI Store, the Health Front Ends download it, and a Health Front End returns it with the Neural Network Model trained; the AIM gives the Neural Network Model it holds for that. It may take a Neural Network Model to wrap or to update.",
 
   "InternalTypes":  [{"Name": "AIHData", "DataType": "AIH-AHD-V1.1"},
-                     {"Name": "ARAData", "DataType": "AIH-ARD-V1.1"}],
+                     {"Name": "NNModel", "DataType": "AIP-MLO-V1.0"}],
 
-  "ExternalPorts":  [{"Name": "AIHData", "Direction": "Input",  "DataType": "AIH-AHD-V1.1", "Technology": "", "Protocol": "", "IsRemote": ""},
-                     {"Name": "ARAData", "Direction": "Output", "DataType": "AIH-ARD-V1.1", "Technology": "", "Protocol": "", "IsRemote": ""},
+  "ExternalPorts":  [{"Name": "AIHDataIn",  "Direction": "Input",                      "DataType": "AIH-AHD-V1.1", "Technology": "", "Protocol": "", "IsRemote": ""},
                      {"Name": "NNModelIn",  "Direction": "Input",  "IsOptional": true, "DataType": "AIP-MLO-V1.0", "Technology": "", "Protocol": "", "IsRemote": ""},
-                     {"Name": "NNModelOut", "Direction": "Output", "DataType": "AIP-MLO-V1.0", "Technology": "", "Protocol": "", "IsRemote": ""}],
+                     {"Name": "AIHDataOut", "Direction": "Output",                     "DataType": "AIH-AHD-V1.1", "Technology": "", "Protocol": "", "IsRemote": ""},
+                     {"Name": "NNModelOut", "Direction": "Output",                     "DataType": "AIP-MLO-V1.0", "Technology": "", "Protocol": "", "IsRemote": ""}],
 
   "AIMLicence":          "/* AIM Licence offered by the Implementer (AIF-LIC-V3.0): Grant, Term, Updates, Payment, TermsURI - or omit it if the AIM needs no AIM Licence */",
 

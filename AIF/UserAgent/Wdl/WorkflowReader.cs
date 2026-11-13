@@ -45,6 +45,13 @@ public sealed class WorkflowReader
         new(@"^ask\s+Controller\s+to\s+join\s+(?<service>""[^""]*""|\S+)(\s+as\s+(?<as>""[^""]*""|\S+))?(\s+role\s+(?<role>\S+))?\s*$",
             RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
+    // AIF V3.0 Workflow Description: 'ask Controller to leave' closes those links; 'ask Controller to admit by "<policy>"' makes the Controller the Trust Authority for the External
+    // links of the Module, under the policy (the roles it admits, the conditions of admission, which roles exchange). The policy is written between one pair of quotes and may hold quotes.
+    private static readonly Regex AskLeave =
+        new(@"^ask\s+Controller\s+to\s+leave\s*$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+    private static readonly Regex AskAdmit =
+        new(@"^ask\s+Controller\s+to\s+admit\s+by\s+""(?<policy>.*)""\s*$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+
     private static readonly Regex AskStopAim =
         new(@"^ask\s+Controller\s+to\s+stop\s+AIM\s+(?<aim>\S+)\s*$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
@@ -203,6 +210,13 @@ public sealed class WorkflowReader
                 Name = join.Groups["as"].Success ? join.Groups["as"].Value.Trim('"') : null,
                 Role = join.Groups["role"].Success ? join.Groups["role"].Value : null, Line = n
             };
+
+        if (AskLeave.IsMatch(line))
+            return new Step { Kind = StepKind.LeaveService, Line = n };
+
+        var admit = AskAdmit.Match(line);
+        if (admit.Success)
+            return new Step { Kind = StepKind.AdmitService, Text = admit.Groups["policy"].Value, Line = n };
 
         var stopAim = AskStopAim.Match(line);
         if (stopAim.Success)

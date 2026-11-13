@@ -20,14 +20,39 @@ public sealed class AihProvider : IAimProvider
     // With the Controller's repository, the model of an AIM that wraps one is the file the Store approved that the repository kept, measured when the AIM is built.
     public AihProvider(AmdStore amds, AimRepository repository) { _amds = amds; _repository = repository; }
 
-    // A Neural Network Model wrapped as an AIM has an identifier of its own (the Store gives each model its Implementation number); its model is a setting, ModelPath.
+    // A Neural Network Model wrapped as an AIM has an identifier of its own (the Store gives each model its Implementation number); its model is data of Access, given as ModelPath.
     private static bool IsModel(string aimName) => aimName.Contains(Nnm.ModelAimPublisher.Type, StringComparison.Ordinal);
 
     public bool CanCreate(string aimName) => aimName is Ara or Mdl or Hdp or Dia or Adt or Hfl || IsModel(aimName);
 
-    public string? ImplementationOf(string aimName) => CanCreate(aimName) ? typeof(AihProvider).Assembly.Location : null;
+    // WHICH BINARY IMPLEMENTS AN AIM: the assembly of its processor - the one its L3 names as BinaryName (Mpai.Aih.Hdp, Mpai.Aih.Dia, ...), so that a Controller that measures
+    // what it runs finds what the L3 declares (AIF V3.0 MET-3; ImplementationEvidence.Check). This provider (Mpai.Aih) only builds them.
+    public string? ImplementationOf(string aimName) => aimName switch
+    {
+        Ara => typeof(Ara.AraAimProcessor).Assembly.Location,
+        Mdl => typeof(Mdl.MdlAimProcessor).Assembly.Location,
+        Hdp => typeof(Hdp.HdpAimProcessor).Assembly.Location,
+        Dia => typeof(Dia.DiaAimProcessor).Assembly.Location,
+        Adt => typeof(Adt.AdtAimProcessor).Assembly.Location,
+        Hfl => typeof(Hfl.HflAimProcessor).Assembly.Location,
+        _ when IsModel(aimName) => typeof(Nnm.NnmAimProcessor).Assembly.Location,
+        _ => null
+    };
 
-    public IAimProcessor Create(string aimName, IReadOnlyDictionary<string, string> settings, ISharedStorage? storage)
+    public IAimProcessor Create(string aimName, IReadOnlyDictionary<string, string> settings, ISharedStorage? storage) => Create(aimName, settings, storage, null, null);
+
+    private const string PseudonymKeyName = "pseudonym-key";
+    private static string PseudonymKey(string aimName, ISharedStorage? privateStorage)
+    {
+        if (privateStorage is null) throw new InvalidOperationException($"{aimName} makes pseudonyms with a key: give it the setting PseudonymKey, or its Private Storage to keep one in.");
+        if (privateStorage.MPAI_AIFM_SharedStorage_Exists(PseudonymKeyName)) return System.Text.Encoding.UTF8.GetString(privateStorage.MPAI_AIFM_SharedStorage_Get(PseudonymKeyName));
+        var key = Convert.ToHexString(System.Security.Cryptography.RandomNumberGenerator.GetBytes(32));
+        privateStorage.MPAI_AIFM_SharedStorage_Put(PseudonymKeyName, System.Text.Encoding.UTF8.GetBytes(key));
+        return key;
+    }
+
+    // AIH Data Processing keeps AIH Data in the Private Storage of the Module (moduleStorage), the handle the Controller binds to it; the other AIMs keep nothing.
+    public IAimProcessor Create(string aimName, IReadOnlyDictionary<string, string> settings, ISharedStorage? storage, ISharedStorage? privateStorage, IRuledStorage? moduleStorage)
     {
         var ports = AimPortReader.Load(_amds, aimName);
         return aimName switch
@@ -35,15 +60,17 @@ public sealed class AihProvider : IAimProvider
             Ara => new Ara.AraAimProcessor(aimName, ports),
             Mdl => new Mdl.MdlAimProcessor(aimName, ports),
             // The end of the Platform this AIF instance is: FrontEnd, else BackEnd.
-            // It keeps AIH Data in the Module's storage, through its API (the Secure Data Vault of a Front End, the Secure Storage of the Back End); the Back End's identifier is a setting.
+            // It keeps AIH Data in the Private Storage of the Module, through the storage API (the Secure Data Vault of a Front End, the Secure Storage of the Back End); the Back End's identifier is a setting.
             Hdp => settings.GetValueOrDefault("Role") == "FrontEnd"
-                ? new Hdp.FrontEndHdpAimProcessor(aimName, ports, storage ?? throw new InvalidOperationException($"{aimName} keeps AIH Data in the Module's storage, and the Module has none."))
-                : new Hdp.BackEndHdpAimProcessor(aimName, ports, storage ?? throw new InvalidOperationException($"{aimName} keeps AIH Data in the Module's storage, and the Module has none."), settings.GetValueOrDefault("BackEndId") ?? ""),
-            // The key the pseudonyms are made with, and the identifier of this Back End: settings of the AIF instance.
-            Dia => new Dia.DiaAimProcessor(aimName, ports, settings.GetValueOrDefault("PseudonymKey") ?? "mpai-aih-test-pseudonym-key"),
+                ? new Hdp.FrontEndHdpAimProcessor(aimName, ports, moduleStorage ?? throw new InvalidOperationException($"{aimName} keeps AIH Data in the Private Storage of the Module, and the Module has none."))
+                : new Hdp.BackEndHdpAimProcessor(aimName, ports, moduleStorage ?? throw new InvalidOperationException($"{aimName} keeps AIH Data in the Private Storage of the Module, and the Module has none."), settings.GetValueOrDefault("BackEndId") ?? ""),
+            // The key the pseudonyms are made with: the setting PseudonymKey where the AIF instance gives one; else a random key made once and kept in the AIM's Private Storage
+            // (the same End User keeps the same pseudonym after a restart). No key is written in the code (review finding A10, 2026-11-13).
+            Dia => new Dia.DiaAimProcessor(aimName, ports, settings.GetValueOrDefault("PseudonymKey") ?? PseudonymKey(aimName, privateStorage)),
             Adt => new Adt.AdtAimProcessor(aimName, ports, settings.GetValueOrDefault("BackEndId") ?? "hbe-1"),
             Hfl => new Hfl.HflAimProcessor(aimName, ports),
-            _ when IsModel(aimName) => new Nnm.NnmAimProcessor(aimName, ports, settings.GetValueOrDefault("ModelPath") ?? _repository?.FileOf(aimName, aimName + ".model.json") ?? throw new InvalidOperationException($"{aimName} wraps a model, and neither its settings (ModelPath) nor the repository name one.")),
+            // its model is data of Access: the Controller obtained it and gives its file as the ModelPath setting (AccessSources of the L3)
+            _ when IsModel(aimName) => new Nnm.NnmAimProcessor(aimName, ports, settings.GetValueOrDefault("ModelPath") ?? throw new InvalidOperationException($"{aimName} wraps a model, and its Access gave none (ModelPath).")),
             _ => throw new ArgumentException($"{aimName} is not an AIM this provider builds.")
         };
     }

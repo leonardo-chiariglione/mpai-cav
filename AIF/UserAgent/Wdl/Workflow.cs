@@ -35,6 +35,8 @@ public enum StepKind
     StopAim,          // ask Controller to stop AIM A
     KeepStorage,      // ask Controller to keep storage in "where" - the Module's Shared Storage is where the User says (M3213 3.6)
     JoinService,      // ask Controller to join "service" [as "name"] [role R] - a step of the trust protocol (MPAI_AIFU_External_Join): the User Agent knows the Trust Authorities its User decided to trust
+    LeaveService,     // ask Controller to leave - closes the links of the External Ports (MPAI_AIFU_External_Leave)
+    AdmitService,     // ask Controller to admit by "policy" - the Controller is the Trust Authority for the External links of the Module, under the policy (MPAI_AIFU_External_Authority)
 
     // --- the User Agent's own ---
     Acquire,          // acquire L (T) [via VAD] [or L (T) [via VAD] ...]
@@ -100,7 +102,8 @@ public sealed class Step
     public bool IsControllerRequest => Kind is
         StepKind.StartModule or StepKind.StopModule or StepKind.PauseModule or
         StepKind.ResumeModule or StepKind.Take or StepKind.Give or
-        StepKind.Status or StepKind.StopAim or StepKind.KeepStorage or StepKind.JoinService;
+        StepKind.Status or StepKind.StopAim or StepKind.KeepStorage or StepKind.JoinService or
+        StepKind.LeaveService or StepKind.AdmitService;
 }
 
 // A workflow: the Modules it drives, what it does on Start, what on Stop, and

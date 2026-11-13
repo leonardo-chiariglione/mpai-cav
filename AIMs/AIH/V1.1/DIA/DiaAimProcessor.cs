@@ -27,6 +27,11 @@ public sealed class DiaAimProcessor : IAimProcessor
     private readonly string _requestIn, _dataIn, _responseOut, _dataOut;
     private readonly byte[] _key;
     private readonly Dictionary<string, JsonObject> _waiting = new();
+    // The identifier of the request that asked for each AIH Data: the response carries it, so that whoever asked (a Front End, through the Controllers) recognises its answer.
+    private readonly Dictionary<string, string> _requestIds = new();
+    // AIH Data given before the request that names it (the two travel on different Channels): kept until the request comes (the last 64).
+    private readonly Dictionary<string, JsonObject> _given = new();
+    private readonly Queue<string> _givenOrder = new();
 
     public string InstanceId { get; }
 
@@ -53,17 +58,37 @@ public sealed class DiaAimProcessor : IAimProcessor
                             ?? throw new FormatException("the request holds no Request.");
                 var id = asked["AIHDataID"]?.GetValue<string>() ?? throw new FormatException("the request names no AIH Data.");
                 _waiting[id] = asked;
+                if (request["DeIDAndAnonymID"]?.GetValue<string>() is { Length: > 0 } requestId) _requestIds[id] = requestId; else _requestIds.Remove(id);
             }
 
             if (message.Ports.TryGetValue(_dataIn, out var dataJson) && !string.IsNullOrWhiteSpace(dataJson))
             {
                 var data = AihJson.Parse(dataJson, "AIH Data");
                 var id = data["AIHDataID"]?.GetValue<string>() ?? "";
+                if (id.Length > 0 && !_waiting.ContainsKey(id))
+                {
+                    if (_given.TryAdd(id, data)) _givenOrder.Enqueue(id);
+                    while (_givenOrder.Count > 64) _given.Remove(_givenOrder.Dequeue());
+                }
+            }
+
+            foreach (var id in _waiting.Keys.Where(_given.ContainsKey).ToList())
+            {
+                _waiting.Remove(id, out var asked); _given.Remove(id, out var data);
+                var made = Make(data!, asked!);
+                if (made is not null) outputs[_dataOut] = made.ToJsonString();
+                outputs[_responseOut] = Response(data!["UserID"]?.GetValue<string>() ?? "", id, made?["AIHDataID"]?.GetValue<string>(), made is not null, RequestIdOf(id)).ToJsonString();
+                break;                                                              // one response a Message; another waiting pair is answered with the next
+            }
+            if (message.Ports.TryGetValue(_dataIn, out var dataJson2) && !string.IsNullOrWhiteSpace(dataJson2) && outputs.Count == 0)
+            {
+                var data = AihJson.Parse(dataJson2, "AIH Data");
+                var id = data["AIHDataID"]?.GetValue<string>() ?? "";
                 if (_waiting.Remove(id, out var asked))
                 {
                     var made = Make(data, asked);
                     if (made is not null) outputs[_dataOut] = made.ToJsonString();
-                    outputs[_responseOut] = Response(data["UserID"]?.GetValue<string>() ?? "", id, made?["AIHDataID"]?.GetValue<string>(), made is not null).ToJsonString();
+                    outputs[_responseOut] = Response(data["UserID"]?.GetValue<string>() ?? "", id, made?["AIHDataID"]?.GetValue<string>(), made is not null, RequestIdOf(id)).ToJsonString();
                 }
             }
 
@@ -73,13 +98,15 @@ public sealed class DiaAimProcessor : IAimProcessor
     }
 
     // The response says which AIH Data was processed and which AIH Data resulted (the copy), so that the requester need not know how the copy is named.
-    public static JsonObject Response(string user, string id, string? newId, bool done)
+    private string? RequestIdOf(string id) => _requestIds.Remove(id, out var requestId) ? requestId : null;
+
+    public static JsonObject Response(string user, string id, string? newId, bool done, string? requestId = null)
     {
         var response = new JsonObject { ["AIHDataID"] = id, ["ProcessingState"] = done };
         if (newId is not null) response["NewAIHDataID"] = newId;
         return new()
         {
-            ["Header"] = AihJson.DeId, ["DeIDAndAnonymID"] = AihJson.NewId("dia"), ["DeIDAndAnonymTime"] = AihJson.Time(), ["EndUserID"] = user,
+            ["Header"] = AihJson.DeId, ["DeIDAndAnonymID"] = requestId ?? AihJson.NewId("dia"), ["DeIDAndAnonymTime"] = AihJson.Time(), ["EndUserID"] = user,
             ["DeIDAndAnonymData"] = new JsonArray(new JsonObject { ["Response"] = response })
         };
     }

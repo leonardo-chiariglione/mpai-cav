@@ -17,20 +17,19 @@ public sealed class HfeUserAgent : IDisposable
 
     private readonly IControllerApi api;
     private readonly ModuleSession s;
-    private readonly IBackEnd backEnd;
     private JsonObject? tokens;
 
     public string UserId { get; }
 
     // service: the Back End's Trust Authority this End User decided to trust - the name of its service, its anchor, where it is reached - and the name the Back End calls this Front End by (its
     // HFEID). The workflow joins the service by name before anything is sent.
-    public HfeUserAgent(IControllerApi api, IBackEnd backEnd, string userId, string workflowFile, string vault, (string Service, string Anchor, string Rendezvous, string KnownAs)? service = null)
+    public HfeUserAgent(IControllerApi api, string userId, string workflowFile, string vault, (string Service, string Anchor, string Rendezvous, string KnownAs)? service = null)
     {
-        this.api = api; this.backEnd = backEnd; UserId = userId;
+        this.api = api; UserId = userId;
         s = new ModuleSession(api, workflowFile, vault, service,
             ("RegisterIn", "AIH-REG-V1.1"), ("RequestIn", "AIH-AHP-V1.1"),
-            ("HealthIn", "AIH-HLD-V1.1"), ("LicenceIn", "AIH-MDL-V1.1"),
-            ("RegisterAnswerOut", ""), ("ResponseOut", ""), ("AraOut", ""));
+            ("HealthIn", "AIH-HLD-V1.1"), ("LicenceIn", "AIH-MDL-V1.1"), ("DeIdIn", "AIH-DIA-V1.1"), ("AuditIn", "AIH-ADT-V1.1"),
+            ("RegisterAnswerOut", ""), ("ResponseOut", ""), ("AraOut", ""), ("DeIdOut", ""), ("AuditOut", ""));
         s.Start();
     }
 
@@ -106,17 +105,18 @@ public sealed class HfeUserAgent : IDisposable
         return AihJson.Parse(s.Receive("ResponseOut", 60_000) ?? throw new TimeoutException("The Back End gave no answer to the processing."), "AIH Data Process");
     }
 
-    // A request for the Back End to de-identify or anonymise an AIH Data of this End User.
+    // A request for the Back End to de-identify or anonymise an AIH Data of this End User: offered at the Port of its Data Type; the Front End sends it to the Back End and gives the answer
+    // out, between the Controllers. This User Agent carries nothing to the Back End.
     public JsonObject DeIdentify(string aihDataId, string type, string algorithm) =>
-        AihJson.Parse(backEnd.DeIdentify(new JsonObject
+        Ask("DeIdIn", "DeIdOut", "DeIDAndAnonymID", "De-Identification and Anonymisation", new JsonObject
         {
             ["Header"] = AihJson.DeId, ["DeIDAndAnonymID"] = AihJson.NewId("dia"), ["DeIDAndAnonymTime"] = AihJson.Time(), ["EndUserID"] = UserId,
             ["DeIDAndAnonymData"] = new JsonArray(new JsonObject { ["Request"] = new JsonObject { ["AIHDataID"] = aihDataId, ["DeIDAndAnonymType"] = type, ["DeIDAndAnonymAlgoID"] = algorithm, ["Tokens"] = (tokens ?? AihJson.TokensFor(UserId, [])).DeepClone() } })
-        }.ToJsonString()), "De-Identification and Anonymisation");
+        });
 
-    // A request for the Back End to audit the use of this End User's AIH Data.
+    // A request for the Back End to audit the use of this End User's AIH Data: the same way.
     public JsonObject Audit() =>
-        AihJson.Parse(backEnd.Audit(new JsonObject
+        Ask("AuditIn", "AuditOut", "AuditID", "Audit", new JsonObject
         {
             ["Header"] = AihJson.Audit, ["UserID"] = UserId, ["AuditID"] = AihJson.NewId("adt"), ["AuditTime"] = AihJson.Time(),
             ["Audit"] = new JsonObject
@@ -128,7 +128,22 @@ public sealed class HfeUserAgent : IDisposable
                     ["Tokens"] = (tokens ?? AihJson.TokensFor(UserId, [])).DeepClone()
                 }
             }
-        }.ToJsonString()), "Audit");
+        });
+
+    // Offers a request and reads its answer: the one that carries the request's identifier.
+    private JsonObject Ask(string inDevice, string outDevice, string idName, string what, JsonObject request)
+    {
+        var id = request[idName]!.GetValue<string>();
+        s.Drain();
+        s.Send(inDevice, request.ToJsonString());
+        var until = DateTime.UtcNow.AddSeconds(60);
+        while (DateTime.UtcNow < until && s.Receive(outDevice, (int)Math.Max(1, (until - DateTime.UtcNow).TotalMilliseconds)) is { } json)
+        {
+            var answer = AihJson.Parse(json, what);
+            if (answer[idName]?.GetValue<string>() == id) return answer;
+        }
+        throw new TimeoutException($"The Back End gave no answer to the {what} request.");
+    }
 
     private JsonObject Request(string type, JsonNode[] items) => new()
     {

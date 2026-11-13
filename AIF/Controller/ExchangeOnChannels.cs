@@ -234,7 +234,7 @@ public sealed partial class ContinuousExecutor
 
         host.Succeeded(leaf.Instance);
         var ports = new Ports(this, leaf);
-        foreach (var (name, json) in result.Ports)
+        foreach (var (name, json) in result.AllOutputs())
         {
             var port = leaf.Ports.FirstOrDefault(p => p.Direction == "Output" && KeyOf(leaf, p) == name);
             if (port is null) { Console.WriteLine($"[AIF] {leaf.Instance}: produced '{name}', which is not one of its Output Ports; dropped"); continue; }

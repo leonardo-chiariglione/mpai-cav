@@ -35,6 +35,38 @@ public class JoinServiceTests
         Assert.Null(registry.Service("another"));
     }
 
+    // 'ask Controller to admit by "<policy>"' (MPAI_AIFU_External_Authority) and 'ask Controller to leave' (MPAI_AIFU_External_Leave): the policy is read whole, quotes and all.
+    [Fact]
+    public void TheWorkflowMakesTheControllerTheAuthorityAndLeaves()
+    {
+        var workflow = new WorkflowReader().Read("""
+            workflow Test over 1AIH-HBE-V1.1-I01
+
+            on Start:
+                ask Controller to start
+                ask Controller to admit by "{ "Roles": ["BackEnd", "FrontEnd"], "AuthorityRole": "BackEnd" }"
+
+            on Stop:
+                ask Controller to leave
+                ask Controller to stop
+            """);
+        var admit = workflow.OnStart.Single(s => s.Kind == StepKind.AdmitService);
+        Assert.Equal("""{ "Roles": ["BackEnd", "FrontEnd"], "AuthorityRole": "BackEnd" }""", admit.Text);
+        Assert.True(admit.IsControllerRequest);
+        var leave = workflow.OnStop.First();
+        Assert.Equal(StepKind.LeaveService, leave.Kind);
+        Assert.True(leave.IsControllerRequest);
+    }
+
+    [Fact]
+    public void AnAdmitThatGivesNoPolicyIsRefused() =>
+        Assert.Throws<WorkflowReader.WorkflowSyntaxError>(() => new WorkflowReader().Read("""
+            workflow Test over 1AIH-HBE-V1.1-I01
+
+            on Start:
+                ask Controller to admit by
+            """));
+
     [Fact]
     public void AJoinThatNamesNoServiceIsRefused() =>
         Assert.Throws<WorkflowReader.WorkflowSyntaxError>(() => new WorkflowReader().Read("""

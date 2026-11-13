@@ -35,6 +35,10 @@ public interface IAsyncControllerApi
     Task<AifError> ExternalJoinAsync(string moduleName, string authority, string rendezvous, string? role, string? controllerId) =>
         Task.FromResult(AifError.Failed);
 
+    // MPAI_AIFU_External_Authority and _Leave (Basic API 3.9): the Controller made the Trust Authority for the External links of the Module, under the policy; the links closed. Not over MPAI-MAS.
+    Task<AifError> ExternalAuthorityAsync(string moduleName, string policy) => Task.FromResult(AifError.Failed);
+    Task<AifError> ExternalLeaveAsync(string moduleName) => Task.FromResult(AifError.Failed);
+
     // A payload placed for a boundary Input Port, its reference returned (M3215
     // 3.6). Not over MPAI-MAS (Phase 15): there a payload goes inline.
     Task<(AifError Error, string? Reference)> PayloadPutAsync(string moduleName, string dataType, int portNumber, ReadOnlyMemory<byte> data) =>
@@ -84,5 +88,9 @@ public static class ControllerApiAsync
 
         public Task<AifError> ExternalJoinAsync(string moduleName, string authority, string rendezvous, string? role, string? controllerId) =>
             Task.Run(() => api.ExternalJoin(moduleName, authority, rendezvous, role, controllerId));
+
+        public Task<AifError> ExternalAuthorityAsync(string moduleName, string policy) => Task.Run(() => api.ExternalAuthority(moduleName, policy));
+
+        public Task<AifError> ExternalLeaveAsync(string moduleName) => Task.Run(() => api.ExternalLeave(moduleName));
     }
 }

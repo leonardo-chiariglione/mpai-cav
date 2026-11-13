@@ -162,19 +162,13 @@ public class AihBackEndModuleTests : IDisposable
     // The pseudonym De-Identification gives an End User (a keyed hash of the identifier; the key is the AIM's setting, here its default).
     private static string Pseudonym(string user) => "pseud-" + Convert.ToHexString(System.Security.Cryptography.HMACSHA256.HashData(System.Text.Encoding.UTF8.GetBytes("mpai-aih-test-pseudonym-key"), System.Text.Encoding.UTF8.GetBytes(user)))[..12].ToLowerInvariant();
 
-    // The Back End's User Agent asks AIH Data Processing for an AIH Data, as the Back End, which has no Tokens (or as a user, with theirs): it is given the AIH Data itself, to hand
-    // to De-Identification and to Auditing.
-    private JsonObject Fetch(string requester, JsonObject tokens, string id)
-    {
-        Write(AihJson.Process, 1, Request(requester, "Store", tokens, id));
-        var response = AihJson.ResponseOf(Read(AihJson.Process, 2))!;
-        Assert.True(response["ProcessingStatus"]!.GetValue<bool>(), $"{id} is not given to {requester}");
-        return (JsonObject)response["AIHDataOrAIHDataID"]![0]!;
-    }
-
+    // DE-IDENTIFICATION AND AUDIT ON CHANNELS (AIF V3.0 COM-1, UA-2, UA-4; 2026-11-13). The User Agent offers the request at the boundary Port of its Data Type and reads the response
+    // at the boundary Port of its Data Type: AIH Data Processing checks the Tokens, gives De-Identification and Anonymisation the AIH Data, keeps the copy it makes, and gives Auditing
+    // every AIH Data it keeps. No AIH Data enters or leaves the Back End at its boundary.
     [SkippableFact]
     public void DeIdentificationMakesACopyThatAuditingFindsLicensedOrNot()
     {
+        Assert.Equal(AifError.NoSuchPort, api.InputWrite(Hbe, AihJson.AihData, 1, "{}", 1000));                // the boundary carries no AIH Data
         var licensed = Register(AihSamples.RegisterRequest("user-1"), "Store", "DeIDAndAnonym", "Auditing");
         Uploaded("ahd-1", licensed, UploadData("ahd-1"));                                    // its Back End Licence states Pseudonymised: the Back End may de-identify
         var unlicensed = UploadData("ahd-2", "user-3");
@@ -182,31 +176,27 @@ public class AihBackEndModuleTests : IDisposable
         var user3 = Register(AihSamples.RegisterRequest("user-3"), "Store", "DeIDAndAnonym", "Auditing");
         Uploaded("ahd-2", user3, unlicensed);
 
-        // For each: the request is made, De-Identification is given the AIH Data AIH Data Processing keeps, makes the copy, and the copy is given to AIH Data Processing to keep.
-        var copies = new Dictionary<string, JsonObject>();
+        // For each: the request in, the response out; the copy is made and kept inside the Module.
         foreach (var (id, user, tokens) in new[] { ("ahd-1", "user-1", licensed), ("ahd-2", "user-3", user3) })
         {
-            var original = Fetch("hbe-1", new JsonObject(), id);
             Write(AihJson.DeId, 1, DeIdRequest(user, id, "De-Identify", "Hashing", tokens));
-            Write(AihJson.AihData, 2, original);                                                // De-Identification gets the AIH Data
-            var done = Read(AihJson.DeId, 1);
+            var done = Read(AihJson.DeId, 2);
             Assert.Equal("valid", Valid("DeIDAndAnonym", done));
             Assert.True(done["DeIDAndAnonymData"]![0]!["Response"]!["ProcessingState"]!.GetValue<bool>());
-            var copy = Read(AihJson.AihData, 1);                                                // the copy: pseudonym for the End User, the original linked
-            Assert.Equal(id + "-deid", copy["AIHDataID"]!.ToString());
-            Assert.Equal(id + "-deid", done["DeIDAndAnonymData"]![0]!["Response"]!["NewAIHDataID"]!.ToString());     // and the response says what it is called
-            Write(AihJson.AihData, 3, copy);                                                    // AIH Data Processing keeps it, and says so
-            Assert.True(AihJson.ResponseOf(Read(AihJson.Process, 2))!["ProcessingStatus"]!.GetValue<bool>());
-            copies[id] = copy;
+            Assert.Equal(id + "-deid", done["DeIDAndAnonymData"]![0]!["Response"]!["NewAIHDataID"]!.ToString());     // the response says what the copy is called
         }
-        Assert.Equal("ahd-1-deid", Fetch("hbe-1", new JsonObject(), "ahd-1-deid")["AIHDataID"]!.ToString());      // it is kept
+
+        // Refused by AIH Data Processing, which holds the registrations: the AIH Data of another End User, and Tokens without the service.
+        Write(AihJson.DeId, 1, DeIdRequest("user-3", "ahd-1", "De-Identify", "Hashing", user3));
+        Assert.False(Read(AihJson.DeId, 2)["DeIDAndAnonymData"]![0]!["Response"]!["ProcessingState"]!.GetValue<bool>());
+        var noService = Register(AihSamples.RegisterRequest("user-4"), "Store");
+        Write(AihJson.Audit, 1, AuditRequest("user-4", noService));
+        Assert.False(Read(AihJson.Audit, 2)["Audit"]!["Response"]!["ProcessingState"]!.GetValue<bool>());
 
         // The audit of user-1: its copy was licensed. The audit of user-3: its copy was not.
-        foreach (var (user, id, expectedUnlicensed, tokens) in new[] { ("user-1", "ahd-1", 0, licensed), ("user-3", "ahd-2", 1, user3) })
+        foreach (var (user, expectedUnlicensed, tokens) in new[] { ("user-1", 0, licensed), ("user-3", 1, user3) })
         {
-            Write(AihJson.AihData, 1, Fetch("hbe-1", new JsonObject(), id));                    // Auditing is given the AIH Data of the End User and its copy...
-            Write(AihJson.AihData, 1, copies[id]);
-            Write(AihJson.Audit, 1, AuditRequest(user, tokens));                                // ...and then the request
+            Write(AihJson.Audit, 1, AuditRequest(user, tokens));
             // Auditing asks one Licence Confirm per copy, to the Blockchain (the boundary Port of Auditing is LCF#1).
             for (var asked = 0; asked < 3; asked++)
             {
@@ -217,7 +207,7 @@ public class AihBackEndModuleTests : IDisposable
                 var allowed = chain.Confirm(request["AIHDataID"]!.GetValue<string>(), request["ProcessType"]!.GetValue<string>(), request["RequesterID"]!.GetValue<string>());
                 Write(AihJson.LicenceConfirm, 1, AihJson.LicenceConfirmResponse(ask["EndUserID"]?.GetValue<string>() ?? "", ask["LicenceConfirmID"]!.GetValue<string>(), allowed));
             }
-            var audit = Read(AihJson.Audit, 1);
+            var audit = Read(AihJson.Audit, 2);
             var found = audit["Audit"]!["Response"]!["AIHDataIDs"]!.AsArray();
             Assert.Equal(expectedUnlicensed, found.Count);
             if (expectedUnlicensed == 1) Assert.Equal("ahd-2-deid", found[0]!["AIHDataID"]!.ToString());

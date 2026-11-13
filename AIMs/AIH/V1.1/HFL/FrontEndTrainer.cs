@@ -80,14 +80,17 @@ public sealed class FrontEndTrainer : IDisposable
     // Trains the model given (null: a final layer from zero, on the trainer's network) on the End User's own cases; keeps the new version; returns it.
     // First the network and the final layer are trained together for networkEpochs passes (Adam, batches of 10, in a fixed order); then the final layer is fitted on the
     // features of the trained network (epochs, full batch). networkEpochs = 0 leaves the network as it is.
-    public JsonObject Train(JsonObject? start, int epochs = 300, float learningRate = 0.01f, int networkEpochs = NetworkEpochs, float networkRate = 0.0002f)
+    // mark: DURING-TRAINING WATERMARK INSERTION (DWI). Given (the ONNX file of the network -> the same, watermarked), the mark is inserted in the network before it is trained, and the
+    // weights it set are kept at the values it gave them after every update: the network learns around the mark, which is part of the trained model, not put on it afterwards.
+    public JsonObject Train(JsonObject? start, int epochs = 300, float learningRate = 0.01f, int networkEpochs = NetworkEpochs, float networkRate = 0.0002f, Func<byte[], byte[]>? mark = null)
     {
         var w = start is null ? new float[FeatureCount + 1] : Weights(start);
         if (w.Length != FeatureCount + 1) throw new FormatException($"the NN Model holds {w.Length} values, the final layer needs {FeatureCount + 1}.");
         var cases = Replay();
         if (cases.Count == 0) throw new InvalidOperationException("the End User has no case to learn from.");
         var net = NetworkFor(start);
-        if (networkEpochs > 0) TrainTogether(net, w, cases, networkEpochs, networkRate, learningRate);
+        var held = mark is null ? null : Held(net, mark);
+        if (networkEpochs > 0) TrainTogether(net, w, cases, networkEpochs, networkRate, learningRate, held);
         var data = cases.Select(c => (net.Features(c.Image), c.Y)).ToList();
         FitHead(w, data, epochs, learningRate);
         var what = networkEpochs > 0 ? "network and final layer" : "final layer (the network unchanged)";
@@ -173,7 +176,29 @@ public sealed class FrontEndTrainer : IDisposable
     private static double Sigmoid(double z) => 1.0 / (1.0 + Math.Exp(-z));
 
     // The network and the final layer together: Adam on the logistic loss, batches of 10 in the order of the cases; the network at networkRate, the final layer at headRate.
-    private static void TrainTogether(Network net, float[] w, List<(float[] Image, float Y)> cases, int epochs, float networkRate, float headRate)
+    // The weights the mark sets, as (tensor, index, value), and the mark applied: the weights of the marked network that differ from those of the network before.
+    private Hold Held(Network net, Func<byte[], byte[]> mark)
+    {
+        var before = net.Weights();
+        var after = new Network(mark(net.ToOnnx()), ImageSide).Weights();
+        var parameters = net.Parameters().ToList();
+        var held = new List<(int P, int I, float V)>();
+        for (int p = 0, at = 0; p < parameters.Count; at += parameters[p].Values.Length, p++)
+            for (var i = 0; i < parameters[p].Values.Length; i++)
+                if (after[at + i] != before[at + i]) held.Add((p, i, after[at + i]));
+        if (held.Count == 0) throw new InvalidOperationException("the mark changed no weight of the network.");
+        var hold = new Hold(held);
+        hold.Apply(parameters);
+        return hold;
+    }
+
+    private sealed class Hold(List<(int P, int I, float V)> held)
+    {
+        public int Count => held.Count;
+        public void Apply(List<(float[] Values, float[] Grads)> parameters) { foreach (var (p, i, v) in held) parameters[p].Values[i] = v; }
+    }
+
+    private static void TrainTogether(Network net, float[] w, List<(float[] Image, float Y)> cases, int epochs, float networkRate, float headRate, Hold? held = null)
     {
         var parameters = net.Parameters().ToList();
         var m = parameters.Select(p => new double[p.Values.Length]).ToList(); var v = parameters.Select(p => new double[p.Values.Length]).ToList();
@@ -211,6 +236,7 @@ public sealed class FrontEndTrainer : IDisposable
                         values[i] -= (float)(networkRate * (pm[i] / c1) / (Math.Sqrt(pv[i] / c2) + 1e-8));
                     }
                 }
+                held?.Apply(parameters);                                               // DWI: the marked weights stay as the mark set them
             }
     }
 

@@ -68,7 +68,41 @@ public class AihFrontEndModuleTests : IDisposable
         var response = AihSamples.RegisterResponse("user-1");
         Write(AihJson.Register, 2, response);
         Assert.Equal(response.ToJsonString(), Read(AihJson.Register, 2).ToJsonString());
+
+        // De-identification, anonymisation and audit the same way (2026-11-13): the request goes to the Back End on Output 1, the Back End's answer comes in on Input 2 and goes out on Output 2.
+        var deId = DeIdRequest("user-1", "d1");
+        Write(AihJson.DeId, 1, deId);
+        Assert.Equal(deId.ToJsonString(), Read(AihJson.DeId, 1).ToJsonString());
+        var deIdAnswer = new JsonObject
+        {
+            ["Header"] = AihJson.DeId, ["DeIDAndAnonymID"] = "d1", ["DeIDAndAnonymTime"] = AihJson.Time(), ["EndUserID"] = "user-1",
+            ["DeIDAndAnonymData"] = new JsonArray(new JsonObject { ["Response"] = new JsonObject { ["AIHDataID"] = "ahd-1", ["ProcessingState"] = true, ["NewAIHDataID"] = "ahd-1-deid" } })
+        };
+        Write(AihJson.DeId, 2, deIdAnswer);
+        Assert.Equal(deIdAnswer.ToJsonString(), Read(AihJson.DeId, 2).ToJsonString());
+        var audit = AuditRequest("user-1", "a1");
+        Write(AihJson.Audit, 1, audit);
+        Assert.Equal(audit.ToJsonString(), Read(AihJson.Audit, 1).ToJsonString());
+        var auditAnswer = new JsonObject
+        {
+            ["Header"] = AihJson.Audit, ["UserID"] = "user-1", ["AuditID"] = "a1", ["AuditTime"] = AihJson.Time(),
+            ["Audit"] = new JsonObject { ["Response"] = new JsonObject { ["ProcessingState"] = true, ["AIHDataIDs"] = new JsonArray() } }
+        };
+        Write(AihJson.Audit, 2, auditAnswer);
+        Assert.Equal(auditAnswer.ToJsonString(), Read(AihJson.Audit, 2).ToJsonString());
     }
+
+    private static JsonObject DeIdRequest(string user, string id) => new()
+    {
+        ["Header"] = AihJson.DeId, ["DeIDAndAnonymID"] = id, ["DeIDAndAnonymTime"] = AihJson.Time(), ["EndUserID"] = user,
+        ["DeIDAndAnonymData"] = new JsonArray(new JsonObject { ["Request"] = new JsonObject { ["AIHDataID"] = "ahd-1", ["DeIDAndAnonymType"] = "De-Identify", ["DeIDAndAnonymAlgoID"] = "Hashing", ["Tokens"] = AihSamples.Tokens() } })
+    };
+
+    private static JsonObject AuditRequest(string user, string id) => new()
+    {
+        ["Header"] = AihJson.Audit, ["UserID"] = user, ["AuditID"] = id, ["AuditTime"] = AihJson.Time(),
+        ["Audit"] = new JsonObject { ["Request"] = new JsonObject { ["AuditPeriod"] = AihJson.Time(), ["ProcessingOperations"] = new JsonArray(new JsonObject { ["ProcessingOperation"] = "PhysiologicalRiskPrediction" }), ["Tokens"] = AihSamples.Tokens() } }
+    };
 
     [Fact]
     public void HealthDataAndALicenceMakeAihDataThatIsCheckedKeptAndRaisesTheAlert()
@@ -124,6 +158,18 @@ public class AihFrontEndModuleTests : IDisposable
         Write(AihJson.Process, 1, store);
         Assert.False(AihJson.ResponseOf(Read(AihJson.Process, 2))!["ProcessingStatus"]!.GetValue<bool>());   // refused here
         Assert.Equal(AifError.NotProduced, api.OutputRead(Hfe, AihJson.Process, 1, 500).Error);            // and not sent to the Back End
+
+        // A request to de-identify, or to audit, likewise: refused here, with the identifier of the request, and not sent to the Back End.
+        Write(AihJson.DeId, 1, DeIdRequest("ada", "d9"));
+        var deId = Read(AihJson.DeId, 2);
+        Assert.Equal("d9", deId["DeIDAndAnonymID"]!.ToString());
+        Assert.False(deId["DeIDAndAnonymData"]![0]!["Response"]!["ProcessingState"]!.GetValue<bool>());
+        Assert.Equal(AifError.NotProduced, api.OutputRead(Hfe, AihJson.DeId, 1, 500).Error);
+        Write(AihJson.Audit, 1, AuditRequest("ada", "a9"));
+        var audit = Read(AihJson.Audit, 2);
+        Assert.Equal("a9", audit["AuditID"]!.ToString());
+        Assert.False(audit["Audit"]!["Response"]!["ProcessingState"]!.GetValue<bool>());
+        Assert.Equal(AifError.NotProduced, api.OutputRead(Hfe, AihJson.Audit, 1, 500).Error);
     }
 
     [Fact]

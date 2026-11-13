@@ -13,19 +13,18 @@
 #      RegisterIn      a registration              (an End User's arrives on the External Port from the Controller of its Front End;
 #                                                   a Third-Party User's, who is no Controller of the service, through this device)
 #      RequestIn       a request to HDP            (an upload, a processing)
-#      DeIdIn          a request to De-Identify or Anonymise
-#      AuditIn         a request to audit
-#      AhdAuditIn, AhdDeIdIn, AhdProcIn   AIH Data, to Auditing, to De-Identification and
-#                      Anonymisation, and to AIH Data Processing (to be kept)
-#      LearnAnswerIn   the request to start a round (the NN Models the Front Ends trained arrive on the same Port,
-#                      from the Controllers of the Front Ends: External)
+#      DeIdIn          a request to De-Identify or Anonymise (an End User's arrives on the External Port from the Controller of its Front End)
+#      AuditIn         a request to audit                     (likewise; the Back End's own audit through this device)
+#      LearnAnswerIn   the request to start a round: ONE Federated Learn with a Request for each Front End (Health
+#                      Federated Learning sends each Front End its own); the NN Models the Front Ends trained arrive
+#                      on the same Port, from the Controllers of the Front Ends: External)
 #    from the Blockchain -
 #      ContractIn      the Smart Contract of a Model Licence
 #      ConfirmIn       the confirmation of a licence, for HDP
 #      AuditConfirmIn  the same, for Auditing
 #
 #    to the clients -
-#      RegisterOut, ResponseOut, DeIdOut, AhdDeIdOut (the copy), AuditOut, ModelOut
+#      RegisterOut, ResponseOut, DeIdOut, AuditOut, ModelOut
 #    to the Blockchain -
 #      ContractOut, ConfirmOut, AuditConfirmOut
 #
@@ -35,16 +34,21 @@
 #      no Tokens: it is not a user). The licence terms are not the workflow's business: AIH Data Processing, and Auditing, ask the
 #      Blockchain to confirm the licence (ConfirmOut, AuditConfirmOut), and a refusal is the answer.
 #    - the same functions are started by the responsible End User through its Health Front End: processing on RequestIn of the Front
-#      End (between the Controllers); de-identification, anonymisation and audit - see the note below.
-#    NOTE: the Ports of de-identification, anonymisation and audit (DeIdIn, DeIdOut, AuditIn, AuditOut, AhdDeIdOut) and the Back End's own
-#    questions to AIH Data Processing are still devices of this User Agent: the L2 of the Health Back End does not let them be remote and
-#    the L2 of the Health Front End has no such Ports. The proposal is in MKG/pending-changes.md; it is not applied.
+#      End (between the Controllers); de-identification, anonymisation and audit on DeIdIn / AuditIn of the Front End (between the Controllers too).
+#    The User Agent offers a request at the Port of its Data Type and reads the response at the Port of its Data Type, and nothing else: no AIH
+#    Data enters or leaves the Back End at its boundary, and the User Agent carries nothing between the AIMs of the Module (AIF V3.0 COM-1,
+#    UA-2, UA-4). AIH Data Processing checks the Tokens of a request to de-identify, anonymise or audit and gives De-Identification and
+#    Anonymisation, and Auditing, the AIH Data on Channels (2026-11-13).
+#
+#  THE BACK END'S SERVICE: the Controller is made the Trust Authority of the External links of the Module
+#  ('ask Controller to admit by', MPAI_AIFU_External_Authority): it admits the Front Ends' Controllers that
+#  join, in the role FrontEnd, which exchange with the Back End and with no other; an answer goes to the
+#  Controller whose request it answers (Correlate) or that it names (Address: the HFEID). The User Agent
+#  publishes the Controller's anchor and rendezvous with the service.
 #
 #  Where the Secure Storage is kept is the Back End's: the User Agent asks the
 #  Controller to keep the storage there. It names no AIM; AIH Data Processing keeps
-#  the AIH Data there through the storage API (there is no Storage AIM), and gives it
-#  back to the User Agent when it asks for it, which hands it to Auditing and to
-#  De-Identification and Anonymisation.
+#  the AIH Data there through the storage API (there is no Storage AIM).
 # =============================================================================
 
 workflow HBE over 1AIH-HBE-V1.1-I01
@@ -54,14 +58,12 @@ on Start:
     type    Storage (OSD-BTO-V1.5)
     ask Controller to start
     ask Controller to keep storage in "{Storage}"
+    ask Controller to admit by "{ "Roles": ["BackEnd", "FrontEnd"], "DefaultRole": "FrontEnd", "AuthorityRole": "BackEnd", "Exchange": [["BackEnd", "FrontEnd"]], "Directed": true, "Correlate": ["RegisterID", "AIHDataProcessID", "FederatedLearnID", "DeIDAndAnonymID", "AuditID"], "Address": ["HFEID"] }"
 
     stream  RegisterIn        (AIH-REG-V1.1)   from device "RegisterIn"
     stream  RequestIn         (AIH-AHP-V1.1:1) from device "RequestIn"
-    stream  DeIdIn            (AIH-DIA-V1.1)   from device "DeIdIn"
-    stream  AhdAuditIn        (AIH-AHD-V1.1:1) from device "AhdAuditIn"
-    stream  AhdDeIdIn         (AIH-AHD-V1.1:2) from device "AhdDeIdIn"
-    stream  AhdProcIn         (AIH-AHD-V1.1:3) from device "AhdProcIn"
-    stream  AuditIn           (AIH-ADT-V1.1)   from device "AuditIn"
+    stream  DeIdIn            (AIH-DIA-V1.1:1) from device "DeIdIn"
+    stream  AuditIn           (AIH-ADT-V1.1:1) from device "AuditIn"
     stream  LearnAnswerIn     (AIH-FDL-V1.1)   from device "LearnAnswerIn"
     stream  ContractIn        (AIH-BCL-V1.1)   from device "ContractIn"
     stream  ConfirmIn         (AIH-LCF-V1.1:2) from device "ConfirmIn"
@@ -70,9 +72,8 @@ on Start:
     deliver RegisterOut       (AIH-REG-V1.1:2) to device "RegisterOut"
     deliver ResponseOut       (AIH-AHP-V1.1:2) to device "ResponseOut"
     deliver AraOut            (AIH-ARD-V1.1)   to device "AraOut"
-    deliver DeIdOut           (AIH-DIA-V1.1)   to device "DeIdOut"
-    deliver AhdDeIdOut        (AIH-AHD-V1.1:1) to device "AhdDeIdOut"
-    deliver AuditOut          (AIH-ADT-V1.1)   to device "AuditOut"
+    deliver DeIdOut           (AIH-DIA-V1.1:2) to device "DeIdOut"
+    deliver AuditOut          (AIH-ADT-V1.1:2) to device "AuditOut"
     deliver ModelOut          (AIP-MLO-V1.0)   to device "ModelOut"
     deliver ContractOut       (AIH-BCL-V1.1)   to device "ContractOut"
     deliver ConfirmOut        (AIH-LCF-V1.1:2) to device "ConfirmOut"
@@ -82,4 +83,5 @@ on Start:
         wait 1s
 
 on Stop:
+    ask Controller to leave
     ask Controller to stop

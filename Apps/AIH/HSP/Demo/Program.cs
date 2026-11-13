@@ -55,29 +55,16 @@ internal static class Program
         var chain = new HashChainBlockchain();
 
         Step("The Health Back End starts: a Controller, and its Module on an AIM host");
-        var hbe = new HbeUserAgent(Controller("hbe", "BackEnd"), chain, Orch("HBE.orch"), Path.Combine(Work, "hbe", "secure-storage"));
+        var hbe = new HbeUserAgent(Controller("hbe", "BackEnd"), chain, Orch("HBE.orch"), Path.Combine(Work, "hbe", "secure-storage"), models: Store, frontEndL3: FrontEndL3());
         Cleanup.Add(hbe);
         Hbe = hbe;
-        if (hbe.StartService() != AifError.OK) throw new InvalidOperationException("the Back End's Controller is not the Trust Authority of its service.");
+        if (hbe.Anchor is null) throw new InvalidOperationException("the Back End's Controller is not the Trust Authority of its service.");
         Say("The Back End's Controller is the Trust Authority of its service: the Front Ends' Controllers join it.");
-        var trust = new BackEndTrust("hbe-1");
-        var door = new TrustedBackEnd(hbe, trust);
-        Say("The Back End is the Trust Authority: it admits the parties that will exchange data with it.");
-
-        IBackEnd Join(string party, string subject)
-        {
-            var admitted = trust.Enroll(party, subject);
-            admitted.Establish();
-            Say($"  {party}: enrolled, trust established with the Back End.");
-            return new TrustedClient(admitted, door);
-        }
 
         Step("Two End Users start their Health Front Ends, and the Third-Party User joins");
-        var one = Front("user-1", Join("hfe:user-1", "user-1"));
-        var two = Front("user-2", Join("hfe:user-2", "user-2"));
-        var tpu = Join("tpu:tpu-1", "tpu-1");
-        var tpuFront = Front("tpu-1", tpu, "tpu-1");              // the Third-Party User runs a Health Front End too: its User Profile makes it do what a Third-Party User does
-
+        var one = Front("user-1");
+        var two = Front("user-2");
+        var tpuFront = Front("tpu-1", "tpu-1");              // the Third-Party User runs a Health Front End too: its User Profile makes it do what a Third-Party User does
 
         Step("The End Users register with the Back End, each through their own Front End");
         var services = new[] { "Store", "DeIDAndAnonym", "Auditing" };
@@ -111,11 +98,18 @@ internal static class Program
         var unlicensed = two.Audit()["Audit"]!["Response"]!["AIHDataIDs"]!.AsArray();
         Say($"  audit of user-2: {unlicensed.Count} unlicensed operation(s): {string.Join(", ", unlicensed.Select(u => u!["AIHDataID"]))}");
 
-        Step("A round of Federated Learning: the Back End asks each Front End for the model it trained, and averages them");
+        Step("Federated Learning: the Back End publishes the Neural Network Model AIM with its first model; the Front Ends start again and take it");
+        Say($"  the AIM {hbe.PublishModel(Mpai.Aih.Hfl.FrontEndTrainer.ModelObject("model-0", new float[] { 0f, 0f }, "the Back End's first model"))} and the Front End version {hbe.FrontEndVersion} are in the MPAI Store");
+        one = Restart(one, "user-1"); two = Restart(two, "user-2");
+        Say("  the Neural Network Model processes new Health Data of each End User, and learns");
+        one.Acquire(HealthData("user-1", 190), Licence("user-1", "ahd-5", licenseThirdParty: false));
+        two.Acquire(HealthData("user-2", 125), Licence("user-2", "ahd-6", licenseThirdParty: false));
+
+        Step("A round of Federated Learning: the Back End asks each Front End for the model its Neural Network Model AIM holds, and averages them");
         var model = hbe.FederatedLearning("model-0", "hfe-1", "hfe-2");
         var weights = new float[2];
         Buffer.BlockCopy(Convert.FromBase64String(model["MLModelData"]![0]!["Data"]!.ToString()), 0, weights, 0, 8);
-        Say($"  new NN Model {model["MLModelObjectID"]}: weights [{weights[0]:0.###}, {weights[1]:0.###}]");
+        Say($"  new NN Model {model["MLModelObjectID"]}: weights [{weights[0]:0.###}, {weights[1]:0.###}]; the AIM {hbe.ModelAimId} and the Front End version {hbe.FrontEndVersion} are in the MPAI Store");
 
         Step("The Blockchain");
         Say($"  {chain.Ledger.Count} entries; the chain holds together: {chain.Verify()}");
@@ -127,9 +121,38 @@ internal static class Program
 
     private static HbeUserAgent? Hbe;
 
-    private static HfeUserAgent Front(string user, IBackEnd backEnd, string? name = null)
+    // A Front End's Module started again on the same Controller, which follows the MPAI Store: it takes the newest Front End version and the AIM it names.
+    private static HfeUserAgent Restart(HfeUserAgent ua, string user)
     {
-        var ua = new HfeUserAgent(Controller("hfe-" + user, "FrontEnd"), backEnd, user, Orch("HFE.orch"), Path.Combine(Work, "hfe-" + user, "secure-data-vault"),
+        ua.Dispose();
+        var again = new HfeUserAgent(Controllers["hfe-" + user], user, Orch("HFE.orch"), Path.Combine(Work, "hfe-" + user, "secure-data-vault"),
+                                     ("AIH-HBE", Hbe!.Anchor!, Hbe.Rendezvous!, "hfe-" + user.Split('-')[1]));
+        Cleanup.Add(again);
+        Say($"  Front End of {user}: started again, as version {Controllers["hfe-" + user].Repository!.VersionOf("1AIH-HFE-V1.1-I01")}.");
+        return again;
+    }
+
+    private static readonly Dictionary<string, ControllerApi> Controllers = [];
+
+    // THE MPAI STORE (the test one): the Back End publishes in it the AIMs that wrap its models and the Front End versions that have them; it publishes only what conforms to the L2.
+    // The Back End's organisation is a Trust Anchor; the Store signs with a key the Front Ends' Controllers know.
+    private static readonly System.Security.Cryptography.ECDsa StoreKey = System.Security.Cryptography.ECDsa.Create(System.Security.Cryptography.ECCurve.NamedCurves.nistP256);
+    private static readonly AIF.Trust.TrustAuthority Organisation = new("hbe-organisation");
+    private static Mpai.Aih.Nnm.ModelAimPublisher? store;
+    private static Mpai.Aih.Nnm.ModelAimPublisher Store => store ??= new(Path.Combine(Work, "mpai-store"), Path.Combine(Work, "hbe-implementations"),
+        l3 => new AIF.Metadata.L2Conformance(Path.Combine(Root, "schemas"), _ => null).Check(l3));
+
+    // The Front End's L3 as the Back End has it: its AIMs executing apart from the Controller.
+    private static string FrontEndL3() => Apart(File.ReadAllText(Path.Combine(Root, "AIMs", "AMDs", "1AIH-HFE-V1.1-I01.json")), FrontEndAims);
+    private static string Apart(string text, IEnumerable<string> aims)
+    {
+        foreach (var aim in aims) text = Regex.Replace(text, "(\"AIMName\"\\s*:\\s*\"" + aim + "\"\\s*,\\s*\"Relation\"\\s*:\\s*)\"Internal\"", "$1\"External\"");
+        return text;
+    }
+
+    private static HfeUserAgent Front(string user, string? name = null)
+    {
+        var ua = new HfeUserAgent(Controller("hfe-" + user, "FrontEnd"), user, Orch("HFE.orch"), Path.Combine(Work, "hfe-" + user, "secure-data-vault"),
                                   ("AIH-HBE", Hbe!.Anchor!, Hbe.Rendezvous!, name ?? "hfe-" + user.Split('-')[1]));
         Cleanup.Add(ua);
         Say($"  Front End of {user}: started.");
@@ -159,22 +182,50 @@ internal static class Program
         foreach (var aim in aims) text = Regex.Replace(text, "(\"AIMName\"\\s*:\\s*\"" + aim + "\"\\s*,\\s*\"Relation\"\\s*:\\s*)\"Internal\"", "$1\"External\"");
         File.WriteAllText(Path.Combine(amds, composite + ".json"), text);
 
-        var address = StartHost(amds, settings, name);
-        var api = new ControllerApi(amds, settings, _ => new CompositeProvider());
+        // A FRONT END'S CONTROLLER FOLLOWS THE MPAI STORE: it holds the Metadata of its own (a repository), obtains a newer Front End and the AIM it names when its Module starts,
+        // and hands the AIM to the AIM host, which obtains the Implementation and checks it. Both have an identity under the organisation's Trust Anchor; both know the Store's key.
+        var extra = new List<string>();
+        AIF.Store.AimRepository? repository = null; AIF.Store.StoreAimSource? source = null;
+        if (role == "FrontEnd")
+        {
+            var spki = (System.Security.Cryptography.ECDsa key) => Convert.ToHexString(key.ExportSubjectPublicKeyInfo());
+            var host = Organisation.Admit("module-" + name, TimeSpan.FromDays(30));
+            var identity = new JsonObject
+            {
+                ["ControllerId"] = "module-" + name, ["Credential"] = host.Credential.DeepClone(), ["Cii"] = host.Anchor.Object(),
+                ["Anchors"] = new JsonObject { [Organisation.Anchor.AnchorId] = spki(Organisation.Anchor.PublicKey) }
+            };
+            var identityFile = Path.Combine(folder, "module-identity.json"); File.WriteAllText(identityFile, identity.ToJsonString());
+            extra.AddRange(["--identity", identityFile, "--store-key", "store-key-1=" + spki(StoreKey)]);
+            var controllerAmds = Path.Combine(folder, "controller-amds"); Directory.CreateDirectory(controllerAmds);
+            foreach (var file in Directory.EnumerateFiles(amds, "*.json")) File.Copy(file, Path.Combine(controllerAmds, Path.GetFileName(file)));
+            var admission = Organisation.Admit(name, TimeSpan.FromDays(30));
+            repository = new AIF.Store.AimRepository(controllerAmds)
+            {
+                Identity = new AIF.Store.AimLicences.ControllerIdentity(name, admission.Credential, admission.Anchor.Object(), [], a => a == Organisation.Anchor.AnchorId ? Organisation.Anchor.PublicKey : null),
+                StoreKeys = id => id == "store-key-1" ? StoreKey : null
+            };
+            source = new AIF.Store.StoreAimSource(Path.Combine(Work, "mpai-store"), Organisation.Anchor.AnchorId, new AIF.Store.AimLicences.Issuer(StoreKey, "store-key-1", "mpai-store", "P7D"));
+        }
+
+        var address = StartHost(amds, settings, name, extra);
+        var api = new ControllerApi(repository?.Folder ?? amds, settings, _ => new CompositeProvider());
         api.Controller.AimHostKey = Key;
-        foreach (var aim in aims) api.Controller.AimHosts[aim] = address;
+        foreach (var aim in aims.Append(composite)) api.Controller.AimHosts[aim] = address;            // and for the Module itself: the AIMs that come later
+        if (repository is not null) { api.Repository = repository; api.Source = source; api.FollowNewerVersions = true; api.FetchImplementations = false; }
+        Controllers[name] = api;
         Cleanup.Add(api);
         return api;
     }
 
-    private static string StartHost(string amds, string settings, string name)
+    private static string StartHost(string amds, string settings, string name, IEnumerable<string> extra)
     {
         var info = new ProcessStartInfo("dotnet") { UseShellExecute = false, RedirectStandardOutput = true, RedirectStandardError = true, CreateNoWindow = true, WorkingDirectory = Root };
         foreach (var arg in new[]
         {
             Path.Combine(Root, "AIF", "AimHost", "bin", "Debug", "net10.0", "AIF.AimHost.dll"), "--port", "0", "--key", Key, "--amds", amds, "--settings", settings,
             "--storage", Path.Combine(Work, name, "aimhost"), "--provider", Path.Combine(AppContext.BaseDirectory, "Mpai.Aih.dll") + ":Mpai.Aih.AihProvider"
-        }) info.ArgumentList.Add(arg);
+        }.Concat(extra)) info.ArgumentList.Add(arg);
         var process = Process.Start(info)!;
         Cleanup.Add(new Killer(process));
         var clock = Stopwatch.StartNew();

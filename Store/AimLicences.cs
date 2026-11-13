@@ -25,7 +25,9 @@ public static class AimLicences
     public sealed record ControllerIdentity(string ControllerId, JsonObject Credential, JsonObject Cii, IReadOnlyList<PtfCredential.Link> Chain, Func<string, ECDsa?> Anchors);
 
     // THE MPAI STORE ISSUES the offer of an AIM to a licensee: the AIM Licence it keeps and shows. controllerId: where only one Controller of the Trust Anchor is licensed.
-    public static JsonObject Issue(JsonObject offer, string aimName, string version, IReadOnlyDictionary<string, string> approved, string trustAnchorId, string? controllerId,
+    // l3Json: the AIM Instance Metadata the licence is for, as the MPAI Store approved it. The licence names it (its SHA-256), not the files: the Implementations are those the
+    // Store approved for that Metadata, and the data of Access are those its SHA-256 pin (2026-11-13).
+    public static JsonObject Issue(JsonObject offer, string aimName, string version, string l3Json, string trustAnchorId, string? controllerId,
                                    Issuer issuer, DateTimeOffset now, string implementerId)
     {
         // The MPAI Store sublicenses only what the Implementer's licence to it lets it sublicense.
@@ -39,7 +41,7 @@ public static class AimLicences
         licence["AIM"] = new JsonObject
         {
             ["AIMName"] = aimName, ["Versions"] = new JsonObject { ["From"] = version },
-            ["Implementations"] = new JsonArray(approved.Select(a => (JsonNode)new JsonObject { ["BinaryName"] = a.Key, ["HashAlgorithm"] = Sha256, ["Hash"] = a.Value.ToUpperInvariant() }).ToArray())
+            ["L3"] = new JsonObject { ["HashAlgorithm"] = Sha256, ["Hash"] = L3Hash(l3Json) }
         };
         licence["Licensor"] = new JsonObject { ["LicensorID"] = issuer.StoreId };       // the MPAI Store grants; the Implementer's relation to it is outside the AIM Licence
         var licensee = new JsonObject { ["TrustAnchorID"] = trustAnchorId };
@@ -76,10 +78,12 @@ public static class AimLicences
         return licence;
     }
 
-    // THE CONTROLLER CHECKS an AIM Licence before it builds the AIM: what is wrong with it, none when it is good. held: the files the Controller holds of the AIM, with the
-    // fingerprints the MPAI Store approved; storeKey: the public key a KeyID names; revoked: whether the MPAI Store says it is revoked, null when it could not be asked;
-    // lastStatusCheck: when the MPAI Store last confirmed that it is not (the time it was issued, if never asked since).
-    public static IReadOnlyList<string> Check(JsonObject licence, ControllerIdentity identity, string aimName, IReadOnlyDictionary<string, string> held,
+    // THE CONTROLLER CHECKS an AIM Licence before it builds the AIM: what is wrong with it, none when it is good. heldL3: the AIM Instance Metadata the Controller holds. The licence
+    // covers it if it is the one it names (the version it was issued for, the same SHA-256), or a newer version of the same AIM where the licence includes updates. The files are
+    // checked against the MPAI Store's approval of that Metadata as the Controller obtains them (from the fingerprints it keeps in its repository when it cannot ask the Store).
+    // storeKey: the public key a KeyID names; revoked: whether the MPAI Store says it is revoked, null when it could not be asked; lastStatusCheck: when the MPAI Store last
+    // confirmed that it is not (the time it was issued, if never asked since).
+    public static IReadOnlyList<string> Check(JsonObject licence, ControllerIdentity identity, string aimName, string heldL3,
                                               Func<string, ECDsa?> storeKey, DateTimeOffset now, bool? revoked = null, bool keeping = false, DateTimeOffset? lastStatusCheck = null, bool executesApart = false, JsonObject? offer = null, string? implementerId = null)
     {
         var found = new List<string>();
@@ -109,11 +113,22 @@ public static class AimLicences
         else if (chain != PtfCredential.Outcome.Valid) found.Add($"this Controller ({identity.ControllerId}) is not under the Trust Anchor {anchorId} ({chain}).");
         if (!executesApart && (string?)licence["Licensee"]?["ControllerID"] is { } only && only != identity.ControllerId) found.Add($"it covers only the Controller {only}, not this Controller ({identity.ControllerId}).");
 
-        var covered = (licence["AIM"]?["Implementations"] as JsonArray ?? []).OfType<JsonObject>()
-                        .ToDictionary(i => (string)i["BinaryName"]!, i => ((string)i["Hash"]!).ToUpperInvariant(), StringComparer.Ordinal);
-        foreach (var (file, hash) in held)
-            if (!covered.TryGetValue(file, out var licensed)) found.Add($"{file} is not covered by it.");
-            else if (!string.Equals(licensed, hash, StringComparison.OrdinalIgnoreCase)) found.Add($"{file} is not the file it covers (other fingerprint).");
+        // THE METADATA IT COVERS: the version it was issued for, with the SHA-256 it names; a newer version only where the licence includes updates (until Versions.To, if given).
+        using (var held = System.Text.Json.JsonDocument.Parse(heldL3))
+        {
+            var version = AimRepository.VersionIn(held.RootElement);
+            var coveredFrom = (string?)licence["AIM"]?["Versions"]?["From"];
+            var coveredTo = (string?)licence["AIM"]?["Versions"]?["To"];
+            if (version == coveredFrom)
+            {
+                if (!string.Equals((string?)licence["AIM"]?["L3"]?["Hash"], L3Hash(heldL3), StringComparison.OrdinalIgnoreCase))
+                    found.Add($"the AIM Metadata held (version {version}) is not the one it covers (other SHA-256).");
+            }
+            else if (licence["Updates"]?["Included"] is not JsonValue included || !included.TryGetValue<bool>(out var updates) || !updates)
+                found.Add($"it covers version {coveredFrom} of {aimName}, not version {version}, and it does not include updates.");
+            else if (coveredFrom is not null && AimRepository.Compare(version, coveredFrom) < 0) found.Add($"it covers version {coveredFrom} and later, not version {version}.");
+            else if (coveredTo is not null && AimRepository.Compare(version, coveredTo) > 0) found.Add($"it covers versions up to {coveredTo}, not version {version}.");
+        }
 
         if (DateTimeOffset.TryParse((string?)licence["Term"]?["NotBefore"], out var from) && now < from) found.Add($"its Term begins at {from:O}.");
         if (licence["Term"]?["NotAfter"] is { } to && DateTimeOffset.TryParse((string?)to, out var until) && now >= until) found.Add($"its Term ended at {until:O}.");
@@ -133,6 +148,9 @@ public static class AimLicences
         }
         return found;
     }
+
+    // The hash of the AIM Instance Metadata a licence covers: its PTF-JSON-CANON-V1 form, SHA-256, in capitals.
+    public static string L3Hash(string l3Json) => Convert.ToHexString(SHA256.HashData(PtfCanonical.Bytes(JsonNode.Parse(l3Json)!.AsObject())));
 
     // The hash of the Implementer's offer: the PTF-JSON-CANON-V1 form of the AIMLicence field, SHA-256, in capitals.
     public static string OfferHash(JsonObject offer) => Convert.ToHexString(SHA256.HashData(PtfCanonical.Bytes(offer)));

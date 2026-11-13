@@ -128,7 +128,7 @@ public sealed class AimRepository
         // Asking the Store, when it can be reached, confirms the status: a licence that is not revoked is confirmed now.
         var revoked = source is not null && (string?)licence["AIMLicenceID"] is { } id ? source.IsRevoked(id) : null;
         var confirmed = revoked == false ? Clock() : LastStatusCheck(aim);
-        Verify(aim, licence, HeldFingerprints(aim), keeping: false, revoked, confirmed, File.ReadAllText(L3Of(aim)));
+        Verify(aim, licence, keeping: false, revoked, confirmed, File.ReadAllText(L3Of(aim)));
         if (revoked == false) SaveStatusCheck(aim, Clock());
     }
 
@@ -144,12 +144,12 @@ public sealed class AimRepository
             ? held.ToDictionary(p => p.Key, p => (string)p.Value!)
             : new Dictionary<string, string>();
 
-    private void Verify(string aim, JsonObject licence, IReadOnlyDictionary<string, string> held, bool keeping, bool? revoked, DateTimeOffset? confirmed, string l3Json)
+    private void Verify(string aim, JsonObject licence, bool keeping, bool? revoked, DateTimeOffset? confirmed, string l3Json)
     {
         var metadata = JsonNode.Parse(l3Json)!.AsObject();
         var identity = Identity ?? throw new InvalidOperationException($"NOT_LICENSED: this Controller has no identity to hold an AIM Licence for {aim} with.");
         var keys = StoreKeys ?? throw new InvalidOperationException($"NOT_LICENSED: this Controller knows no key of the MPAI Store to check the AIM Licence of {aim} with.");
-        var wrong = AimLicences.Check(licence, identity, aim, held, keys, Clock(), revoked, keeping, confirmed, ExecutesApart, metadata["AIMLicence"] as JsonObject, (string?)metadata["Identifier"]?["ImplementerID"]);
+        var wrong = AimLicences.Check(licence, identity, aim, l3Json, keys, Clock(), revoked, keeping, confirmed, ExecutesApart, metadata["AIMLicence"] as JsonObject, (string?)metadata["Identifier"]?["ImplementerID"]);
         if (wrong.Count > 0) throw new InvalidOperationException($"NOT_LICENSED: the AIM Licence of {aim}: {string.Join(" ", wrong)}");
     }
 
@@ -252,7 +252,7 @@ public sealed class AimRepository
             var offers = l3.RootElement.TryGetProperty("AIMLicence", out _);
             if (offers && licence is null) throw new InvalidOperationException($"NOT_LICENSED: {package.AimName} has an AIMLicence in its Metadata and the Store gave no AIM Licence.");
             if (licence is not null)
-                Verify(package.AimName, JsonNode.Parse(licence)!.AsObject(), held, keeping: true, revoked: null, confirmed: null, package.L3Json);
+                Verify(package.AimName, JsonNode.Parse(licence)!.AsObject(), keeping: true, revoked: null, confirmed: null, package.L3Json);
         }
 
         var into = FilesOf(package.AimName);
@@ -369,12 +369,7 @@ public sealed class StoreAimSource(string folder, string trustAnchorId, AimLicen
         if (!document.RootElement.TryGetProperty("AIMLicence", out var offer)) return null;
         if (_licences.TryGetValue(aimName, out var kept)) return kept;
         var key = issuer ?? throw new InvalidOperationException($"{aimName} offers an AIM Licence and this Store has no key to issue one with.");
-        var fingerprints = new ImplementationFingerprints(folder);
-        var approved = new Dictionary<string, string>();
-        if (document.RootElement.TryGetProperty("Implementations", out var list) && list.ValueKind == JsonValueKind.Array)
-            foreach (var item in list.EnumerateArray())
-                if (item.TryGetProperty("BinaryName", out var b) && b.GetString() is { } name && fingerprints.Approved(aimName, name) is { } fingerprint) approved[name] = fingerprint;
-        var issued = AimLicences.Issue(JsonNode.Parse(offer.GetRawText())!.AsObject(), aimName, AimRepository.VersionIn(document.RootElement), approved, trustAnchorId, controllerId, key, Clock(), document.RootElement.GetProperty("Identifier").GetProperty("ImplementerID").GetString() ?? "");
+        var issued = AimLicences.Issue(JsonNode.Parse(offer.GetRawText())!.AsObject(), aimName, AimRepository.VersionIn(document.RootElement), File.ReadAllText(path), trustAnchorId, controllerId, key, Clock(), document.RootElement.GetProperty("Identifier").GetProperty("ImplementerID").GetString() ?? "");
         _issued.Add((string)issued["AIMLicenceID"]!);
         return _licences[aimName] = issued.ToJsonString();
     }

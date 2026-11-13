@@ -104,7 +104,8 @@ public sealed class RemoteProcessor : IAimProcessor
             MessageId   = message.MessageId,
             MessageType = reply["MessageType"]?.GetValue<string>() ?? "",
             Payload     = reply["Payload"]?.GetValue<string>() ?? "",
-            Ports       = (reply["Ports"]?.AsObject() ?? new JsonObject()).ToDictionary(p => p.Key, p => p.Value!.GetValue<string>())
+            Ports       = (reply["Ports"]?.AsObject() ?? new JsonObject()).ToDictionary(p => p.Key, p => p.Value!.GetValue<string>()),
+            More        = (reply["More"]?.AsObject() ?? new JsonObject()).ToDictionary(p => p.Key, p => p.Value!.AsArray().Select(v => v!.GetValue<string>()).ToList())
         };
     }
 }

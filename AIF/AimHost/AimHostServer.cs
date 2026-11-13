@@ -198,6 +198,7 @@ public sealed class AimHostServer
                         ["MessageType"] = result.MessageType,
                         ["Payload"]     = result.Payload,
                         ["Ports"]       = new JsonObject(result.Ports.Select(p => KeyValuePair.Create(p.Key, (JsonNode?)p.Value))),
+                        ["More"]        = new JsonObject(result.More.Select(p => KeyValuePair.Create(p.Key, (JsonNode?)new JsonArray(p.Value.Select(v => (JsonNode?)JsonValue.Create(v)).ToArray())))),
                         ["Reports"]     = Reports(hosted, aim)
                     };
                 }

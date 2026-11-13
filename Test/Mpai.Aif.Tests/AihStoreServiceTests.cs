@@ -46,7 +46,8 @@ public class AihStoreServiceTests
         var backEnd = await StoreTests.Implementer.Approved(http, "Machine", "Health Back End");
         var publisher = new ModelAimPublisher(store.Url, backEnd.Id, backEnd.Key, Path.Combine(store.Packages, "health-back-end"));
 
-        // It publishes the AIM that wraps its model: signed, through the Service, which reads the model where the Back End keeps it and records its fingerprint.
+        // It publishes the AIM that wraps its model: signed, through the Service, which validates the L3 and records the fingerprint of the AIM's code (the binary the L3 names). The
+        // model is data of Access (A7): the L3 pins it with its SHA-256.
         var aim = publisher.Upload(Model("model-1", 0.9f, 3));
         Assert.Equal(backEnd.Id + "AIH-NNM-V1.1-I01", aim);
         Assert.True(publisher.Has(aim));
@@ -54,19 +55,19 @@ public class AihStoreServiceTests
         // The model stays with the Back End: the Store folder holds no copy of it.
         Assert.False(Directory.EnumerateFiles(store.StoreFolder, "*.model.json", SearchOption.AllDirectories).Any());
 
-        // A Controller of a Front End, with a folder of its own, obtains the AIM over HTTP and builds it: the model is the one the Store approved.
+        // A Controller of a Front End, with a folder of its own, obtains the AIM over HTTP and builds it: the model, data of Access, is the one the L3 pins.
         using var source = new HttpAimSource(store.Url);
         var controller = Path.Combine(store.Root, "controller");
         var repository = new AimRepository(controller);
         Assert.True(repository.Obtain(aim, source));
-        var amds = new AmdStore(controller); amds.Scan();
-        var built = Assert.IsType<NnmAimProcessor>(new AihProvider(amds, repository).Create(aim, new Dictionary<string, string>(), null));
+        var built = Assert.IsType<NnmAimProcessor>(AihModelAimTests.BuildWithAccess(controller, aim, Path.Combine(store.Root, "access")));
         Assert.Equal("model-1", built.ModelId);
 
-        // A model changed where the Back End keeps it, after the Store approved it, is not kept by another Controller.
+        // A model changed where the Back End keeps it, after the Store published the L3, is refused by another Controller's Access (its SHA-256 is not the one the L3 gives).
         File.WriteAllText(publisher.ModelFile(aim), Model("model-1", 0.1f, 3).ToJsonString());
         var second = new AimRepository(Path.Combine(store.Root, "controller-2"));
-        Assert.Contains("NOT_TRUSTED", Assert.Throws<InvalidOperationException>(() => second.Obtain(aim, source)).Message);
+        Assert.True(second.Obtain(aim, source));
+        Assert.Contains("NOT_OBTAINED", Assert.Throws<InvalidOperationException>(() => AihModelAimTests.BuildWithAccess(Path.Combine(store.Root, "controller-2"), aim, Path.Combine(store.Root, "access-2"))).Message);
         File.WriteAllText(publisher.ModelFile(aim), Model("model-1", 0.9f, 3).ToJsonString());
 
         // It publishes a Front End that has the AIM, as its own Implementation, and each new version after it; the Store keeps every version.

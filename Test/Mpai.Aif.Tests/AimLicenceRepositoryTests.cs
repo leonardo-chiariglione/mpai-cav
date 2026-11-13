@@ -52,10 +52,11 @@ public class AimLicenceRepositoryTests : IDisposable
     private AimRepository Repo(AimLicences.ControllerIdentity identity, string name) =>
         new(Path.Combine(folder, name)) { Identity = identity, StoreKeys = KeyOf, Clock = () => now };
 
+    // The AIM as the Controller builds it: its AIM Licence checked, its model from Access.
     private static IAimProcessor Build(AimRepository repository, string aim)
     {
-        var amds = new AmdStore(repository.Folder); amds.Scan();
-        return new AihProvider(amds, repository).Create(aim, new Dictionary<string, string>(), null);
+        repository.CheckLicence(aim);
+        return AihModelAimTests.BuildWithAccess(repository.Folder, aim, Path.Combine(repository.Folder, "access"));
     }
 
     private static string Valid(JsonObject licence)
@@ -162,10 +163,10 @@ public class AimLicenceRepositoryTests : IDisposable
         var org = Org("acme");
         var source = Source(org);
         var licence = JsonNode.Parse(source.GetLicence(aim)!)!.AsObject();
-        licence["AIM"]!["Implementations"]![0]!["Hash"] = new string('0', 64);                          // another file than the one the Store approved...
+        licence["AIM"]!["L3"]!["Hash"] = new string('0', 64);                                           // other Metadata than the Store approved...
         AIF.Trust.PtfSignature.Sign(licence, storeKey, "store-key-1");                                  // ...though the Store signed it
         var refused = Assert.Throws<InvalidOperationException>(() => Repo(Controller(org, "c-1"), "c-1").Obtain(aim, new Given(source.Get(aim)!, licence.ToJsonString(), StoreFolder)));
-        Assert.Contains("other fingerprint", refused.Message);
+        Assert.Contains("other SHA-256", refused.Message);
     }
 
     [Fact]

@@ -84,4 +84,28 @@ public class AihFederatedWatermarkTests : IDisposable
         Assert.True(NoConstraint.ExtractOnnx(second, key2, 16).Carries(payload2));
         Assert.False(NoConstraint.ExtractOnnx(second, Key, 16).Carries(Payload));
     }
+
+    // DWI MODE (A8, 2026-11-13): the Back End inserts the mark in the network BEFORE it trains it and keeps the marked weights as the mark set them while it trains; the network
+    // learns around them. After the training the mark is exactly there (not weakened by the training), the network has been trained, and it still does its task.
+    [Fact]
+    public void TheMarkInsertedDuringTrainingIsInTheTrainedNetwork()
+    {
+        var original = File.ReadAllBytes(Network);
+        using var be = new FrontEndTrainer(Network, new FileSharedStorage(Path.Combine(folder, "be"), "be", "be"));
+        var k = 0; foreach (var (img, f) in AihFederatedTrainingTests.Cases(AihFederatedTrainingTests.EndUsers[0], 40, 90)) be.KeepCase($"c{k++}", img, f);
+        byte[]? marked = null;
+        var model = be.Train(null, networkEpochs: 3, mark: onnx => marked = NoConstraint.InsertOnnx(onnx, Key, Payload));
+        var trained = FrontEndTrainer.NetworkOf(model)!;
+        Assert.NotNull(marked);
+        Assert.NotEqual(marked, trained);                                                                           // the network was trained
+        var detection = NoConstraint.ExtractOnnx(trained, Key, 16);
+        Assert.True(detection.Carries(Payload), "the mark is in the trained network");
+        // the weights the mark set are, after the training, exactly the values it gave them
+        var tensors = OnnxFloats.Weights(original);
+        var before = OnnxFloats.Read(original, tensors); var set = OnnxFloats.Read(marked!, tensors); var after = OnnxFloats.Read(trained, tensors);
+        var positions = Enumerable.Range(0, before.Length).Where(i => set[i] != before[i]).ToList();
+        Assert.NotEmpty(positions);
+        Assert.All(positions, i => Assert.Equal(set[i], after[i]));
+        Assert.Contains(Enumerable.Range(0, before.Length).Except(positions), i => after[i] != set[i]);             // the other weights did learn
+    }
 }

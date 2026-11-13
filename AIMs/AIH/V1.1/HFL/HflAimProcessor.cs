@@ -8,8 +8,8 @@ using AIF.Controller;
 
 namespace Mpai.Aih.Hfl;
 
-// AIH-HFL-V1.1 - Health Federated Learning: "requests trained NN Models and produces a new NN Model". A Federated Learn request (to which Front End, which model)
-// goes out as it is - the round has one more answer to wait for; a Federated Learn response (the model the Front End trained, as an ML Model Object) comes in and
+// AIH-HFL-V1.1 - Health Federated Learning: "requests trained NN Models and produces a new NN Model". A round is one Federated Learn holding a Request for each Front End
+// (to which Front End, which model): each Front End is sent its own Request, and the round has as many answers to wait for; a Federated Learn response (the model the Front End trained, as an ML Model Object) comes in and
 // is kept; when every answer asked for is in, the models are averaged (federated averaging) and the new NN Model leaves (AIP-MLO-V1.0).
 //
 // The weights of a model are read as 32-bit floats, little endian, in the first Data item of the ML Model Object (base64): the specification does not say what a
@@ -55,14 +55,25 @@ public sealed class HflAimProcessor : IAimProcessor
         try
         {
             var outputs = new Dictionary<string, string>();
+            var more = new Dictionary<string, List<string>>();
             var fdl = AihJson.Parse(json, "Federated Learn");
             var item = (fdl["FederatedLearnData"] as JsonArray)?.OfType<JsonObject>().FirstOrDefault() ?? throw new FormatException("the Federated Learn holds nothing.");
 
-            if (item["Request"] is JsonObject request)
+            if (item["Request"] is JsonObject)
             {
-                _pre = request["PreLearnNNModelID"]?.GetValue<string>() ?? _pre;
-                _expected++;
-                outputs[_fdlOut] = json;                                             // to the Front End
+                // A ROUND: one Federated Learn with a Request for each Front End (FederatedLearnData is an array). The round has as many answers to wait for as Requests, known
+                // before any request goes out; each Front End is sent a Federated Learn with its own Request only (it learns nothing of the others), all from this one input.
+                var requests = (fdl["FederatedLearnData"] as JsonArray)!.OfType<JsonObject>().Select(o => o["Request"] as JsonObject).OfType<JsonObject>().ToList();
+                _pre = requests[0]["PreLearnNNModelID"]?.GetValue<string>() ?? _pre;
+                _expected += requests.Count;
+                var each = requests.Select(r =>
+                {
+                    var one = (JsonObject)fdl.DeepClone();                           // the round's Federated Learn, each addressed by its own Request (the Front End it names)
+                    one["FederatedLearnData"] = new JsonArray(new JsonObject { ["Request"] = r.DeepClone() });
+                    return one.ToJsonString();
+                }).ToList();
+                outputs[_fdlOut] = each[0];                                          // to the Front Ends
+                if (each.Count > 1) more[_fdlOut] = each.Skip(1).ToList();
             }
             else if (item["Response"] is JsonObject response)
             {
@@ -100,7 +111,7 @@ public sealed class HflAimProcessor : IAimProcessor
                     _answers.Clear(); _cases.Clear(); _expected = 0; _refused = 0;
                 }
             }
-            return Task.FromResult(new Message { MessageId = message.MessageId, MessageType = "FederatedLearn", DataType = AihJson.FederatedLearn, Payload = outputs.Values.FirstOrDefault() ?? "", Ports = outputs });
+            return Task.FromResult(new Message { MessageId = message.MessageId, MessageType = "FederatedLearn", DataType = AihJson.FederatedLearn, Payload = outputs.Values.FirstOrDefault() ?? "", Ports = outputs, More = more });
         }
         catch (Exception ex) { return Task.FromResult(Message.Error(message.MessageId, InstanceId, "AIH-HFL-V1.1: " + ex.Message)); }
     }

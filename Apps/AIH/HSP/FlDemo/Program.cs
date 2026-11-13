@@ -10,7 +10,6 @@ using AIF.Controller;
 using AIF.SharedStorage;
 using AIF.Store;
 using Mpai.Aih;
-using Mpai.Aih.Chain;
 using Mpai.Aih.Hfl;
 using Mpai.Aih.Nnm;
 using Mpai.Nnw.NoConstraint;
@@ -19,8 +18,8 @@ namespace Mpai.Aih.FlDemo;
 
 // AIH-HSP, FEDERATED LEARNING, NARRATED. The Back End watermarks its model and uploads an AIM with it to the Store; three End Users download the same AIM, train the
 // network and the final layer on their own images (which stay), and return the model; the Back End checks with its watermark that each trained AIM was made from its
-// model, averages those (network and final layer) weighted by the number of cases, checks the result on a fixed set, registers the new version and uploads it - with the
-// mark again - for the next round. It ends with an audit and with the table of known problems.
+// model, averages those (network and final layer) weighted by the number of cases, checks the result on a fixed set, and uploads it - with the mark
+// again - for the next round. It ends with the table of known problems. A trained NN Model has an identifier and no licence: nothing is registered for it.
 //
 // WHAT IS REAL AND WHAT IS NOT is said on the screen and in the table at the end. In short: the images are SYNTHETIC, the network is small and its starting weights are
 // random (the Back End trains it first), the Controllers and the Module of the Front Ends and of the Back End are NOT started here (the components are called directly),
@@ -43,7 +42,7 @@ internal static class Program
     {
         Say("AIH-HSP V1.1 - federated learning, narrated");
         Say("THIS IS A SIMULATION OF THE PLATFORM: synthetic chest-like images, a small network trained from random weights, components called directly (no Controller, no AIM host),");
-        Say("the Store and the Blockchain are the test ones. What is real and what is not: see the table at the end.");
+        Say("the Store is the test one. What is real and what is not: see the table at the end.");
         try { await Run(); Say(""); Say("Done."); return 0; }
         catch (Exception ex) { Console.WriteLine(); Console.WriteLine("FAILED: " + ex.Message); return 1; }
         finally { try { Directory.Delete(Work, true); } catch { } }
@@ -87,47 +86,43 @@ internal static class Program
 
         var amds = new AmdStore(Path.Combine(Root, "AIMs", "AMDs")); amds.Scan();
         var nnw = new NnwProvider(amds);
-        var pwi = nnw.Create(NnwProvider.Pwi, new Dictionary<string, string>(), null); var pwiPorts = AimPortReader.Load(amds, NnwProvider.Pwi);
         var wex = nnw.Create(NnwProvider.Wex, new Dictionary<string, string>(), null); var wexPorts = AimPortReader.Load(amds, NnwProvider.Wex);
         var hfl = new HflAimProcessor("hfl", AimPortReader.Load(amds, AihProvider.Hfl));
         var ports = AimPortReader.Load(amds, AihProvider.Hfl);
         var conformance = new AIF.Metadata.L2Conformance(Path.Combine(Root, "schemas"), _ => null);
         var store = new ModelAimPublisher(Path.Combine(Work, "store"), Path.Combine(Work, "back-end"), l3 => conformance.Check(l3));
-        var chain = new HashChainBlockchain();
-        var register = new ModelVersionRegister(chain, "hbe-1");
         using var judge = new FrontEndTrainer(networkPath, new FileSharedStorage(Path.Combine(Work, "judge"), "j", "j"));
         string Acc(JsonObject m) => $"{judge.Score(m, checkSet).Accuracy:P0}";
 
-        // The Back End's first model: the network (its starting weights are random) and the final layer, trained together on neutral cases.
-        Step("The Back End makes its first model: the network and the final layer trained together on 200 neutral cases");
+        // THE WATERMARK (NoConstraint, IMT; M3304). It has ONE use: the Back End is sure that a trained AIM it receives was made from ITS model. So it is the same in every round
+        // and for every End User: one key, kept by the Back End (the Locator that names the method carries a KeyReference, never the key), and one payload. It is inserted in DWI
+        // mode (During-Training Watermark Insertion): in the network before the Back End trains it, the marked weights kept as the mark set them while it trains - the network learns
+        // around the mark. The Front Ends check no watermark; the Back End checks it with Watermark Extraction (NNW-WEX V2.0) on every trained AIM it receives.
+        var key = NnwJson.NewKey("key-backend"); const string payload = "1010010111000011";
+        var locator = NnwJson.LocatorObject("wlc-backend", Bits, "key:backend", valuesPerBit: ValuesPerBit);
+        var markSeed = NnwJson.Seed(key); var markBits = NoConstraint.Bits(payload);
+
+        // The Back End's first model: the network (its starting weights are random) and the final layer, trained together on neutral cases, with the mark.
+        Step("The Back End makes its first model: the network and the final layer trained together on 200 neutral cases, the watermark inserted during the training (DWI)");
         JsonObject current;
         using (var seed = new FrontEndTrainer(networkPath, new FileSharedStorage(Path.Combine(Work, "seed"), "be", "be")))
         {
             var k = 0; foreach (var (img, f) in Cases(Neutral, 200, 1)) seed.KeepCase("n" + k++, img, f);
-            current = seed.Train(null, epochs: 80, networkEpochs: FirstModelEpochs);
+            current = seed.Train(null, epochs: 80, networkEpochs: FirstModelEpochs, mark: onnx => NoConstraint.InsertOnnx(onnx, markSeed, markBits, null, ValuesPerBit));
             current["MLModelObjectID"] = "model-0";
         }
+        Say($"   watermark: {NoConstraint.MethodName(Bits, ValuesPerBit)}; {Bits * ValuesPerBit} weights of the network set by the mark and kept while the network was trained; the key stays with the Back End");
         Say($"   accuracy on the fixed check set of 200 cases: {Acc(current)}");
-
-        // THE WATERMARK (NoConstraint, IMT; M3304), with the Back End's own Post-Training Watermark Insertion and Watermark Extraction AIMs (NNW V2.0). It has ONE use: the
-        // Back End is sure that a trained AIM it receives was made from ITS model. So it is the same in every round and for every End User: one key, kept by the Back End
-        // (it goes only to its own AIMs; the Locator that names the method carries a KeyReference, never the key), and one payload.
-        var key = NnwJson.NewKey("key-backend"); const string payload = "1010010111000011";
-        var locator = NnwJson.LocatorObject("wlc-backend", Bits, "key:backend", valuesPerBit: ValuesPerBit);
 
         var refusalsSeen = 0;
         for (var round = 1; round <= Rounds; round++)
         {
-            Step($"ROUND {round}: the Back End watermarks its model and uploads an AIM with it to the Store");
-            var pwiOut = await pwi.ProcessAsync(new Message { MessageId = "pwi-" + round, Ports = new Dictionary<string, string> {
-                [pwiPorts.Input(NnwJson.Model)] = current.ToJsonString(),
-                [pwiPorts.Input(NnwJson.Payload)] = NnwJson.PayloadObject("pld-backend", payload).ToJsonString(),
-                [pwiPorts.Input(NnwJson.Key)] = key.ToJsonString(), [pwiPorts.Input(NnwJson.Locator)] = locator.ToJsonString() } });
-            if (pwiOut.IsError) throw new InvalidOperationException(pwiOut.Payload);
-            var published = JsonNode.Parse(pwiOut.Payload)!.AsObject();
+            Step($"ROUND {round}: the Back End uploads an AIM with its model to the Store");
+            var published = current.DeepClone().AsObject();
             published["MLModelObjectID"] = "model-" + (round - 1);
-            Say($"   watermark: {NoConstraint.MethodName(Bits, ValuesPerBit)}; {Bits * ValuesPerBit} weights of the network replaced (Post-Training Watermark Insertion); the key stays with the Back End");
-            Say($"   accuracy on the fixed check set: {Acc(current)} before the mark, {Acc(published)} with it (the training of the End Users goes on over the marked weights)");
+            var mine = await wex.ProcessAsync(new Message { MessageId = "wex-pub-" + round, Ports = new Dictionary<string, string> {
+                [wexPorts.Input(NnwJson.Model)] = published.ToJsonString(), [wexPorts.Input(NnwJson.Key)] = key.ToJsonString(), [wexPorts.Input(NnwJson.Locator)] = locator.ToJsonString() } });
+            Say($"   the model it publishes: {JsonNode.Parse(mine.Payload)?["DescrMetadata"]} (no mark is put on it: it carries the one inserted during training)");
             var aim = store.Upload(published);
             Say($"   the Store validated and published the AIM {aim}: every End User downloads this same AIM (BUILT; the Store is the test one)");
 
@@ -176,7 +171,6 @@ internal static class Program
             foreach (var m in accepted)
             {
                 var response = Fdl(new JsonObject { ["Response"] = new JsonObject { ["AIHDataID"] = "aih-data-of-a-front-end-" + Guid.NewGuid().ToString("N")[..6], ["PostLearnNNModel"] = m } });
-                register.NoteResponse(response);
                 await hfl.ProcessAsync(Msg(response));
             }
             foreach (var r in hfl.Refusals.Skip(refusalsSeen)) Say($"   REFUSED ({r.What}, round {r.Round}): {r.Reason}");
@@ -188,14 +182,7 @@ internal static class Program
                 [wexPorts.Input(NnwJson.Model)] = hfl.CurrentModel!.ToJsonString(), [wexPorts.Input(NnwJson.Key)] = key.ToJsonString(), [wexPorts.Input(NnwJson.Locator)] = locator.ToJsonString() } });
             Say($"   the averaged model: {JsonNode.Parse(averaged.Payload)?["DescrMetadata"]}");
             current = hfl.CurrentModel!.DeepClone().AsObject();
-            var version = register.Register(outcome.ModelId!, outcome.Round, outcome.StartedFrom, outcome.Updates, outcome.Cases, EndUsers.Select(e => "user-" + e.Name));
-            Say($"   registered the version {outcome.ModelId} on the Blockchain (the test one), Smart Contract {version!.ContractId}");
         }
-
-        Step("Audit of the last version, asked by the Back End; and a stranger asking");
-        var last2 = register.Versions.Last();
-        Say("   a stranger's audit: " + (register.Audit(last2.ModelId, "user-Mallory") is null ? "refused" : "given"));
-        Say(register.Audit(last2.ModelId, "hbe-1")!.ToJsonString(new JsonSerializerOptions { WriteIndented = true }));
 
         Step("Known problems of federated learning, and what this demo does about each");
         Say("   Problem                                      Status      How");
@@ -204,7 +191,7 @@ internal static class Program
         Say("   A bad result of averaging                    BUILT       evaluation on a fixed set; the old version is kept and the refusal recorded");
         Say("   Unequal numbers of cases                     BUILT       average weighted by the number of cases (count in the second Data item)");
         Say("   Who sent a model is used against the sender  SIMULATED   the Back End's code never reads the sender (the Controllers still sign)");
-        Say("   A trained AIM not made from the Back End's   BUILT       the Back End's watermark (NoConstraint, IMT) in the network; WEX on every trained AIM; without the mark, refused");
+        Say("   A trained AIM not made from the Back End's   BUILT       the Back End's watermark (NoConstraint, IMT), inserted while it trains its first model (DWI); WEX on every trained AIM; without the mark, refused");
         Say("   Real chest images and a real network         SIMULATED   synthetic images; a small network whose starting weights are random, trained by the Back End and the End Users");
         Say("   Controllers, Modules and AIM hosts           SIMULATED   the components are called directly here; the first-slice demo runs them as Controllers");
         Say("   Leakage through the model's weights          PLANNED     noise (differential privacy) is not added");

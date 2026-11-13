@@ -301,11 +301,8 @@ app.MapPost("/MPAI/Store/Licence", async (HttpRequest request) =>
         if (repository.Text(aim, null) is not { } text) return Results.NotFound(new { refused = $"{aim} is not in the Store." });
         var l3 = JsonNode.Parse(text)!.AsObject();
         if (l3["AIMLicence"] is not JsonObject offer) return Results.NotFound(new { refused = $"{aim} has no AIMLicence in its Metadata: it needs no AIM Licence." });
-        var approved = new Dictionary<string, string>();
-        foreach (var item in l3["Implementations"] as JsonArray ?? [])
-            if ((string?)item?["BinaryName"] is { } binary && fingerprints.Approved(aim, binary) is { } fingerprint) approved[binary] = fingerprint;
         var (licence, created) = licences.GetOrIssue(aim, anchor, controller.Length > 0 ? controller : null, () =>
-            AIF.Store.AimLicences.Issue(offer.DeepClone().AsObject(), aim, AIF.Store.AimRepository.VersionIn(JsonDocument.Parse(text).RootElement), approved, anchor,
+            AIF.Store.AimLicences.Issue(offer.DeepClone().AsObject(), aim, AIF.Store.AimRepository.VersionIn(JsonDocument.Parse(text).RootElement), text, anchor,
                                         controller.Length > 0 ? controller : null, licenceIssuer, DateTimeOffset.UtcNow, (string?)l3["Identifier"]?["ImplementerID"] ?? ""),
             offer["Grant"]?["MaxControllers"] is JsonValue mc && mc.TryGetValue<int>(out var maxControllers) ? maxControllers : (int?)null);
         if (created) Console.WriteLine($"[Store] issued an AIM Licence for {aim} to the Trust Anchor {anchor}");

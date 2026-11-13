@@ -22,10 +22,58 @@ public class AihAimsTests : IDisposable
     public void Dispose() { try { Directory.Delete(work, true); } catch { } }
 
     private IAimProcessor Build(string aim) =>
-        new AihProvider(store).Create(aim, new Dictionary<string, string>(), new FileSharedStorage(work, "aih-test", aim));
+        new AihProvider(store).Create(aim, new Dictionary<string, string>(), new FileSharedStorage(work, "aih-test", aim), new FileSharedStorage(Path.Combine(work, "own", aim), "aih-test", aim),
+            new AIF.SharedStorage.RuledStore(() => Path.Combine(work, "private", "module"), () => DateTimeOffset.UtcNow, everyoneReads: false, centralControl: null)
+                .For(new AIF.SharedStorage.StorageHolder("m", aim), "m", "s"));
 
     private string In(string aim, string dataType, int ordinal = 1) => AimPortReader.Load(store, aim).Input(dataType, ordinal);
     private string Out(string aim, string dataType, int ordinal = 1) => AimPortReader.Load(store, aim).Output(dataType, ordinal);
+
+    // A10 (2026-11-13): NO PSEUDONYM KEY IN THE CODE. Without the setting PseudonymKey, De-Identification and Anonymisation makes a random key once and keeps it in its Private
+    // Storage - built again on that storage, it uses the same key (the same End User keeps the same pseudonym); without the setting and without its storage, it is not built.
+    [Fact]
+    public void TheKeyOfThePseudonymsIsMadeOnceAndKeptNotWrittenInTheCode()
+    {
+        var own = new FileSharedStorage(Path.Combine(work, "dia-own"), "aih-test", AihProvider.Dia);
+        new AihProvider(store).Create(AihProvider.Dia, new Dictionary<string, string>(), null, own, null);
+        var key = Encoding.UTF8.GetString(own.MPAI_AIFM_SharedStorage_Get("pseudonym-key"));
+        Assert.Equal(64, key.Length);
+        new AihProvider(store).Create(AihProvider.Dia, new Dictionary<string, string>(), null, own, null);
+        Assert.Equal(key, Encoding.UTF8.GetString(own.MPAI_AIFM_SharedStorage_Get("pseudonym-key")));
+        var other = new FileSharedStorage(Path.Combine(work, "dia-other"), "aih-test", AihProvider.Dia);
+        new AihProvider(store).Create(AihProvider.Dia, new Dictionary<string, string>(), null, other, null);
+        Assert.NotEqual(key, Encoding.UTF8.GetString(other.MPAI_AIFM_SharedStorage_Get("pseudonym-key")));
+        Assert.Throws<InvalidOperationException>(() => new AihProvider(store).Create(AihProvider.Dia, new Dictionary<string, string>(), null, null, null));
+        Assert.DoesNotContain("mpai-aih-test-pseudonym-key", File.ReadAllText(Path.Combine(Repository.Root, "AIMs", "AIH", "V1.1", "Provider", "AihProvider.cs")));
+    }
+
+    // AIF V3.0 MET-3 (A5, 2026-11-13): an L3 declares only what its Implementation supports. For every AIH-HSP V1.1 L3: the folder its ImplementationURI names is in this
+    // repository, and the binary the provider reports for the AIM is the BinaryName the L3 gives (a Controller that measures what it runs compares the two). A Composite AIM is an
+    // AIM too: it names the binary through which its Sub-AIMs are provided (Mpai.Aih).
+    [Fact]
+    public void EveryAihL3NamesAnImplementationThatExists()
+    {
+        var provider = new AihProvider(store);
+        var problems = new List<string>();
+        const string Repo = "https://github.com/leonardo-chiariglione/mpai-cav/tree/main/";
+        foreach (var file in Directory.GetFiles(Repository.Amds, "1AIH-*-V1.1-I01.json"))
+        {
+            var aim = Path.GetFileNameWithoutExtension(file);
+            using var doc = JsonDocument.Parse(File.ReadAllText(file));
+            var impl = doc.RootElement.GetProperty("Implementations")[0];
+            var uri = impl.GetProperty("ImplementationURI").GetString() ?? "";
+            var named = impl.GetProperty("BinaryName").GetString();
+            if (!uri.StartsWith(Repo, StringComparison.Ordinal) || !Directory.Exists(Path.Combine(Repository.Root, uri[Repo.Length..])))
+                problems.Add($"{aim}: its ImplementationURI {uri} is not a folder of this repository.");
+            if (provider.CanCreate(aim))
+            {
+                var reported = provider.ImplementationOf(aim) is { } path ? Path.GetFileNameWithoutExtension(path) : null;
+                if (reported != named) problems.Add($"{aim}: the provider reports {reported ?? "no binary"}, its L3 names {named}.");
+            }
+            else if (named != "Mpai.Aih") problems.Add($"{aim}: a Composite AIM of AIH-HSP names {named}, not the binary that provides its Sub-AIMs (Mpai.Aih).");
+        }
+        Assert.True(problems.Count == 0, string.Join(Environment.NewLine, problems));
+    }
 
     private static string Valid(string schema, string json)
     {

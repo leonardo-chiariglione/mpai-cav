@@ -480,6 +480,24 @@ public sealed class WorkflowInterpreter
                 break;
             }
 
+            case StepKind.AdmitService:
+            {
+                var done = await north.ExternalAuthorityAsync(Module, Fill(step.Text ?? ""));
+                if (done != AifError.OK)
+                    throw new NotSupportedException($"line {step.Line}: the Controller was not made the Trust Authority of the External links of {Module} ({done}).");
+                say($"[C] {Module}: the Controller is the Trust Authority of its External links");
+                break;
+            }
+
+            case StepKind.LeaveService:
+            {
+                var done = await north.ExternalLeaveAsync(Module);
+                if (done != AifError.OK)
+                    throw new NotSupportedException($"line {step.Line}: the Controller did not close the External links of {Module} ({done}).");
+                say($"[C] {Module}: External links closed");
+                break;
+            }
+
             case StepKind.StopAim:
             {
                 var done = await north.StopAimAsync(Module, step.Variable!);
