@@ -114,3 +114,7 @@ llama3.2:3b	run 3	81.28 s	ok | said "The doors are now open." | actions MU-Actua
 llama3.2:3b	run 1	300.07 s	not accepted
 llama3.2:3b	run 2	301.64 s	not accepted
 llama3.2:3b	run 3	300.05 s	not accepted
+--- 2026-11-12T12:58:41
+llama3.2:3b	run 1	1.92 s	ok | said "The doors are now open." | actions MU-Actuate
+llama3.2:3b	run 2	1.35 s	ok | said "The doors are now open." | actions MU-Actuate
+llama3.2:3b	run 3	1.37 s	ok | said "The doors are now open." | actions MU-Actuate
