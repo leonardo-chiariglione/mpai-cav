@@ -114,6 +114,11 @@ if (anchorFile is not null && AIF.RootOfTrust.TpmParty.Is(anchorFile))
     (tpmAnchor, tpm) = AIF.RootOfTrust.TpmParty.Load(anchorFile);
     AIF.Trust.PartyCode.MeasureInto(tpm, AppContext.BaseDirectory);
     Console.WriteLine($"[AIM host] its root of trust: the TPM of {tpm.Name}; its code measured ({tpm.Log.Count} files)");
+    // The Security API of this party (Secure Profile), opened once its code is measured and before any Implementation is: the AIMs it builds from a Secure L3
+    // have a handle on it, whose Owner is the AIM.
+    var security = new AIF.Security.SecurityApi(tpm, Path.Combine(storage, "security"));
+    foreach (var aware in providers.OfType<AIF.Controller.ISecurityAware>()) aware.Security = security;
+    Console.WriteLine($"[AIM host] its Security API: {(security.Opened ? "opened" : "NOT opened - its code is not the code its secrets were sealed to")}");
 }
 var server = new AimHostServer(store, settings, new CompositeProvider(providers.ToArray()), storage) { RootOfTrust = tpm, Repository = repository };
 ILinkAdmission admission = new KeyAdmission(key ?? "");

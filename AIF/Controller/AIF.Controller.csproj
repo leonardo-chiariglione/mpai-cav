@@ -5,6 +5,7 @@
     <ProjectReference Include="..\Communication\SharedStorage\AIF.SharedStorage.csproj" />
     <ProjectReference Include="..\Communication\Channels\AIF.Channels.csproj" />
     <ProjectReference Include="..\Trust\AIF.Trust.csproj" />
+    <ProjectReference Include="..\Security\AIF.Security.csproj" />
   </ItemGroup>
 
   <PropertyGroup>

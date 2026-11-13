@@ -25,7 +25,7 @@ public sealed class DiaAimProcessor : IAimProcessor
     private static readonly string[] Anonymise = ["Perturbation", "K-Anonymity", "Generalisation", "Data Aggregation", "L-Diversity", "Differential Privacy", "Synthetic Data Generation"];
 
     private readonly string _requestIn, _dataIn, _responseOut, _dataOut;
-    private readonly byte[] _key;
+    private readonly Func<byte[], byte[]> _keyedHash;
     private readonly Dictionary<string, JsonObject> _waiting = new();
     // The identifier of the request that asked for each AIH Data: the response carries it, so that whoever asked (a Front End, through the Controllers) recognises its answer.
     private readonly Dictionary<string, string> _requestIds = new();
@@ -36,9 +36,16 @@ public sealed class DiaAimProcessor : IAimProcessor
     public string InstanceId { get; }
 
     public DiaAimProcessor(string instanceId, AimPortReader ports, string pseudonymKey)
+        : this(instanceId, ports, KeyedHash(Encoding.UTF8.GetBytes(pseudonymKey))) { }
+
+    private static Func<byte[], byte[]> KeyedHash(byte[] key) => data => HMACSHA256.HashData(key, data);
+
+    // keyedHash: the keyed hash the pseudonyms are made with (HMAC-SHA-256). In the Secure Profile it is computed by the Security API with a key of this AIM that
+    // never leaves the root of trust (AihProvider, the Secure L3 1AIH-DIA-V1.1-I02).
+    public DiaAimProcessor(string instanceId, AimPortReader ports, Func<byte[], byte[]> keyedHash)
     {
         InstanceId = instanceId;
-        _key = Encoding.UTF8.GetBytes(pseudonymKey);
+        _keyedHash = keyedHash;
         _requestIn   = ports.Input(AihJson.DeId);
         _dataIn      = ports.Input(AihJson.AihData);
         _responseOut = ports.Output(AihJson.DeId);
@@ -124,7 +131,7 @@ public sealed class DiaAimProcessor : IAimProcessor
         var copy = (JsonObject)original.DeepClone();
         var id = original["AIHDataID"]!.GetValue<string>();
         var user = original["UserID"]?.GetValue<string>() ?? "";
-        var pseudonym = "pseud-" + Convert.ToHexString(HMACSHA256.HashData(_key, Encoding.UTF8.GetBytes(user)))[..12].ToLowerInvariant();
+        var pseudonym = "pseud-" + Convert.ToHexString(_keyedHash(Encoding.UTF8.GetBytes(user)))[..12].ToLowerInvariant();
 
         copy["UserID"] = pseudonym;
         copy["AIHDataID"] = id + (anonymise ? "-anon" : "-deid");

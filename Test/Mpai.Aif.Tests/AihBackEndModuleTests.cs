@@ -44,14 +44,14 @@ public class AihBackEndModuleTests : IDisposable
 
     private bool Nothing(string type, int n, int ms = 800) => api.OutputRead(Hbe, type, n, ms).Error != AifError.OK;
 
-    private static string Valid(string schema, JsonNode json)
+    internal static string Valid(string schema, JsonNode json)
     {
         var s = Schemas[Path.GetFullPath(Path.Combine(Repository.Schemas, "AIH1", "V1.1", "data", schema + ".json"))];
         using var doc = JsonDocument.Parse(json.ToJsonString());
         lock (AIF.Metadata.PublishedSchemas.Lock) return s.Evaluate(doc.RootElement).IsValid ? "valid" : "not valid";
     }
 
-    private static JsonObject Request(string requester, string type, JsonObject tokens, params JsonNode[] items) => new()
+    internal static JsonObject Request(string requester, string type, JsonObject tokens, params JsonNode[] items) => new()
     {
         ["Header"] = "AIH-AHP-V1.1", ["UserID"] = requester, ["AIHDataProcessID"] = AihJson.NewId("ahp"), ["AIHDataProcessTime"] = AihJson.Time(),
         ["AIHDataProcess"] = new JsonArray(new JsonObject
@@ -89,7 +89,7 @@ public class AihBackEndModuleTests : IDisposable
         return AihJson.LicenceConfirmResponse(asked["EndUserID"]?.GetValue<string>() ?? "", asked["LicenceConfirmID"]!.GetValue<string>(), allowed);
     }
 
-    private static JsonObject UploadData(string id, string user = "user-1")
+    internal static JsonObject UploadData(string id, string user = "user-1")
     {
         var data = AihSamples.AihData(user, id);
         data["AIHData"]!.AsObject().Remove("SmartContractID"); data["AIHData"]!.AsObject().Remove("DeIDAndAnonym");
@@ -140,7 +140,7 @@ public class AihBackEndModuleTests : IDisposable
         Assert.True(chain.Verify());
     }
 
-    private static JsonObject DeIdRequest(string user, string id, string type, string algorithm, JsonObject tokens) => new()
+    internal static JsonObject DeIdRequest(string user, string id, string type, string algorithm, JsonObject tokens) => new()
     {
         ["Header"] = AihJson.DeId, ["DeIDAndAnonymID"] = AihJson.NewId("dia"), ["DeIDAndAnonymTime"] = AihJson.Time(), ["EndUserID"] = user,
         ["DeIDAndAnonymData"] = new JsonArray(new JsonObject { ["Request"] = new JsonObject { ["AIHDataID"] = id, ["DeIDAndAnonymType"] = type, ["DeIDAndAnonymAlgoID"] = algorithm, ["Tokens"] = tokens.DeepClone() } })
