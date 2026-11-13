@@ -17,6 +17,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Trust\AIF.Trust.csproj" />
+    <ProjectReference Include="..\Security\AIF.Security.csproj" />
   </ItemGroup>
 
 </Project>

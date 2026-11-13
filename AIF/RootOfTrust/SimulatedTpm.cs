@@ -20,7 +20,7 @@ namespace AIF.RootOfTrust;
 // All three are primary keys, derived from the TPM's seeds: the same each time the
 // TPM is booted, never stored outside it. The interface has no function that
 // returns a private key.
-public sealed class SimulatedTpm : IRootOfTrust, IDisposable
+public sealed class SimulatedTpm : AIF.Security.ISecureRoot, IDisposable
 {
     private readonly Tpm2Device device;
     private readonly Tpm2 tpm;
@@ -199,6 +199,20 @@ public sealed class SimulatedTpm : IRootOfTrust, IDisposable
             var sealedPrivate = tpm[new AuthValue()].Create(storage, new SensitiveCreate([], secret), template, [], [], out var sealedPublic, out _, out _, out _);
             return (byte[])[.. BitConverter.GetBytes(sealedPublic.GetTpmRepresentation().Length), .. sealedPublic.GetTpmRepresentation(), .. sealedPrivate.GetTpmRepresentation()];
         });
+    }
+
+    // RANDOM BYTES from the generator of the TPM (TPM2_GetRandom gives at most a digest's size at a time).
+    public byte[] Random(int count)
+    {
+        var result = new List<byte>(count);
+        lock (gate)
+            while (result.Count < count)
+            {
+                var part = tpm.GetRandom((ushort)Math.Min(32, count - result.Count));
+                if (part.Length == 0) throw new CryptographicException("The TPM gave no random bytes.");
+                result.AddRange(part);
+            }
+        return [.. result];
     }
 
     // The secret, or null where the registers no longer hold what it was sealed to.

@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- AIF.Security - the Security API of AIF V3.0 (https://mpai.community/standards/mpai-aif/v3-0/security-api/), the Trusted Services of the Secure
+       Profile on a root of trust: Secure Storage (4), Attestation (5), Cryptography (6). It is below the Controller: the Secure Controller holds a SecurityApi
+       and gives each caller - an AIM Instance, the Controller, the User Agent - a handle bound to its identity, the Owner of its keys and areas. -->
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.Formats.Cbor" Version="10.0.15" />
+    <PackageReference Include="System.Security.Cryptography.Cose" Version="10.0.14" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Trust\AIF.Trust.csproj" />
+  </ItemGroup>
+
+</Project>
