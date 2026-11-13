@@ -320,7 +320,7 @@ public class AimLicenceRepositoryTests : IDisposable
         var offer = JsonNode.Parse(File.ReadAllText(Path.Combine(StoreFolder, aim + ".json")))!["AIMLicence"]!.AsObject();
         Assert.Equal("valid", Valid(licence));
         Assert.Equal(AimLicences.OfferHash(offer), (string?)licence["ParentLicence"]!["OfferHash"]);      // the offer it is under
-        Assert.Equal("1", (string?)licence["ParentLicence"]!["ImplementerID"]);
+        Assert.Equal("hbe1", (string?)licence["ParentLicence"]!["ImplementerID"]);                     // the Back End, an Implementer of its own
         Assert.Equal(120.0, (double)offer["Payment"]!["OneTime"]!["Price"]!);                             // what the Implementer proposed
         Assert.Equal(132.0, (double)licence["Payment"]!["OneTime"]!["Price"]!);                           // what the Controller's owner pays: with the mark-up
         Assert.IsType<NnmAimProcessor>(Build(repository, aim));

@@ -236,7 +236,7 @@ public class AihFirstSliceTests : IDisposable
         // Store when its Module starts: it obtains the new Front End and the AIM (and only those), with the fingerprints, and hands the AIM to where the Module's AIMs execute; there
         // the Implementation is obtained, measured and checked, and the AIM is built. The AIM then processes AIH Data and learns (user-1's data is Green, user-2's Yellow).
         const string hfe = "1AIH-HFE-V1.1-I01";
-        Assert.Equal("1AIH-NNM-V1.1-I01", hbe.PublishModel(Mpai.Aih.Hfl.FrontEndTrainer.ModelObject("model-0", new float[] { 0f, 0f }, "the Back End's first model")));
+        Assert.Equal("hbe1AIH-NNM-V1.1-I01", hbe.PublishModel(Mpai.Aih.Hfl.FrontEndTrainer.ModelObject("model-0", new float[] { 0f, 0f }, "the Back End's first model")));
         Assert.Equal("1.2", hbe.FrontEndVersion);
         var (repository1, source1) = holdings["hfe-user-1"];
         Assert.Equal("1.1", repository1.VersionOf(hfe));
@@ -245,8 +245,8 @@ public class AihFirstSliceTests : IDisposable
         one = new HfeUserAgent(controllers["hfe-user-1"], "user-1", Orch("HFE.orch"), Path.Combine(work, "hfe-user-1", "secure-data-vault"), ServiceOf("user-1")); toDispose.Add(one);
         two = new HfeUserAgent(controllers["hfe-user-2"], "user-2", Orch("HFE.orch"), Path.Combine(work, "hfe-user-2", "secure-data-vault"), ServiceOf("user-2")); toDispose.Add(two);
         Assert.Equal("1.2", repository1.VersionOf(hfe));
-        Assert.Equal([hfe, "1AIH-NNM-V1.1-I01"], source1.Obtained);
-        Assert.True(repository1.Holds("1AIH-NNM-V1.1-I01"));
+        Assert.Equal([hfe, "hbe1AIH-NNM-V1.1-I01"], source1.Obtained);
+        Assert.True(repository1.Holds("hbe1AIH-NNM-V1.1-I01"));
         Assert.Null(one.Acquire(HealthData("user-1", 190), Licence("user-1", "ahd-5", licenseTpu: false)));
         Assert.NotNull(two.Acquire(HealthData("user-2", 125), Licence("user-2", "ahd-6", licenseTpu: false)));
 
@@ -259,21 +259,21 @@ public class AihFirstSliceTests : IDisposable
         Assert.Equal(1f, weights[1], 3);
 
         // What the Back End put in the MPAI Store is the AIM that wraps this model, and a new version of the Front End that has it as a Sub-AIM; the next round names the AIM.
-        Assert.Equal("1AIH-NNM-V1.1-I02", hbe.ModelAimId);
+        Assert.Equal("hbe1AIH-NNM-V1.1-I02", hbe.ModelAimId);
         Assert.Equal("1.3", hbe.FrontEndVersion);
         hbe.FederatedLearning("model-0", "hfe-1", "hfe-2");
-        Assert.Equal("1AIH-NNM-V1.1-I03", hbe.ModelAimId);
+        Assert.Equal("hbe1AIH-NNM-V1.1-I03", hbe.ModelAimId);
         Assert.Equal("1.4", hbe.FrontEndVersion);
 
         // 7. user-1's Module is restarted: its Controller takes the newest Front End and its AIM. A rate Anomaly and Risk Alerting can say nothing of (one beat only) is processed by
         // the model: the AIH Data resulting from the processing, kept in the Vault, names the AIH Data processed and carries what the model found (its mean, 0.375: Yellow).
         {
             var (repository, source) = holdings["hfe-user-1"];
-            const string nnm = "1AIH-NNM-V1.1-I03";
+            const string nnm = "hbe1AIH-NNM-V1.1-I03";
             one.Dispose();
             using var restarted = new HfeUserAgent(controllers["hfe-user-1"], "user-1", Orch("HFE.orch"), Path.Combine(work, "hfe-user-1", "secure-data-vault"), ServiceOf("user-1"));
             Assert.Equal("1.4", repository.VersionOf(hfe));
-            Assert.Equal([hfe, "1AIH-NNM-V1.1-I01", hfe, nnm], source.Obtained);
+            Assert.Equal([hfe, "hbe1AIH-NNM-V1.1-I01", hfe, nnm], source.Obtained);
             Assert.True(repository.Holds(nnm));
             Assert.Null(restarted.Acquire(HealthData("user-1", 100_000), Licence("user-1", "ahd-7", licenseTpu: false)));   // Anomaly and Risk Alerting: no alert
             JsonObject? processed = null;

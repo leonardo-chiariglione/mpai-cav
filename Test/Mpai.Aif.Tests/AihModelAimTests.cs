@@ -71,7 +71,7 @@ public class AihModelAimTests : IDisposable
     {
         var store = Store();
         var aim = store.Upload(Model("model-0-federated-1", 0.9f, 3));
-        Assert.Equal("1AIH-NNM-V1.1-I01", aim);
+        Assert.Equal("hbe1AIH-NNM-V1.1-I01", aim);
         Assert.True(store.Has(aim));
         Assert.Empty(conformance.Check(JsonDocument.Parse(File.ReadAllText(Path.Combine(folder, "store", aim + ".json"))).RootElement));
 
@@ -93,8 +93,8 @@ public class AihModelAimTests : IDisposable
     public void EachModelIsAnAimOfItsOwn()
     {
         var store = Store();
-        Assert.Equal("1AIH-NNM-V1.1-I01", store.Upload(Model("m-1", 0.1f, 1)));
-        Assert.Equal("1AIH-NNM-V1.1-I02", store.Upload(Model("m-2", 0.5f, 2)));
+        Assert.Equal("hbe1AIH-NNM-V1.1-I01", store.Upload(Model("m-1", 0.1f, 1)));
+        Assert.Equal("hbe1AIH-NNM-V1.1-I02", store.Upload(Model("m-2", 0.5f, 2)));
     }
 
     // THE MODEL IS DATA OF ACCESS: the L3 names it by its URI and pins it with its SHA-256 - not as an Implementation - with Terms (only for the processing of AIH Data).
@@ -110,7 +110,7 @@ public class AihModelAimTests : IDisposable
         Assert.Equal(Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(File.ReadAllBytes(store.ModelFile(aim)))), entry.Sha256, ignoreCase: true);
         Assert.Equal("Only for the processing of AIH Data (AIH-HSP V1.1)", entry.Terms!.Licence);
         Assert.Single(l3.RootElement.GetProperty("Implementations").EnumerateArray());                   // the code only
-        Assert.Throws<FileNotFoundException>(() => new AimRepository(Repo).Obtain("1AIH-NNM-V1.1-I09", Source()));
+        Assert.Throws<FileNotFoundException>(() => new AimRepository(Repo).Obtain("hbe1AIH-NNM-V1.1-I09", Source()));
     }
 
     [Fact]

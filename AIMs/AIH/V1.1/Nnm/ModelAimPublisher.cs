@@ -29,10 +29,11 @@ public sealed class ModelAimPublisher
     private MpaiStore _store => _library ?? throw new InvalidOperationException("This publisher submits to the Store Service.");
 
     // folder: the MPAI Store's (L3s and approvals only). implementations: where the Back End keeps what it implemented, the models. conformance: the Store's check of an L3
-    // against its L2 (AIF.Metadata.L2Conformance.Check).
-    public ModelAimPublisher(string folder, string implementations, Func<JsonElement, IReadOnlyList<string>> conformance)
+    // against its L2 (AIF.Metadata.L2Conformance.Check). implementerId: the Back End's own Implementer ID - never MPAI's "1", whose reference L3s of this AIM
+    // (1AIH-NNM-V1.1-I01, Basic; -I02, Secure) wrap the initial model (2026-11-13, author: "Back End own Implementer").
+    public ModelAimPublisher(string folder, string implementations, Func<JsonElement, IReadOnlyList<string>> conformance, string implementerId = "hbe1")
     {
-        _folder = folder; _implementations = implementations;
+        _folder = folder; _implementations = implementations; _implementerId = implementerId;
         Directory.CreateDirectory(implementations);
         _library = new MpaiStore(folder, conformance);
     }
@@ -65,9 +66,9 @@ public sealed class ModelAimPublisher
     }
     // THE BACK END PUBLISHES: wraps the model (an ML Model Object, AIP-MLO-V1.0) in a new AIM, keeps the model where it implements, submits the L3 and the model to the
     // MPAI Store for approval, and gives the AIM's identifier.
-    public string Upload(JsonObject model, string implementerId = "1", JsonObject? aimLicence = null)
+    public string Upload(JsonObject model, JsonObject? aimLicence = null)
     {
-        if (_service is not null) implementerId = _implementerId;                  // the Implementer is the one that is registered
+        var implementerId = _implementerId;                                        // the Back End: with the Store Service, the Implementer it is registered as
         var n = _service is not null
             ? ((JsonArray?)JsonNode.Parse(Text($"MPAI/Store/L3?name={Type}") ?? "[]"))!.Count(e => ((string)e!["id"]!).StartsWith(implementerId + Type, StringComparison.Ordinal)) + 1
             : Directory.EnumerateFiles(_folder, $"{implementerId}{Type}-I*.json").Count() + 1;
@@ -89,7 +90,7 @@ public sealed class ModelAimPublisher
             ["InternalTypes"] = new JsonArray(new JsonObject { ["Name"] = "AIHData", ["DataType"] = AihJson.AihData }, new JsonObject { ["Name"] = "NNModel", ["DataType"] = "AIP-MLO-V1.0" }),
             ["ExternalPorts"] = new JsonArray(
                 new JsonObject { ["Name"] = "AIHDataIn", ["Direction"] = "Input", ["DataType"] = AihJson.AihData, ["Depth"] = 8, ["Technology"] = "Software", ["Protocol"] = "", ["IsRemote"] = false },
-                new JsonObject { ["Name"] = "NNModelIn", ["Direction"] = "Input", ["IsOptional"] = true, ["DataType"] = "AIP-MLO-V1.0", ["Depth"] = 8, ["Technology"] = "Software", ["Protocol"] = "", ["IsRemote"] = false },
+                new JsonObject { ["Name"] = "NNModelIn", ["Direction"] = "Input", ["IsOptional"] = true, ["DataType"] = "AIP-MLO-V1.0", ["Depth"] = 1, ["Overflow"] = "DropOldest", ["Technology"] = "Software", ["Protocol"] = "", ["IsRemote"] = false },
                 new JsonObject { ["Name"] = "AIHDataOut", ["Direction"] = "Output", ["DataType"] = AihJson.AihData, ["Technology"] = "Software", ["Protocol"] = "", ["IsRemote"] = false },
                 new JsonObject { ["Name"] = "NNModelOut", ["Direction"] = "Output", ["DataType"] = "AIP-MLO-V1.0", ["Technology"] = "Software", ["Protocol"] = "", ["IsRemote"] = false }),
             ["SubAIMs"] = new JsonArray(), ["Topology"] = new JsonArray(),
