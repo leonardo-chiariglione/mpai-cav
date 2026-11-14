@@ -61,7 +61,7 @@ public class AihModelAimTests : IDisposable
         }
         var repository = new AimRepository(Repo);
         Assert.True(repository.Obtain(aim, Source()));
-        Assert.Contains("declares the Secure Profile", Assert.Throws<InvalidOperationException>(() => BuildWithAccess(repository.Folder, aim, Path.Combine(folder, "access"))).Message);
+        Assert.Contains("declares the Secure Profile", Assert.Throws<ProfileRefusedException>(() => BuildWithAccess(repository.Folder, aim, Path.Combine(folder, "access"))).Message);
         using var security = new AIF.Security.SecurityApi(new SecurityApiTests.TestRoot(), Path.Combine(folder, "security"));
         Assert.IsType<NnmAimProcessor>(BuildWithAccess(repository.Folder, aim, Path.Combine(folder, "access"), security));
         Assert.Contains("no model AIM of the Secure Profile", Assert.Throws<InvalidOperationException>(() => store.PublishFrontEnd(File.ReadAllText(Path.Combine(Repository.Amds, "1AIH-HFE-V1.1-I01.json")), aim)).Message);

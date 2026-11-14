@@ -208,6 +208,9 @@ public sealed partial class ControllerApi : IControllerApi, IDisposable
     // Why the last Module was refused in preparing its AIMs: the reason that goes with FAILED or NOT_TRUSTED.
     public string? PrepareError { get; private set; }
 
+    // Why the Controller refused the last Module it was asked to start - an AIM not trusted, an AIM of a Profile the party cannot run: the reason of NOT_TRUSTED or FAILED.
+    public string? StartRefusal => _ua.LastRefusal;
+
     public void StopFlow(string moduleName)
     {
         List<AIF.Channels.ExternalHub>? hubs;

@@ -598,6 +598,13 @@ public sealed class UserAgent
                 moduleId = -1;
                 return AifError.NotTrusted;
             }
+            catch (ProfileRefusedException refused)
+            {
+                // An AIM of the Secure Profile where the party has no Security API, or Sub-AIMs of another Profile (Zero Trust and Profiles 6.3): FAILED, and why.
+                LastRefusal = refused.Message;
+                moduleId = -1;
+                return AifError.Failed;
+            }
         }
     }
 
@@ -609,6 +616,7 @@ public sealed class UserAgent
 
         var selected = _store.GetCatalog().FirstOrDefault(c => c.AIMName == name);
         if (selected is null) return AifError.NotFound;
+        if (AimProfiles.Mismatch(_store, name) is { } mismatch) throw new ProfileRefusedException(mismatch);
 
         var identifier = new Identifier
         {

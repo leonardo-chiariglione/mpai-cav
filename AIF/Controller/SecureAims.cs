@@ -13,6 +13,34 @@ public interface ISecurityAware
     SecurityApi? Security { get; set; }
 }
 
+// THE PROFILE OF AN AIM (AIF V3.0, Zero Trust and Profiles 6.3): a Module is refused - MPAI_AIF_FAILED, with the reason - where an AIM declares the Secure
+// Profile and the party it executes in has no Security API, or where a Sub-AIM of a Composite AIM declares another Profile than the Composite AIM.
+public sealed class ProfileRefusedException(string message) : InvalidOperationException(message);
+
+public static class AimProfiles
+{
+    public static string Of(System.Text.Json.JsonElement l3) =>
+        l3.TryGetProperty("APIProfile", out var p) && p.ValueKind == System.Text.Json.JsonValueKind.String ? p.GetString() ?? "Basic" : "Basic";
+
+    // The first Sub-AIM, at any depth, whose Profile is not that of its Composite AIM; null where there is none.
+    public static string? Mismatch(AIF.Store.AmdStore store, string aimName)
+    {
+        if (store.FindByAimName(aimName) is not { } id) return null;
+        var l3 = store.GetOriginal(id).RootElement;
+        var profile = Of(l3);
+        if (!l3.TryGetProperty("SubAIMs", out var subs) || subs.ValueKind != System.Text.Json.JsonValueKind.Array) return null;
+        foreach (var sub in subs.EnumerateArray())
+        {
+            if (!sub.TryGetProperty("Identifier", out var identifier) || !identifier.TryGetProperty("AIMName", out var n) || n.GetString() is not { Length: > 0 } name) continue;
+            if (store.FindByAimName(name) is not { } subId) continue;
+            var subProfile = Of(store.GetOriginal(subId).RootElement);
+            if (subProfile != profile) return $"{name} declares the {subProfile} Profile and its Composite AIM {aimName} the {profile} Profile: the Sub-AIMs of a Composite AIM declare its Profile (Zero Trust and Profiles 6.3).";
+            if (Mismatch(store, name) is { } deeper) return deeper;
+        }
+        return null;
+    }
+}
+
 // STORAGE SEALED WITH THE SECURITY API. Wraps a Ruled Storage (the Private Storage of a Module, the Shared Storage): every datum is written encrypted and
 // authenticated (AES-256-GCM, a fresh 12-byte nonce from the root of trust, the holder and the key of the datum as associated data) under a persistent key of
 // the AIM, generated once and never exportable, whose identifier it keeps in a Secure Storage area of the AIM. The storage, and whoever reaches its files,

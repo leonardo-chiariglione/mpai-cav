@@ -102,7 +102,7 @@ public sealed class AihProvider : IAimProvider, ISecurityAware
         if (DeclaresSecure(aimName))
         {
             if (Security is not { Opened: true } api)
-                throw new InvalidOperationException($"{aimName} declares the Secure Profile: it is built only where the party it executes in gives it the Security API, opened (a Secure Controller, or an AIM host with a root of trust).");
+                throw new ProfileRefusedException($"{aimName} declares the Secure Profile: it is built only where the party it executes in gives it the Security API, opened (a Secure Controller, or an AIM host with a root of trust).");
             security = api.For(aimName);
             if (moduleStorage is not null) moduleStorage = new SealedRuledStorage(moduleStorage, security);
         }

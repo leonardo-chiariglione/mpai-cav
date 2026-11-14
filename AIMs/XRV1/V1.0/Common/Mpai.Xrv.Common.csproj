@@ -1,13 +1,26 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <!-- What the AIMs of XRV-LTP V1.0 share: typed access to the Data Types of the Cue engine (each validated against its schema),
-       the matching of Status targets, and the Status Interpretation AIM. -->
+       the matching of Status targets, and the Status Interpretation AIM.
+       THE SCHEMAS ARE PART OF THE IMPLEMENTATION (AIF V3.0 review X1, 2026-11-13, author: "In the binary"): the schemas of the XRV-LTP Data Types, and those they
+       refer to, are built into this assembly at build time, so that the AIMs use no data the Controller did not give them (AIF V3.0, AI Modules 10.4). The
+       folders below hold the closure of the $refs of XRV1/V1.0/data; XrvSchemasTests checks that it is complete. -->
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>disable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <Schemas>$(MSBuildThisFileDirectory)..\..\..\..\schemas\</Schemas>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\..\..\AIF\Controller\AIF.Controller.csproj" />
     <ProjectReference Include="..\..\..\..\AIF\Metadata\AIF.Metadata.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <SchemaFolder Include="XRV1/V1.0/data;AIF/V3.0/data;AIH1/V1.1/data;AIP/V1.0/data;CAE1/V2.5/data;CAE3/V1.0/data;CVE/V1.0/data;MMC/V2.5/data;MMM4/V2.2/data;OSD/V1.5/data;PAF/V1.6/data;PTF/V1.0/data;TFA/V1.5/data;TFA/V1.5/formats;TFA/V1.5/types" />
+  </ItemGroup>
+  <Target Name="EmbedXrvSchemas" BeforeTargets="PrepareForBuild">
+    <ItemGroup>
+      <XrvSchema Include="$(Schemas)%(SchemaFolder.Identity)/*.json" Folder="%(SchemaFolder.Identity)" />
+      <EmbeddedResource Include="@(XrvSchema)" LogicalName="schemas/%(XrvSchema.Folder)/%(XrvSchema.Filename)%(XrvSchema.Extension)" />
+    </ItemGroup>
+  </Target>
 </Project>

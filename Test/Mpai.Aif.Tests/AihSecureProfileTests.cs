@@ -157,12 +157,28 @@ public class AihSecureProfileTests : IDisposable
             }
         }
 
-        // Where there is no Security API, the Secure L3 is not built.
+        // Where there is no Security API, the Secure L3 is not built: the Module is refused with FAILED and the reason (Zero Trust and Profiles 6.3).
         using var basic = new ControllerApi(Repository.Amds, settings, store => new AihProvider(store));
-        string refused;
-        try { refused = basic.StartFlow(Hbe).ToString(); }
-        catch (InvalidOperationException e) { refused = e.Message; }
-        Assert.Contains("declares the Secure Profile", refused);
+        Assert.Equal(AifError.Failed, basic.StartFlow(Hbe));
+        Assert.Contains("declares the Secure Profile", basic.StartRefusal);
+    }
+
+    // THE SUB-AIMs OF A COMPOSITE AIM DECLARE ITS PROFILE (Zero Trust and Profiles 6.3): a Back End whose L3 declares the Basic Profile over the Secure Sub-AIMs
+    // is refused before anything is built - FAILED, and the reason names the Sub-AIM and the two Profiles.
+    [Fact]
+    public void ACompositeWhoseSubAimsDeclareAnotherProfileIsRefused()
+    {
+        var amds = Path.Combine(work, "amds");
+        Directory.CreateDirectory(amds);
+        foreach (var file in Directory.GetFiles(Repository.Amds, "*.json")) File.Copy(file, Path.Combine(amds, Path.GetFileName(file)));
+        var hbe = Path.Combine(amds, Hbe + ".json");
+        var text = File.ReadAllText(hbe);
+        Assert.Contains("\"APIProfile\":       \"Secure\"", text);
+        File.WriteAllText(hbe, text.Replace("\"APIProfile\":       \"Secure\"", "\"APIProfile\":       \"Basic\""));
+        using var security = new SecurityApi(new SecurityApiTests.TestRoot(), Path.Combine(work, "security"));
+        using var api = new ControllerApi(amds, Settings(), store => new AihProvider(store) { Security = security });
+        Assert.Equal(AifError.Failed, api.StartFlow(Hbe));
+        Assert.Contains("declares the Secure Profile and its Composite AIM 1AIH-HBE-V1.1-I02 the Basic Profile", api.StartRefusal);
     }
 
     private const string Hfe = "1AIH-HFE-V1.1-I02";
