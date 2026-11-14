@@ -42,6 +42,13 @@ on Start:
     loop until Stop:
         wait 1s
 
+# An AIM that is not ALIVE, or a request of the Controller that failed. The Module's
+# policy is Continue: the show goes on; the operator is told which AIM and why, and
+# decides.
+on Degraded:
+
+    prompt "Part of the show is not running as designed: {Status}. The show goes on."
+
 on Stop:
 
     ask Controller to stop

@@ -81,9 +81,12 @@ public sealed class WorkflowInterpreter
     {
         current = workflow;
         say($"workflow {workflow.Name} over {string.Join(", ", workflow.Modules)}");
+        // ended by Stop, or by an 'on Degraded:' that stopped the Module while it executed continuously
+        using var walk = CancellationTokenSource.CreateLinkedTokenSource(stop);
+        walking = walk;
         try
         {
-            await WalkAsync(workflow.OnStart, stop);
+            await WalkAsync(workflow.OnStart, walk.Token);
         }
         finally
         {
@@ -173,7 +176,7 @@ public sealed class WorkflowInterpreter
                 Until(clock, due, stop);
                 var json = WithPayloadsAsync(m).GetAwaiter().GetResult();
                 errors.Add((clock.Elapsed - due).TotalMilliseconds);
-                north.InputWriteAsync(Module, m.DataType, m.PortNumber, json, -1).GetAwaiter().GetResult();
+                WriteOutcome(north.InputWriteAsync(Module, m.DataType, m.PortNumber, json, -1).GetAwaiter().GetResult(), stop);
             }
         }
         catch (OperationCanceledException) { }
@@ -213,7 +216,7 @@ public sealed class WorkflowInterpreter
                     {
                         await foreach (var (dataType, json) in device.ReadAsync(token))
                             if (into.TryGetValue(dataType, out var port))
-                                await north.InputWriteAsync(Module, dataType, port.PortNumber, json, -1);
+                                WriteOutcome(await north.InputWriteAsync(Module, dataType, port.PortNumber, json, -1), token);
                     }
                     catch (OperationCanceledException) { }
                 }));
@@ -252,6 +255,12 @@ public sealed class WorkflowInterpreter
                     var status = await north.StatusAsync(Module);
                     if (!answered && !status.Ok) return;
                     answered = true;
+                    // AN AIM THAT IS NOT ALIVE (Communication 3; Workflow Description): 'on Degraded:' runs, once each time an AIM leaves ALIVE.
+                    if (status.Ok && !status.Stopped)
+                    {
+                        var notAlive = status.Aims.Any(a => a.Status != AimStatus.Alive) ? 1 : 0;
+                        if (Interlocked.Exchange(ref aimsNotAlive, notAlive) == 0 && notAlive == 1) await DegradedContinuousAsync(AifError.OK, token);
+                    }
                     // THE MODULE'S POLICY DECIDES (OnDegraded): an AIM that degrades under Continue, or StopAIM, is the Module's business and the Module goes on; what acts on the world is brought to its
                     // safe state when the Module is stopped - by its policy, StopModule - or is no longer there. A critical AIM that dies and leaves its device without commands is the device's own
                     // business: its timeout.
@@ -817,23 +826,53 @@ public sealed class WorkflowInterpreter
     // an AIM that is not ALIVE - once, not from within itself. True when it ran.
     // A Controller that gives no status (over MPAI-MAS, until Phase 15) is judged
     // by the outcome of the exchange alone.
-    private bool handlingDegraded;
+    // Run from the steps of the workflow, from the devices' writes and from the status watcher: one at a time.
+    private int handlingDegraded;
 
     private async Task<bool> DegradedAsync(AifError outcome, CancellationToken stop)
     {
-        if (current is null || current.OnDegraded.Count == 0 || handlingDegraded) return false;
+        if (current is null || current.OnDegraded.Count == 0 || Volatile.Read(ref handlingDegraded) == 1) return false;
 
         var status = await north.StatusAsync(Module);
         var degraded = outcome != AifError.OK ||
                        (status.Ok && status.Aims.Any(a => a.Status != AimStatus.Alive));
         if (!degraded) return false;
+        if (Interlocked.CompareExchange(ref handlingDegraded, 1, 0) != 0) return false;
 
         if (status.Ok) variables["Status"] = StatusText(status);
         say($"on Degraded: {(outcome != AifError.OK ? outcome.ToString() : "an AIM is not ALIVE")}");
-        handlingDegraded = true;
         try { await WalkAsync(current.OnDegraded, stop); }
-        finally { handlingDegraded = false; }
+        finally { Volatile.Write(ref handlingDegraded, 0); }
         return true;
+    }
+
+    // ---- 'on Degraded:' in continuous execution (review finding X6, 2026-11-14) ----------------------------
+
+    // The walk of 'on Start:' - cancelled where 'on Degraded:' stopped the Module: "A Workflow that stops its Module there ends."
+    private CancellationTokenSource? walking;
+    private int writesFailing, aimsNotAlive;
+
+    // A WRITE TO THE BOUNDARY IS A REQUEST OF THE CONTROLLER: one that fails runs 'on Degraded:', once, until a write succeeds again. Not on the
+    // writer's own thread: a record keeps its pace, a device its order.
+    private void WriteOutcome(AifError outcome, CancellationToken token)
+    {
+        if (outcome == AifError.OK) { Volatile.Write(ref writesFailing, 0); return; }
+        if (Interlocked.Exchange(ref writesFailing, 1) == 1) return;
+        say($"a write to {Module} failed: {outcome}");
+        _ = Task.Run(() => DegradedContinuousAsync(outcome, token)).ContinueWith(t => _ = t.Exception, TaskScheduler.Default);
+    }
+
+    private async Task DegradedContinuousAsync(AifError outcome, CancellationToken token)
+    {
+        try
+        {
+            if (await DegradedAsync(outcome, token) && !running.Contains(Module))
+            {
+                say($"on Degraded stopped {Module}; the workflow ends.");
+                walking?.Cancel();
+            }
+        }
+        catch (OperationCanceledException) { }
     }
 
     private static string StatusText(ControllerApi.ModuleStatus status) =>

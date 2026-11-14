@@ -78,6 +78,57 @@ public class XrvLtpWorkflowTests
         return condition();
     }
 
+    // A venue whose Output Unit takes what it is given and does nothing with it.
+    private sealed class QuietVenue(string dataInType) : Venue(dataInType)
+    {
+        public override Task DeliverAsync(string dataType, string json, CancellationToken cancel) => Task.CompletedTask;
+    }
+
+    // ON DEGRADED, IN CONTINUOUS EXECUTION (review finding X6): the real venue sends an RE Data In that is not valid; Environment Description reports it and is DEGRADED.
+    // The Module's policy is Continue; the workflow's 'on Degraded:' tells the operator which AIM and why - once - and the show goes on: C1 still brings the lamps up.
+    [Fact]
+    public async Task AnAimThatDegradesIsToldToTheOperatorAndTheShowGoesOn()
+    {
+        var work = Path.Combine(Path.GetTempPath(), "xrv-degraded-" + Guid.NewGuid().ToString("N")); Directory.CreateDirectory(work);
+        var settings = Path.Combine(work, "aim-settings.json"); File.WriteAllText(settings, "{}");
+        try
+        {
+            using var api = new ControllerApi(Repository.Amds, settings, new XrvProvider());
+            var show = new ShowDevice((Types.ScriptVenueAssociations, "ScriptVenueAssociations.json"), (Types.REVenueSpecification, "REVenueSpecification.json"),
+                (Types.VEVenueSpecification, "VEVenueSpecification.json"), (Types.ActionTable, "ActionTable.json"), (Types.ParticipantData, "ParticipantData.json"), (Types.Script, "Script.json"));
+            var real = new RealVenue(Path.Combine(work, "dmx.txt"));
+            var prompts = new List<string>();
+            var devices = new DeviceRegistry().RegisterDevice("Show", show).RegisterDevice("RealVenue", real).RegisterDevice("VirtualVenue", new QuietVenue(EndAimProcessor.VDI))
+                .RegisterPresent("operator", shown => { if (shown.TryGetValue("Prompt", out var p)) lock (prompts) prompts.Add(p); return Task.CompletedTask; });
+            var told = new List<string>();
+            var interpreter = new WorkflowInterpreter(api.Async(), devices, line => { lock (told) told.Add(line); });
+            using var stop = new CancellationTokenSource();
+            var run = Task.Run(() => interpreter.RunAsync(new WorkflowReader().Read(File.ReadAllText(Workflow)), stop.Token));
+            string Why() { lock (told) return "\nworkflow: " + string.Join(" | ", told); }
+            bool Told() { lock (prompts) return prompts.Any(p => p.Contains("not running as designed")); }
+
+            await show.Given.Task.WaitAsync(TimeSpan.FromSeconds(30));
+            Assert.True(await Until(() => show.ParticipantData.Count > 0), "the Participant Data did not come back." + Why());
+            Assert.False(Told(), "the operator was told of a degradation before there was one." + Why());
+
+            real.Play(new JsonObject { ["Header"] = EndAimProcessor.RDI, ["REDataInID"] = "broken" }.ToJsonString());      // not a valid RE Data In
+            Assert.True(await Until(Told), "the operator was not told." + Why());
+            string prompt; lock (prompts) prompt = prompts.Single(p => p.Contains("not running as designed"));
+            Assert.Contains("1XRV-END-V1.0-I01 DEGRADED", prompt);
+            Assert.Contains("The show goes on.", prompt);
+
+            // the show goes on: C1, Anna on the real stage, brings both lamps up
+            real.Play(XrvLtpTests.REDataIn("rdi-1", new JsonObject { ["3DModelObjects"] = new JsonArray(new JsonObject { ["3DModelObjectTime"] = XrvTime.Simple("a-t", 0), ["3DModelObject"] = new JsonObject { ["Header"] = "OSD-3DO-V1.5", ["MInstanceID"] = "MI1", ["3DModelObjectID"] = "Anna", ["3DModelObjectSpaceTime"] = XrvTime.Simple("a-st", 0) } }) }));
+            Assert.True(await Until(() => real.Level("1/1") == 255 && real.Level("1/2") == 255), "C1: the lamps did not come up after the degradation." + Why());
+            await Task.Delay(1_500);
+            lock (prompts) Assert.Single(prompts, p => p.Contains("not running as designed"));          // once: END stays DEGRADED, it has not left ALIVE again
+
+            stop.Cancel();
+            try { await run.WaitAsync(TimeSpan.FromSeconds(30)); } catch (OperationCanceledException) { }
+        }
+        finally { try { Directory.Delete(work, true); } catch { } }
+    }
+
     [Fact]
     public async Task TheMiniShowRunsThroughTheAppAndTheOutputUnitsActAsTheScriptSays()
     {
