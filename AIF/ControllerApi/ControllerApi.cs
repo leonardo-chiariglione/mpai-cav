@@ -72,6 +72,17 @@ public sealed partial class ControllerApi : IControllerApi, IDisposable
     private readonly Dictionary<string, Started> _running = new();
     private readonly object _tables = new();
 
+    // A MODULE IS ADDRESSED BY THE MODULE_ID THE CONTROLLER RETURNED WHEN IT STARTED IT (Basic API 2.2): the User Agent names a Module only to
+    // start it (UA-3). The Module each MODULE_ID was given to; "" for one that is not, or no longer, started (its calls answer NOT_STARTED).
+    private readonly Dictionary<int, string> _names = new();
+    private string NameOf(int moduleId) { lock (_tables) return _names.TryGetValue(moduleId, out var name) ? name : ""; }
+
+    // The Modules stopped, by the MODULE_ID they had: only to reach what they left (ModuleStorageAt), never to act on a Module.
+    private readonly Dictionary<int, string> _stopped = new();
+
+    // The MODULE_IDs of the Modules this Controller has started and not stopped (for the program that hosts it: a trace, a status page).
+    public IReadOnlyList<int> ModuleIds { get { lock (_tables) return _names.Keys.ToList(); } }
+
     // A started Module: its id, what has been written to it since its last run,
     // and that run.
     private sealed class Started
@@ -151,20 +162,24 @@ public sealed partial class ControllerApi : IControllerApi, IDisposable
         public bool Ok => Error == AifError.OK;
     }
 
-    public AifError StartFlow(string moduleName)
+    // MPAI_AIFU_MODULE_Start(name, MODULE_ID): the one call that names the Module; every other call addresses it by moduleId. A Module already
+    // running is not started again: its MODULE_ID is returned. -1 where it was not started.
+    public AifError StartFlow(string moduleName, out int moduleId)
     {
+        moduleId = -1;
         lock (_tables)
         {
             if (_running.TryGetValue(moduleName, out var already))
             {
-                if (!already.Stopped) return AifError.OK;
+                if (!already.Stopped) { moduleId = already.Id; return AifError.OK; }
                 _ua.MPAI_AIFU_MODULE_Stop(already.Id);
                 _running.Remove(moduleName);
+                _names.Remove(already.Id);
             }
             var prepared = PrepareAims(moduleName);
             if (prepared != AifError.OK) return prepared;
             var err = _ua.MPAI_AIFU_MODULE_Start(moduleName, _provider, _settings, out var id);
-            if (err == AifError.OK) _running[moduleName] = new Started { Id = id };
+            if (err == AifError.OK) { _running[moduleName] = new Started { Id = id }; _names[id] = moduleName; moduleId = id; }
             return err;
         }
     }
@@ -211,8 +226,9 @@ public sealed partial class ControllerApi : IControllerApi, IDisposable
     // Why the Controller refused the last Module it was asked to start - an AIM not trusted, an AIM of a Profile the party cannot run: the reason of NOT_TRUSTED or FAILED.
     public string? StartRefusal => _ua.LastRefusal;
 
-    public void StopFlow(string moduleName)
+    public void StopFlow(int moduleId)
     {
+        var moduleName = NameOf(moduleId);
         List<AIF.Channels.ExternalHub>? hubs;
         lock (_tables)
         {
@@ -221,7 +237,10 @@ public sealed partial class ControllerApi : IControllerApi, IDisposable
             _external.Remove(moduleName, out hubs);
         }
         foreach (var hub in hubs ?? []) hub.DisposeAsync().AsTask().GetAwaiter().GetResult();
-        ExternalLeave(moduleName);
+        ExternalLeave(moduleId);
+        // The MODULE_ID no longer addresses the Module (every call answers NOT_STARTED, and a later Start gives another); what it left - its storage at a
+        // location (ModuleStorageAt) - can still be read through it.
+        lock (_tables) { if (_names.Remove(moduleId, out var stoppedName)) _stopped[moduleId] = stoppedName; }
     }
 
     // THE EXTERNAL PORTS OF A MODULE JOINED TO OTHER CONTROLLERS (M3205 3.3; M3241 3.2):
@@ -242,10 +261,11 @@ public sealed partial class ControllerApi : IControllerApi, IDisposable
         }
     }
 
-    public AIF.Channels.ExternalHub StartExternal(string moduleName, AIF.Channels.ExternalHub.Options options,
+    public AIF.Channels.ExternalHub StartExternal(int moduleId, AIF.Channels.ExternalHub.Options options,
                                                   Func<string, string, string>? sign = null, Func<string, string, string, string?>? verify = null,
                                                   Func<string, IReadOnlyList<AIF.Channels.PayloadDescriptor>, string, string>? signPayloads = null)
     {
+        var moduleName = NameOf(moduleId);
         int id;
         IReadOnlyList<RuntimePort> ports;
         lock (_tables)
@@ -348,7 +368,7 @@ public sealed partial class ControllerApi : IControllerApi, IDisposable
 
     // Messages from other Controllers that were not given to the Module (no External Input Port accepts them, or the Port did not take them in time): dropped, and counted (COM-8).
     private readonly System.Collections.Concurrent.ConcurrentDictionary<string, long> _externalDropped = new();
-    public long ExternalDropped(string moduleName) => _externalDropped.GetValueOrDefault(moduleName);
+    public long ExternalDropped(int moduleId) => _externalDropped.GetValueOrDefault(NameOf(moduleId));
 
     // Why the last External_Join or External_Authority did not succeed.
     public string? ExternalError { get; private set; }
@@ -357,8 +377,9 @@ public sealed partial class ControllerApi : IControllerApi, IDisposable
     // for the External links of the Module, admitting Controllers under policy. It is admitted to
     // its own service in the role the policy gives it. Its anchor, the one its User Agent publishes
     // with the service, is ExternalAnchor(moduleName); the rendezvous, ExternalRendezvous(moduleName).
-    public AifError ExternalAuthority(string moduleName, string policy, string host = "127.0.0.1", int port = 0)
+    public AifError ExternalAuthority(int moduleId, string policy, string host = "127.0.0.1", int port = 0)
     {
+        var moduleName = NameOf(moduleId);
         ExternalError = null;
         lock (_tables)
         {
@@ -382,7 +403,7 @@ public sealed partial class ControllerApi : IControllerApi, IDisposable
             var (credential, discovery) = service.AdmitSelf(anchor.AnchorId);
             if (ExternalAnnouncementPort > 0) service.Announce(ExternalAnnouncementPort);          // Controllers in range find where it admits (External_Join, rendezvous NULL)
             var trust = new AIF.Controller.ExternalTrust(anchor, key, credential, anchor.Object(), parsed.AuthorityRole, parsed);
-            var hub = StartExternal(moduleName, new AIF.Channels.ExternalHub.Options
+            var hub = StartExternal(moduleId, new AIF.Channels.ExternalHub.Options
             {
                 ControllerId = anchor.AnchorId, ModuleType = anchor.AnchorId, Discovery = discovery, Admission = trust.Admission, Host = host,
                 DirectedReplies = parsed.Directed, CorrelateBy = parsed.Correlate ?? [], AddressedBy = parsed.Address ?? [],
@@ -398,8 +419,8 @@ public sealed partial class ControllerApi : IControllerApi, IDisposable
 
     // The Trust Anchor object this Controller is the Authority by, to be published by its User
     // Agent with the service; and the rendezvous where Controllers present themselves.
-    public string? ExternalAnchor(string moduleName) { lock (_tables) return _authorities.TryGetValue(moduleName, out var a) ? a.AnchorObject.ToJsonString() : null; }
-    public string? ExternalRendezvous(string moduleName) { lock (_tables) return _authorities.TryGetValue(moduleName, out var a) ? a.Rendezvous : null; }
+    public string? ExternalAnchor(int moduleId) { var moduleName = NameOf(moduleId); lock (_tables) return _authorities.TryGetValue(moduleName, out var a) ? a.AnchorObject.ToJsonString() : null; }
+    public string? ExternalRendezvous(int moduleId) { var moduleName = NameOf(moduleId); lock (_tables) return _authorities.TryGetValue(moduleName, out var a) ? a.Rendezvous : null; }
 
     // MPAI_AIFU_External_Join(MODULE_ID, authority, rendezvous): the External Ports of the Module are
     // linked to the Controllers admitted by the Trust Authority whose anchor is authority (its Trust
@@ -410,8 +431,9 @@ public sealed partial class ControllerApi : IControllerApi, IDisposable
     // the name this Controller is known by in the service (null: one is made), which other Controllers may
     // name in a Message to address it; rendezvous
     // null (announcement in range) is not offered by this Controller.
-    public AifError ExternalJoin(string moduleName, string authority, string? rendezvous, string? role = null, string? controllerId = null)
+    public AifError ExternalJoin(int moduleId, string authority, string? rendezvous, string? role = null, string? controllerId = null)
     {
+        var moduleName = NameOf(moduleId);
         ExternalError = null;
         lock (_tables)
         {
@@ -439,7 +461,7 @@ public sealed partial class ControllerApi : IControllerApi, IDisposable
         catch (Exception e) when (e is System.Text.Json.JsonException or FormatException) { ExternalError = e.Message; return AifError.Failed; }
         try
         {
-            var hub = StartExternal(moduleName, new AIF.Channels.ExternalHub.Options
+            var hub = StartExternal(moduleId, new AIF.Channels.ExternalHub.Options
             {
                 ControllerId = member.Trust.ControllerId, ModuleType = AuthorityIdOf(authority), Discovery = member.Discovery, Admission = member.Trust.Admission,
                 DirectedReplies = false, HoldUntilLinked = true,    // what its Module gives waits until a Controller of the service is linked
@@ -461,8 +483,9 @@ public sealed partial class ControllerApi : IControllerApi, IDisposable
     }
 
     // The hubs of the External Ports of a Module (what they linked, sent, received, refused).
-    public IReadOnlyList<AIF.Channels.ExternalHub> ExternalHubsOf(string moduleName)
+    public IReadOnlyList<AIF.Channels.ExternalHub> ExternalHubsOf(int moduleId)
     {
+        var moduleName = NameOf(moduleId);
         lock (_tables) return _external.TryGetValue(moduleName, out var list) ? list.ToList() : [];
     }
 
@@ -470,8 +493,9 @@ public sealed partial class ControllerApi : IControllerApi, IDisposable
     private static string AuthorityIdOf(string authorityAnchor) => (string?)System.Text.Json.Nodes.JsonNode.Parse(authorityAnchor)?["AnchorID"] ?? "";
 
     // MPAI_AIFU_External_Leave(MODULE_ID): the links of the Module are closed; its credential is discarded.
-    public AifError ExternalLeave(string moduleName)
+    public AifError ExternalLeave(int moduleId)
     {
+        var moduleName = NameOf(moduleId);
         List<AIF.Channels.ExternalHub>? hubs;
         AIF.Controller.ExternalMember? member;
         AIF.Controller.ExternalAuthorityService? service;
@@ -498,8 +522,9 @@ public sealed partial class ControllerApi : IControllerApi, IDisposable
     // for the Module's next run. Writing never waits here, so timeoutMs is
     // honoured trivially; it is in the signature because a Port with a Depth
     // (Phase 4) may have to.
-    public AifError InputWrite(string moduleName, string dataType, int portNumber, string json, int timeoutMs = -1)
+    public AifError InputWrite(int moduleId, string dataType, int portNumber, string json, int timeoutMs = -1)
     {
+        var moduleName = NameOf(moduleId);
         Started? continuous = null;
         lock (_tables)
         {
@@ -527,8 +552,9 @@ public sealed partial class ControllerApi : IControllerApi, IDisposable
     // written; later reads return what that run produced. timeoutMs: 0, do not
     // wait; negative, wait without limit. A run a TIMEOUT leaves behind
     // continues, and a later read returns its result.
-    public Read OutputRead(string moduleName, string dataType, int portNumber, int timeoutMs = -1)
+    public Read OutputRead(int moduleId, string dataType, int portNumber, int timeoutMs = -1)
     {
+        var moduleName = NameOf(moduleId);
         Task<Result>? run;
         int? continuous = null;
         System.Collections.Concurrent.BlockingCollection<string>? unroutedQueue = null;
@@ -591,24 +617,27 @@ public sealed partial class ControllerApi : IControllerApi, IDisposable
 
     // MPAI_AIFU_MODULE_Pause and _Resume. A run started while the Module is
     // paused waits, and a read observes its timeout.
-    public AifError Pause(string moduleName)
+    public AifError Pause(int moduleId)
     {
+        var moduleName = NameOf(moduleId);
         lock (_tables)
             return _running.TryGetValue(moduleName, out var started)
                 ? _ua.MPAI_AIFU_MODULE_Pause(started.Id)
                 : AifError.NotStarted;
     }
 
-    public AifError Resume(string moduleName)
+    public AifError Resume(int moduleId)
     {
+        var moduleName = NameOf(moduleId);
         lock (_tables)
             return _running.TryGetValue(moduleName, out var started)
                 ? _ua.MPAI_AIFU_MODULE_Resume(started.Id)
                 : AifError.NotStarted;
     }
 
-    public ModuleStatus Status(string moduleName)
+    public ModuleStatus Status(int moduleId)
     {
+        var moduleName = NameOf(moduleId);
         lock (_tables)
         {
             if (!_running.TryGetValue(moduleName, out var started)) return new ModuleStatus(AifError.NotStarted, Array.Empty<AimReport>());
@@ -619,20 +648,23 @@ public sealed partial class ControllerApi : IControllerApi, IDisposable
     }
 
     // MPAI_AIFM_Model_Update and MPAI_AIFM_Model_Drift are called by an AIM, through its Ports; these are the Controller's side of them, for the Controller's own callers (a test, a tool).
-    public AifError ModelUpdate(string moduleName, string aimName, string uri)
+    public AifError ModelUpdate(int moduleId, string aimName, string uri)
     {
+        var moduleName = NameOf(moduleId);
         int id;
         lock (_tables) { if (!_running.TryGetValue(moduleName, out var started) || started.Stopped) return AifError.NotStarted; id = started.Id; }
         return _ua.ModelUpdate(id, aimName, uri).GetAwaiter().GetResult();
     }
 
-    public double? ModelDrift(string moduleName, string aimName)
+    public double? ModelDrift(int moduleId, string aimName)
     {
+        var moduleName = NameOf(moduleId);
         lock (_tables) return _running.TryGetValue(moduleName, out var started) && !started.Stopped ? _ua.ModelDrift(started.Id, aimName) : null;
     }
 
-    public AifError StopAim(string moduleName, string aimName)
+    public AifError StopAim(int moduleId, string aimName)
     {
+        var moduleName = NameOf(moduleId);
         lock (_tables)
             return _running.TryGetValue(moduleName, out var started) && !started.Stopped
                 ? _ua.MPAI_AIFU_AIM_Stop(started.Id, aimName)
@@ -641,22 +673,25 @@ public sealed partial class ControllerApi : IControllerApi, IDisposable
 
     // MPAI_AIFU_Payload_Put (M3215 3.6): a payload placed for a boundary Input
     // Port of a Continuous Module; its Object is then written with the reference.
-    public (AifError Error, string? Reference) PayloadPut(string moduleName, string dataType, int portNumber, ReadOnlyMemory<byte> data)
+    public (AifError Error, string? Reference) PayloadPut(int moduleId, string dataType, int portNumber, ReadOnlyMemory<byte> data)
     {
+        var moduleName = NameOf(moduleId);
         lock (_tables)
             return _running.TryGetValue(moduleName, out var started)
                 ? _ua.PayloadPut(started.Id, dataType, portNumber, data)
                 : (AifError.NotStarted, null);
     }
 
-    public int PayloadsHeld(string moduleName)
+    public int PayloadsHeld(int moduleId)
     {
+        var moduleName = NameOf(moduleId);
         lock (_tables) return _running.TryGetValue(moduleName, out var started) ? _ua.PayloadsHeld(started.Id) : 0;
     }
 
     // What each Channel of a Continuous Module carried (M3215 3.8).
-    public IReadOnlyList<string> ChannelAccounts(string moduleName)
+    public IReadOnlyList<string> ChannelAccounts(int moduleId)
     {
+        var moduleName = NameOf(moduleId);
         lock (_tables)
             return _running.TryGetValue(moduleName, out var started) ? _ua.ChannelAccounts(started.Id) : Array.Empty<string>();
     }
@@ -666,38 +701,47 @@ public sealed partial class ControllerApi : IControllerApi, IDisposable
     public UserAgent Controller => _ua;
 
     // THE RECORD OF THE BOUNDARY (M3219 3.4).
-    public AifError RecordStart(string moduleName, out string? recordId)
+    public AifError RecordStart(int moduleId, out string? recordId)
     {
+        var moduleName = NameOf(moduleId);
         recordId = null;
         lock (_tables)
             return _running.TryGetValue(moduleName, out var started) ? _ua.MPAI_AIFU_Record_Start(started.Id, out recordId) : AifError.NotStarted;
     }
 
-    public AifError RecordStop(string moduleName, out IReadOnlyDictionary<BoundaryRecord.PortKey, (long Recorded, long NotRecorded)>? totals)
+    public AifError RecordStop(int moduleId, out IReadOnlyDictionary<BoundaryRecord.PortKey, (long Recorded, long NotRecorded)>? totals)
     {
+        var moduleName = NameOf(moduleId);
         totals = null;
         lock (_tables)
             return _running.TryGetValue(moduleName, out var started) ? _ua.MPAI_AIFU_Record_Stop(started.Id, out totals) : AifError.NotStarted;
     }
 
-    public AIF.SharedStorage.IRuledStorage ModuleStorageAt(string moduleName, string location) =>
-        _ua.ModuleStorageAt(moduleName, location);
-
-    public string? RecordId(string moduleName)
+    // The storage a Module keeps at a location - also of a Module stopped, by the MODULE_ID it had (to read what it left).
+    public AIF.SharedStorage.IRuledStorage ModuleStorageAt(int moduleId, string location)
     {
+        string name;
+        lock (_tables) name = _names.TryGetValue(moduleId, out var n) ? n : _stopped.GetValueOrDefault(moduleId, "");
+        return _ua.ModuleStorageAt(name, location);
+    }
+
+    public string? RecordId(int moduleId)
+    {
+        var moduleName = NameOf(moduleId);
         lock (_tables)
             return _running.TryGetValue(moduleName, out var started) ? _ua.RecordStatus(started.Id)?.Id : null;
     }
 
     // The Private Storage of a running Module, as the User Agent may reach it:
     // under the rules of its writers or its central control (M3219 3.1).
-    public AIF.SharedStorage.IRuledStorage? ModuleStorage(string moduleName)
+    public AIF.SharedStorage.IRuledStorage? ModuleStorage(int moduleId)
     {
+        var moduleName = NameOf(moduleId);
         lock (_tables)
             return _running.TryGetValue(moduleName, out var started) ? _ua.ModuleStorage(started.Id) : null;
     }
 
-    public AifError SharedStorageInit(string moduleName, string location) => SharedStorageInit(moduleName, location, false);
+    public AifError SharedStorageInit(int moduleId, string location) => SharedStorageInit(moduleId, location, false);
 
     // THE USER AGENT'S STORE, READ, DELETE AND LIST on the Module's Shared Storage, through the handle the Controller binds to the User Agent: the rules and the Grants are the storage's.
     private static AifError Outcome(AIF.SharedStorage.StorageOutcome o) => o switch
@@ -707,31 +751,33 @@ public sealed partial class ControllerApi : IControllerApi, IDisposable
         _ => AifError.NotAuthorised
     };
 
-    public AifError SharedStorageStore(string moduleName, string key, byte[] data, string category = "Data") =>
-        SharedStorage(moduleName) is { } storage ? Outcome(storage.MPAI_AIFM_RuledStorage_Put(key, data, category)) : AifError.NotStarted;
+    public AifError SharedStorageStore(int moduleId, string key, byte[] data, string category = "Data") =>
+        SharedStorage(moduleId) is { } storage ? Outcome(storage.MPAI_AIFM_RuledStorage_Put(key, data, category)) : AifError.NotStarted;
 
-    public AifError SharedStorageRead(string moduleName, string key, out byte[] data)
+    public AifError SharedStorageRead(int moduleId, string key, out byte[] data)
     {
+        var moduleName = NameOf(moduleId);
         data = [];
-        if (SharedStorage(moduleName) is not { } storage) return AifError.NotStarted;
+        if (SharedStorage(moduleId) is not { } storage) return AifError.NotStarted;
         var outcome = storage.MPAI_AIFM_RuledStorage_Get(key, out var got);
         data = got ?? [];
         return Outcome(outcome);
     }
 
-    public AifError SharedStorageDelete(string moduleName, string key) =>
-        SharedStorage(moduleName) is { } storage ? Outcome(storage.MPAI_AIFM_RuledStorage_Delete(key)) : AifError.NotStarted;
+    public AifError SharedStorageDelete(int moduleId, string key) =>
+        SharedStorage(moduleId) is { } storage ? Outcome(storage.MPAI_AIFM_RuledStorage_Delete(key)) : AifError.NotStarted;
 
-    public IReadOnlyList<string> SharedStorageList(string moduleName, string prefix = "") =>
-        SharedStorage(moduleName) is { } storage ? storage.MPAI_AIFM_RuledStorage_List(null, prefix) : [];
+    public IReadOnlyList<string> SharedStorageList(int moduleId, string prefix = "") =>
+        SharedStorage(moduleId) is { } storage ? storage.MPAI_AIFM_RuledStorage_List(null, prefix) : [];
 
     // WHOSE SESSION AN EXCHANGE SERVES (M3245 3.3): a Service's Controller serves
     // many clients; the data an exchange keeps for its session are that client's,
     // and deleted when the client's session ends.
-    public Result Advance(string moduleName, IEnumerable<Datum> inputs, string session)
+    public Result Advance(int moduleId, IEnumerable<Datum> inputs, string session)
     {
+        var moduleName = NameOf(moduleId);
         _ua.MPAI_AIFU_Session_Serve(moduleName, session);
-        try { return Advance(moduleName, inputs); }
+        try { return Advance(moduleId, inputs); }
         finally { _ua.MPAI_AIFU_Session_Serve(moduleName, null); }
     }
 
@@ -741,8 +787,9 @@ public sealed partial class ControllerApi : IControllerApi, IDisposable
     public AifError SharedStorageKeep(string location, string category, AIF.SharedStorage.StorageTime time) =>
         _ua.MPAI_AIFU_SharedStorage_Keep(location, category, time);
 
-    public AifError SharedStorageInit(string moduleName, string location, bool governs)
+    public AifError SharedStorageInit(int moduleId, string location, bool governs)
     {
+        var moduleName = NameOf(moduleId);
         lock (_tables)
             return _running.TryGetValue(moduleName, out var started)
                 ? _ua.MPAI_AIFU_SharedStorage_Init(started.Id, location, governs)
@@ -751,8 +798,9 @@ public sealed partial class ControllerApi : IControllerApi, IDisposable
 
     // The Shared Storage at a running Module's location, as the User Agent may
     // reach it (M3219 3.3).
-    public AIF.SharedStorage.IRuledStorage? SharedStorage(string moduleName)
+    public AIF.SharedStorage.IRuledStorage? SharedStorage(int moduleId)
     {
+        var moduleName = NameOf(moduleId);
         lock (_tables)
             return _running.TryGetValue(moduleName, out var started) ? _ua.SharedStorage(started.Id) : null;
     }
@@ -760,16 +808,10 @@ public sealed partial class ControllerApi : IControllerApi, IDisposable
     // Write every input, read every output: one exchange, built on the data path.
     // It is lenient where InputWrite is not - a datum for a Port the Module does
     // not declare is passed on, and meets no connection - because every client
-    // and workflow was written against it.
-    public Result Advance(string moduleName, IEnumerable<Datum> inputs)
+    // and workflow was written against it. On a Module started (it is addressed by its MODULE_ID): one that is not answers NOT_STARTED.
+    public Result Advance(int moduleId, IEnumerable<Datum> inputs)
     {
-        bool ephemeral;
-        lock (_tables) ephemeral = !_running.ContainsKey(moduleName);
-        if (ephemeral)
-        {
-            var e = StartFlow(moduleName);
-            if (e != AifError.OK) return new Result(e, Array.Empty<Datum>());
-        }
+        var moduleName = NameOf(moduleId);
 
         // A Continuous Module: the inputs written, and what is pending at its
         // boundary outputs now, one Message of each; nothing waits for more.
@@ -787,7 +829,6 @@ public sealed partial class ControllerApi : IControllerApi, IDisposable
                 var (error, json) = _ua.ContinuousReadAsync(cid, port.DataType, number, 0).GetAwaiter().GetResult();
                 if (error == AifError.OK && json is not null) pending.Add(new Datum(port.DataType, number, json));
             }
-            if (ephemeral) StopFlow(moduleName);
             return new Result(AifError.OK, pending);
         }
 
@@ -802,7 +843,6 @@ public sealed partial class ControllerApi : IControllerApi, IDisposable
         }
 
         var result = run.GetAwaiter().GetResult();
-        if (ephemeral) StopFlow(moduleName);
         return result;
     }
 

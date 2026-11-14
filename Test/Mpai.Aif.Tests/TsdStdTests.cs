@@ -128,14 +128,14 @@ public class TsdStdTests
         using var api = new ControllerApi(Repository.Amds, settings, s => new LeafAimsProvider(s));
         try
         {
-            Assert.Equal(AifError.OK, api.StartFlow(Std));
-            Assert.Equal(AifError.OK, api.InputWrite(Std, "OSD-SEL-V1.5", 1, MpaiJson.ToJson(BasicSelectorObject.Languages("en", "it"))));
-            Assert.Equal(AifError.OK, api.InputWrite(Std, "OSD-BSO-V1.5", 1, UscSpeech.Make("said", speech)));
-            var translatedText = api.OutputRead(Std, "OSD-BTO-V1.5", 1, 240_000);
+            Assert.Equal(AifError.OK, api.StartFlow(Std, out var moduleId));
+            Assert.Equal(AifError.OK, api.InputWrite(moduleId, "OSD-SEL-V1.5", 1, MpaiJson.ToJson(BasicSelectorObject.Languages("en", "it"))));
+            Assert.Equal(AifError.OK, api.InputWrite(moduleId, "OSD-BSO-V1.5", 1, UscSpeech.Make("said", speech)));
+            var translatedText = api.OutputRead(moduleId, "OSD-BTO-V1.5", 1, 240_000);
             Assert.Equal(AifError.OK, translatedText.Error);
             var text = MpaiJson.FromJson<BasicTextObject>(translatedText.Json!);
             Assert.False(string.IsNullOrWhiteSpace(text?.GetText()), "the translated text is empty");
-            var translated = api.OutputRead(Std, "OSD-BSO-V1.5", 1, 240_000);
+            var translated = api.OutputRead(moduleId, "OSD-BSO-V1.5", 1, 240_000);
             Assert.Equal(AifError.OK, translated.Error);
             var piece = UscSpeech.Read(translated.Json!).First().At(16000);
 

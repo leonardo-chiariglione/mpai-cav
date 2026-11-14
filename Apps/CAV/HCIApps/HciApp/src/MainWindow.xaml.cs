@@ -61,6 +61,8 @@ public partial class MainWindow : Window
     private IControllerApi?    _north;
     private AvatarUaHost? _avatar;
     private bool _ready, _started, _identified;
+    // The MODULE_IDs the Controller returned when it started HCI and PAF-RSR (Basic API 2.2); -1 while not started.
+    private int _hciId = -1, _rsrId = -1;
     private string? _userName;
     private volatile bool _conversing;
     private int _phase = 0;
@@ -105,7 +107,7 @@ public partial class MainWindow : Window
     {
         SetStatus("welcome...");
         await RenderPromptAsync(Welcome);
-        var started = await Task.Run(() => _north!.StartFlow(HciModule));
+        var started = await Task.Run(() => _north!.StartFlow(HciModule, out _hciId));
         Diag("StartFlow HCI -> " + started);
         if (started != AifError.OK) { SetStatus("could not start " + HciModule); return; }
 
@@ -215,7 +217,7 @@ public partial class MainWindow : Window
         inputs.Add(new ControllerApi.Datum(BLO, MpaiJson.ToJson(new BasicLiDARObject
         { BasicLiDARObjectID = Guid.NewGuid().ToString("N"), BasicLiDARData = new List<object>() })));
 
-        var r = await Task.Run(() => _north!.Advance(HciModule, inputs));
+        var r = await Task.Run(() => _north!.Advance(_hciId, inputs));
         if (!r.Ok) { Diag("front-end Advance err=" + r.Error); return (null, face is not null); }
 
         _lastUserId   = r.ByType(IID);
@@ -244,7 +246,9 @@ public partial class MainWindow : Window
             new ControllerApi.Datum(BTO, 2, MpaiJson.ToJson(BasicTextObject.FromText(words))),
             new ControllerApi.Datum(AVT, AvatarDatum)
         };
-        var r = await Task.Run(() => _north!.Advance(RsrModule, inputs));
+        // PAF-RSR, started once and kept for the prompts
+        if (_rsrId < 0 && await Task.Run(() => _north!.StartFlow(RsrModule, out _rsrId)) != AifError.OK) { _rsrId = -1; return; }
+        var r = await Task.Run(() => _north!.Advance(_rsrId, inputs));
         if (!r.Ok || AvatarUtterance.FromPortableAvatar(r.ByType(SAV)) is not { } utterance) return;
         await _avatar!.PresentAsync(utterance);
         await Task.Delay(TimeSpan.FromSeconds(AvatarUaHost.WavDurationSeconds(utterance.MachineSpeechWav) + 0.3));
@@ -252,7 +256,7 @@ public partial class MainWindow : Window
 
     private async Task StopHciAsync()
     {
-        try { if (_started) { await Task.Run(() => _north!.StopFlow(HciModule)); _started = false; _identified = false; _conversing = false; } } catch { }
+        try { if (_started) { await Task.Run(() => _north!.StopFlow(_hciId)); _hciId = -1; _started = false; _identified = false; _conversing = false; } } catch { }
         _phase = 0;
     }
 
@@ -301,5 +305,5 @@ public partial class MainWindow : Window
     private void HideResult() => Dispatcher.Invoke(() => ResultBorder.Visibility = Visibility.Collapsed);
 
     protected override void OnClosed(EventArgs e)
-    { try { if (_started) _north?.StopFlow(HciModule); } catch { } base.OnClosed(e); }
+    { try { if (_started) _north?.StopFlow(_hciId); if (_rsrId >= 0) _north?.StopFlow(_rsrId); } catch { } base.OnClosed(e); }
 }

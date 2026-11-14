@@ -49,14 +49,15 @@ public class AsmTranslationTests
 
         var r = new Dictionary<string, string>();
         using var api = new ControllerApi(Repository.Amds, settings, store => new CompositeProvider(new AsmProvider(Repository.Amds), new LeafAimsProvider(store), new VciStandIn()));
+        int id = -1;
         try
         {
-            r["the Module starts"] = api.StartFlow(Asm).ToString();
-            api.SharedStorageInit(Asm, Path.Combine(work, "assets"));
+            r["the Module starts"] = api.StartFlow(Asm, out id).ToString();
+            api.SharedStorageInit(id, Path.Combine(work, "assets"));
 
-            api.InputWrite(Asm, "CAE-UCM-V1.0", 3, Forms.Acquire(MpaiJson.ToJson(english)));
-            Assert.Equal(AifError.OK, api.OutputRead(Asm, "CAE-UCM-V1.0", 3, 60_000).Error);            // the speech is taken: reported
-            api.InputWrite(Asm, "CAE-UCM-V1.0", 3, MpaiJson.ToJson(new UserCommand
+            api.InputWrite(id, "CAE-UCM-V1.0", 3, Forms.Acquire(MpaiJson.ToJson(english)));
+            Assert.Equal(AifError.OK, api.OutputRead(id, "CAE-UCM-V1.0", 3, 60_000).Error);            // the speech is taken: reported
+            api.InputWrite(id, "CAE-UCM-V1.0", 3, MpaiJson.ToJson(new UserCommand
             {
                 UserCommandID = Guid.NewGuid().ToString(), UserCommandTime = SimpleTime.At(DateTimeOffset.UtcNow),
                 UserCommandRQ = new UserCommandRQ
@@ -74,7 +75,7 @@ public class AsmTranslationTests
             }));
 
             // Speech Object Editing reports the command when the translation is done.
-            var report = api.OutputRead(Asm, "CAE-UCM-V1.0", 3, 300_000);
+            var report = api.OutputRead(id, "CAE-UCM-V1.0", 3, 300_000);
             r["the report of Speech Object Editing"] = report.Error != AifError.OK ? $"nothing ({report.Error})"
                 : string.Join("; ", MpaiJson.FromJson<UserCommand>(report.Json!).UserCommandRS is { } done
                     ? new[] { done.Outcome }.Concat(done.Actions.Select(a => $"{a.Action} {a.Outcome}")) : ["no report half"]);
@@ -83,7 +84,7 @@ public class AsmTranslationTests
             (AifError Error, string? Json) read = (AifError.NotProduced, null);
             for (var i = 0; i < 6; i++)
             {
-                var next = api.OutputRead(Asm, "OSD-SPO-V1.5", 1, 5_000);
+                var next = api.OutputRead(id, "OSD-SPO-V1.5", 1, 5_000);
                 if (next.Error != AifError.OK) break;
                 read = (next.Error, Forms.Bso(next.Json!));
             }
@@ -99,16 +100,16 @@ public class AsmTranslationTests
             }
 
             // The original is not kept; the translation is named as the original with -trans added.
-            var kept = Stored(api.SharedStorage(Asm), english.BasicSpeechObjectID);
+            var kept = Stored(api.SharedStorage(id), english.BasicSpeechObjectID);
             r["the Speech Object under the original's identifier"] = kept is null ? "none"
                 : $"{(kept.Data.SequenceEqual(english.Data) ? "still the original" : "changed")}, language {(kept.SpeechQualifier?.Attributes?.Metadata?.Language?.LanguageCode ?? "none").Split('-')[0]}";
-            var stored = Stored(api.SharedStorage(Asm), english.BasicSpeechObjectID + "-trans");
+            var stored = Stored(api.SharedStorage(id), english.BasicSpeechObjectID + "-trans");
             r["the Speech Object under the identifier with -trans"] = stored is null ? "none"
                 : $"{(stored.Data.SequenceEqual(english.Data) ? "the original" : "the translation")}, language {(stored.SpeechQualifier?.Attributes?.Metadata?.Language?.LanguageCode ?? "none").Split('-')[0]}";
         }
         finally
         {
-            api.StopFlow(Asm);
+            api.StopFlow(id);
             try { Directory.Delete(work, true); } catch { }
         }
         Expected.Match("asm-translation.json", r);
@@ -130,12 +131,13 @@ public class AsmTranslationTests
         var english = Mpai.Mmc.Soe.SpeechStore.With(Mpai.Aims.Tts.TtsFactory.Create(tts).ProcessAsync(BasicTextObject.FromText("Good morning. The concert starts at eight.")).GetAwaiter().GetResult(), id: "welcome");
 
         using var api = new ControllerApi(Repository.Amds, settings, store => new CompositeProvider(new AsmProvider(Repository.Amds), new LeafAimsProvider(store), new VciStandIn()));
+        int id = -1;
         try
         {
-            Assert.Equal(AifError.OK, api.StartFlow(Asm));
-            api.SharedStorageInit(Asm, Path.Combine(work, "assets"));
-            api.InputWrite(Asm, "CAE-UCM-V1.0", 3, Forms.Acquire(MpaiJson.ToJson(english)));
-            Assert.Equal(AifError.OK, api.OutputRead(Asm, "CAE-UCM-V1.0", 3, 60_000).Error);            // the speech is taken: reported
+            Assert.Equal(AifError.OK, api.StartFlow(Asm, out id));
+            api.SharedStorageInit(id, Path.Combine(work, "assets"));
+            api.InputWrite(id, "CAE-UCM-V1.0", 3, Forms.Acquire(MpaiJson.ToJson(english)));
+            Assert.Equal(AifError.OK, api.OutputRead(id, "CAE-UCM-V1.0", 3, 60_000).Error);            // the speech is taken: reported
             var translate = new UserCommand
             {
                 UserCommandID = Guid.NewGuid().ToString(), UserCommandTime = SimpleTime.At(DateTimeOffset.UtcNow),
@@ -152,21 +154,21 @@ public class AsmTranslationTests
                     }] }
                 }
             };
-            api.InputWrite(Asm, "CAE-UCM-V1.0", 3, MpaiJson.ToJson(translate));
-            Assert.Equal(AifError.OK, api.OutputRead(Asm, "CAE-UCM-V1.0", 3, 300_000).Error);          // translated: reported
+            api.InputWrite(id, "CAE-UCM-V1.0", 3, MpaiJson.ToJson(translate));
+            Assert.Equal(AifError.OK, api.OutputRead(id, "CAE-UCM-V1.0", 3, 300_000).Error);          // translated: reported
 
-            var storage = api.SharedStorage(Asm)!;
+            var storage = api.SharedStorage(id)!;
             BasicSpeechObject? Stored() => AsmTranslationTests.Stored(storage, english.BasicSpeechObjectID);
             Assert.Null(Stored());                                                                     // the original is not kept
             BasicSpeechObject? Translation() => AsmTranslationTests.Stored(storage, english.BasicSpeechObjectID + "-trans");
             Assert.False(Translation()!.Data.SequenceEqual(english.Data));                            // the translation stands under the identifier with -trans
 
-            api.InputWrite(Asm, "CAE-UCM-V1.0", 3, MpaiJson.ToJson(new UserCommand
+            api.InputWrite(id, "CAE-UCM-V1.0", 3, MpaiJson.ToJson(new UserCommand
             {
                 UserCommandID = Guid.NewGuid().ToString(), UserCommandTime = SimpleTime.At(DateTimeOffset.UtcNow),
                 UserCommandRQ = new UserCommandRQ { RevokedUserCommandID = translate.UserCommandID }
             }));
-            var report = api.OutputRead(Asm, "CAE-UCM-V1.0", 3, 60_000);
+            var report = api.OutputRead(id, "CAE-UCM-V1.0", 3, 60_000);
             Assert.Equal(AifError.OK, report.Error);
             Assert.Equal("Done", MpaiJson.FromJson<UserCommand>(report.Json!).UserCommandRS!.Outcome);
             Assert.True(Stored()!.Data.SequenceEqual(english.Data));                                   // the original is back
@@ -174,7 +176,7 @@ public class AsmTranslationTests
         }
         finally
         {
-            api.StopFlow(Asm);
+            api.StopFlow(id);
             try { Directory.Delete(work, true); } catch { }
         }
     }

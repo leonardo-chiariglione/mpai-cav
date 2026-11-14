@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
@@ -58,9 +59,11 @@ public sealed class RemoteControllerApi : IControllerApi, IDisposable
     public int BoutInstancesSent { get; private set; }
     public int BoutInstancesReceived { get; private set; }
 
-    // Module name -> Module Instance id, for the Modules started so far.
-    private readonly Dictionary<string, string> modules =
-        new(StringComparer.Ordinal);
+    // THE MODULE_ID THIS CLIENT RETURNS (Basic API 2.2) -> the Module Instance id the MAS server gave ({mid} in its paths), for the Modules started so far;
+    // and the MODULE_ID of each Module started, so that it is not started twice.
+    private readonly Dictionary<int, string> modules = new();
+    private readonly Dictionary<string, int> started = new(StringComparer.Ordinal);
+    private int nextModuleId;
 
     public RemoteControllerApi(
         string baseUrl,
@@ -121,9 +124,10 @@ public sealed class RemoteControllerApi : IControllerApi, IDisposable
     private string Root => $"{prefix.TrimStart('/')}/{Controller()}/MODULE";
 
     public AifError StartFlow(
-        string moduleName)
+        string moduleName, out int moduleId)
     {
-        if (modules.ContainsKey(moduleName)) return AifError.OK;
+        if (started.TryGetValue(moduleName, out moduleId)) return AifError.OK;
+        moduleId = -1;
 
         var body = new StringContent(
             new JsonObject { ["module"] = moduleName }.ToJsonString(),
@@ -139,14 +143,16 @@ public sealed class RemoteControllerApi : IControllerApi, IDisposable
         var id = (string?)json?["id"];
         if (string.IsNullOrEmpty(id)) return AifError.Failed;
 
-        modules[moduleName] = id!;
+        moduleId = ++nextModuleId;
+        modules[moduleId] = id!;
+        started[moduleName] = moduleId;
         return AifError.OK;
     }
 
     public void StopFlow(
-        string moduleName)
+        int moduleId)
     {
-        if (!modules.TryGetValue(moduleName, out var mid)) return;
+        if (!modules.TryGetValue(moduleId, out var mid)) return;
 
         try
         {
@@ -158,21 +164,17 @@ public sealed class RemoteControllerApi : IControllerApi, IDisposable
             // already gone.
         }
 
-        modules.Remove(moduleName);
+        modules.Remove(moduleId);
+        foreach (var name in started.Where(s => s.Value == moduleId).Select(s => s.Key).ToList()) started.Remove(name);
     }
 
     public ControllerApi.Result Advance(
-        string moduleName,
+        int moduleId,
         IEnumerable<ControllerApi.Datum> inputs)
     {
-        if (!modules.ContainsKey(moduleName))
-        {
-            var started = StartFlow(moduleName);
-            if (started != AifError.OK)
-                return new ControllerApi.Result(started, Array.Empty<ControllerApi.Datum>());
-        }
-
-        var mid = modules[moduleName];
+        // On a Module started: it is addressed by its MODULE_ID.
+        if (!modules.TryGetValue(moduleId, out var mid))
+            return new ControllerApi.Result(AifError.NotStarted, Array.Empty<ControllerApi.Datum>());
 
         // POST every input Port, then read the outputs. The run happens on the
         // first Output request: the specification has no "run now" call, so
@@ -240,9 +242,9 @@ public sealed class RemoteControllerApi : IControllerApi, IDisposable
     // exist and one whose AIM failed alike (404), so over it they are all
     // NotProduced, until MPAI-MAS carries the outcomes (M3206 Phase 15). A
     // TIMEOUT abandons the request; the run it started continues on the Service.
-    public AifError InputWrite(string moduleName, string dataType, int portNumber, string json, int timeoutMs = -1)
+    public AifError InputWrite(int moduleId, string dataType, int portNumber, string json, int timeoutMs = -1)
     {
-        if (!modules.TryGetValue(moduleName, out var mid)) return AifError.NotStarted;
+        if (!modules.TryGetValue(moduleId, out var mid)) return AifError.NotStarted;
         if (!codecsKnow(dataType)) return AifError.Failed;
 
         var content = InputContent(mid, dataType, portNumber, Codecs.ToWire(dataType, json));
@@ -256,9 +258,9 @@ public sealed class RemoteControllerApi : IControllerApi, IDisposable
         catch (OperationCanceledException) { return AifError.Timeout; }
     }
 
-    public ControllerApi.Read OutputRead(string moduleName, string dataType, int portNumber, int timeoutMs = -1)
+    public ControllerApi.Read OutputRead(int moduleId, string dataType, int portNumber, int timeoutMs = -1)
     {
-        if (!modules.TryGetValue(moduleName, out var mid)) return new ControllerApi.Read(AifError.NotStarted, null);
+        if (!modules.TryGetValue(moduleId, out var mid)) return new ControllerApi.Read(AifError.NotStarted, null);
         if (!codecsKnow(dataType)) return new ControllerApi.Read(AifError.Failed, null);
         try
         {
@@ -279,9 +281,9 @@ public sealed class RemoteControllerApi : IControllerApi, IDisposable
     // so the client refuses them rather than pretend, until MPAI-MAS is aligned
     // to AIF V3.0 (M3206 Phase 15).
     // ------------------------------------------------------------------ Bouts on output Ports (MPAI-MAS V1.1, API 3.3.1 to 3.3.3)
-    public AifError OutputBoutOpen(string moduleName, string dataType, int portNumber, string signingMode = AIF.Bout.BoutSecurity.EachInstance, int chainInterval = 1)
+    public AifError OutputBoutOpen(int moduleId, string dataType, int portNumber, string signingMode = AIF.Bout.BoutSecurity.EachInstance, int chainInterval = 1)
     {
-        if (!modules.TryGetValue(moduleName, out var mid)) return AifError.NotStarted;
+        if (!modules.TryGetValue(moduleId, out var mid)) return AifError.NotStarted;
         if (sciKey is null) return AifError.NotTrusted;
         var body = new JsonObject { ["SigningMode"] = signingMode };
         if (signingMode == AIF.Bout.BoutSecurity.Chain) body["ChainInterval"] = chainInterval;
@@ -298,9 +300,9 @@ public sealed class RemoteControllerApi : IControllerApi, IDisposable
         return AifError.OK;
     }
 
-    public AifError OutputBoutClose(string moduleName, string dataType, int portNumber)
+    public AifError OutputBoutClose(int moduleId, string dataType, int portNumber)
     {
-        if (!modules.TryGetValue(moduleName, out var mid)) return AifError.NotStarted;
+        if (!modules.TryGetValue(moduleId, out var mid)) return AifError.NotStarted;
         var key = BoutKey(mid, dataType, portNumber);
         var response = http.DeleteAsync($"{Root}/{mid}/Output/{Segment(dataType, portNumber)}/Bout").GetAwaiter().GetResult();
         if (outputBouts.Remove(key, out var receiver) && response.IsSuccessStatusCode &&
@@ -312,9 +314,9 @@ public sealed class RemoteControllerApi : IControllerApi, IDisposable
     // ------------------------------------------------------------------ Bouts on input Ports (MPAI-MAS V1.1, API 3.3.4 and 3.3.5)
     // The Bout is made from first, signed with the key of the Instance Credential, and given; the following InputWrite calls of the Port send Bout
     // Instances.
-    public AifError InputBoutGive(string moduleName, string dataType, int portNumber, string firstJson, string signingMode = AIF.Bout.BoutSecurity.EachInstance, int chainInterval = 1)
+    public AifError InputBoutGive(int moduleId, string dataType, int portNumber, string firstJson, string signingMode = AIF.Bout.BoutSecurity.EachInstance, int chainInterval = 1)
     {
-        if (!modules.TryGetValue(moduleName, out var mid)) return AifError.NotStarted;
+        if (!modules.TryGetValue(moduleId, out var mid)) return AifError.NotStarted;
         if (Credential is null) return AifError.NotTrusted;
         var giver = new AIF.Bout.BoutGiver(new AIF.Bout.BoutGiver.Options
         {
@@ -330,9 +332,9 @@ public sealed class RemoteControllerApi : IControllerApi, IDisposable
         return AifError.OK;
     }
 
-    public AifError InputBoutEnd(string moduleName, string dataType, int portNumber)
+    public AifError InputBoutEnd(int moduleId, string dataType, int portNumber)
     {
-        if (!modules.TryGetValue(moduleName, out var mid)) return AifError.NotStarted;
+        if (!modules.TryGetValue(moduleId, out var mid)) return AifError.NotStarted;
         if (!inputBouts.Remove(BoutKey(mid, dataType, portNumber), out var giver)) return AifError.NotFound;
         var response = http.PostAsync($"{Root}/{mid}/Input/{Segment(dataType, portNumber)}/Bout/Close",
                                       new StringContent(giver.Close().ToJsonString(), System.Text.Encoding.UTF8, "application/json")).GetAwaiter().GetResult();
@@ -382,19 +384,19 @@ public sealed class RemoteControllerApi : IControllerApi, IDisposable
         return System.Text.Encoding.UTF8.GetBytes(received.Delivered[^1].ToJsonString());
     }
 
-    public AifError Pause(string moduleName) => AifError.Failed;
+    public AifError Pause(int moduleId) => AifError.Failed;
 
-    public AifError Resume(string moduleName) => AifError.Failed;
+    public AifError Resume(int moduleId) => AifError.Failed;
 
     // Status and StopAim reach a remote User Agent when MPAI-MAS carries them
     // (Phase 15); until then they are refused.
-    public ControllerApi.ModuleStatus Status(string moduleName) =>
+    public ControllerApi.ModuleStatus Status(int moduleId) =>
         new(AifError.Failed, Array.Empty<AimReport>());
 
-    public AifError StopAim(string moduleName, string aimName) => AifError.Failed;
+    public AifError StopAim(int moduleId, string aimName) => AifError.Failed;
 
     // Where a Service holds a Module's storage is the Service's: refused.
-    public AifError SharedStorageInit(string moduleName, string location) => AifError.Failed;
+    public AifError SharedStorageInit(int moduleId, string location) => AifError.Failed;
 
     // 0 - do not wait - cannot be offered over a network; it is the shortest wait.
     private static CancellationTokenSource Limit(int timeoutMs) =>

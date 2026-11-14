@@ -16,6 +16,7 @@ namespace Mpai.Aif.Tests;
 public class CaeUscV25EesModuleTests : IDisposable
 {
     private const string Ees = "1CAE-EES-V2.5-I01";
+    private readonly int moduleId;                                                     // the MODULE_ID the Controller returned when it started the Module
     private static readonly string[] Aims = ["1CAE-SFA-V2.5-I01", "1CAE-SFB-V2.5-I01", "1CAE-EFP-V2.5-I01", "1CAE-PEI-V2.5-I01", "1CAE-NEI-V2.5-I01"];
     private readonly string work = Path.Combine(Path.GetTempPath(), "cae-ees-" + Guid.NewGuid().ToString("N"));
     private readonly HostProcess process;
@@ -36,12 +37,12 @@ public class CaeUscV25EesModuleTests : IDisposable
         api = new ControllerApi(amds, settings, _ => new CompositeProvider());
         api.Controller.AimHostKey = HostProcess.Key;
         foreach (var aim in Aims) api.Controller.AimHosts[aim] = process.Address;
-        Assert.Equal(AifError.OK, api.StartFlow(Ees));
+        Assert.Equal(AifError.OK, api.StartFlow(Ees, out moduleId));
     }
 
     public void Dispose() { api.Dispose(); process.Dispose(); try { Directory.Delete(work, true); } catch { } }
 
-    private void Write(string type, int n, string json) => Assert.Equal(AifError.OK, api.InputWrite(Ees, type, n, json, 10_000));
+    private void Write(string type, int n, string json) => Assert.Equal(AifError.OK, api.InputWrite(moduleId, type, n, json, 10_000));
 
     private static Audio Syllables(double hertz, double perSecond, double level, double seconds = 3)
     {
@@ -60,12 +61,12 @@ public class CaeUscV25EesModuleTests : IDisposable
         Write("OSD-BSO-V1.5", 1, SpeechObject.Make("model", Syllables(300, 5, 16000)));            // the model utterance
         Write("OSD-BSO-V1.5", 3, SpeechObject.Make("neutral", neutral));                           // the emotionless speech, for the prosodic insertion
 
-        var read = api.OutputRead(Ees, "OSD-BSO-V1.5", 1, 20_000);
+        var read = api.OutputRead(moduleId, "OSD-BSO-V1.5", 1, 20_000);
         Assert.True(read.Error == AifError.OK, $"nothing at Speech with Emotion (prosodic): {read.Error}");
         var f = Prosody.Measure(SpeechObject.Read(read.Json!).Single());
         Assert.InRange(f.MeanF0Hz, 285, 315);
         Assert.InRange(f.RmsDb - Prosody.Measure(neutral).RmsDb, 5, 7);
-        Assert.Equal(AifError.NotProduced, api.OutputRead(Ees, "OSD-BSO-V1.5", 2, 1_000).Error);        // the neural pathway was not asked for: nothing from it
+        Assert.Equal(AifError.NotProduced, api.OutputRead(moduleId, "OSD-BSO-V1.5", 2, 1_000).Error);        // the neural pathway was not asked for: nothing from it
     }
 
     [Fact]
@@ -78,11 +79,11 @@ public class CaeUscV25EesModuleTests : IDisposable
         Write("OSD-BSO-V1.5", 2, SpeechObject.Make("neutral-features", neutral));                  // the emotionless speech, for its features
         Write("OSD-BSO-V1.5", 4, SpeechObject.Make("neutral", neutral));                           // and for the neural insertion
 
-        var read = api.OutputRead(Ees, "OSD-BSO-V1.5", 2, 20_000);
+        var read = api.OutputRead(moduleId, "OSD-BSO-V1.5", 2, 20_000);
         Assert.True(read.Error == AifError.OK, $"nothing at Speech with Emotion (neural): {read.Error}");
         var f = Prosody.Measure(SpeechObject.Read(read.Json!).Single());
         Assert.InRange(f.MeanF0Hz, 170, 190);                                                       // sadness: the pitch x 0.90
         Assert.InRange(f.RmsDb - Prosody.Measure(neutral).RmsDb, -5, -3);
-        Assert.Equal(AifError.NotProduced, api.OutputRead(Ees, "OSD-BSO-V1.5", 1, 1_000).Error);
+        Assert.Equal(AifError.NotProduced, api.OutputRead(moduleId, "OSD-BSO-V1.5", 1, 1_000).Error);
     }
 }

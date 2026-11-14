@@ -63,12 +63,12 @@ public class CpsCasTests
             var trace = new List<string>();
             using var api = new ControllerApi(Repository.Amds, settings, s => new TracingProvider(Mpai.Hmc.Provider.HmcProviders.For(s, Repository.Root), trace));
             const string Cps = "1MMC-CPS-V2.5-I01";
-            Assert.Equal(AifError.OK, api.StartFlow(Cps));
-            Assert.Equal(AifError.OK, api.InputWrite(Cps, "OSD-BVO-V1.5", 1, Face("happy")));
-            Assert.Equal(AifError.OK, api.InputWrite(Cps, "OSD-BTO-V1.5", 1, MpaiJson.ToJson(BasicTextObject.FromText("I am so excited about the concert tonight! Do you know what time it starts?"))));
-            Assert.Equal(AifError.OK, api.InputWrite(Cps, "OSD-SEL-V1.5", 1, "{\"Header\":\"OSD-SEL-V1.5\",\"InputMedia\":\"Text\"}"));
-            Assert.Equal(AifError.OK, api.InputWrite(Cps, "string", 1, "\"MPAI as a Service\""));
-            var avatar = api.OutputRead(Cps, "PAF-PAV-V1.6", 1, 600_000);
+            Assert.Equal(AifError.OK, api.StartFlow(Cps, out var moduleId));
+            Assert.Equal(AifError.OK, api.InputWrite(moduleId, "OSD-BVO-V1.5", 1, Face("happy")));
+            Assert.Equal(AifError.OK, api.InputWrite(moduleId, "OSD-BTO-V1.5", 1, MpaiJson.ToJson(BasicTextObject.FromText("I am so excited about the concert tonight! Do you know what time it starts?"))));
+            Assert.Equal(AifError.OK, api.InputWrite(moduleId, "OSD-SEL-V1.5", 1, "{\"Header\":\"OSD-SEL-V1.5\",\"InputMedia\":\"Text\"}"));
+            Assert.Equal(AifError.OK, api.InputWrite(moduleId, "string", 1, "\"MPAI as a Service\""));
+            var avatar = api.OutputRead(moduleId, "PAF-PAV-V1.6", 1, 600_000);
             Assert.True(avatar.Error == AifError.OK, avatar.Error + Environment.NewLine + string.Join(Environment.NewLine, trace));
             Assert.Contains("PAF-PAV-V1.6", avatar.Json!);
         }
@@ -86,12 +86,12 @@ public class CpsCasTests
             using var api = new ControllerApi(Repository.Amds, settings, s => new TracingProvider(s, trace));
             const string Cas = "1MMC-CAS-V2.5-I01";
             var speech = UscSpeech.Make("said", UscAudio.FromWav(File.ReadAllBytes(Path.Combine(MpaiPaths.Clips, "clip1272.wav"))));
-            Assert.Equal(AifError.OK, api.StartFlow(Cas));
-            Assert.Equal(AifError.OK, api.InputWrite(Cas, "OSD-BVO-V1.5", 1, Face("neutral")));
-            Assert.Equal(AifError.OK, api.InputWrite(Cas, "OSD-BSO-V1.5", 1, speech));
-            Assert.Equal(AifError.OK, api.InputWrite(Cas, "OSD-BSO-V1.5", 2, speech));
-            Assert.Equal(AifError.OK, api.InputWrite(Cas, "string", 1, "\"MPAI as a Service\""));
-            var avatar = api.OutputRead(Cas, "PAF-PAV-V1.6", 1, 600_000);
+            Assert.Equal(AifError.OK, api.StartFlow(Cas, out var moduleId));
+            Assert.Equal(AifError.OK, api.InputWrite(moduleId, "OSD-BVO-V1.5", 1, Face("neutral")));
+            Assert.Equal(AifError.OK, api.InputWrite(moduleId, "OSD-BSO-V1.5", 1, speech));
+            Assert.Equal(AifError.OK, api.InputWrite(moduleId, "OSD-BSO-V1.5", 2, speech));
+            Assert.Equal(AifError.OK, api.InputWrite(moduleId, "string", 1, "\"MPAI as a Service\""));
+            var avatar = api.OutputRead(moduleId, "PAF-PAV-V1.6", 1, 600_000);
             Assert.True(avatar.Error == AifError.OK, avatar.Error + Environment.NewLine + string.Join(Environment.NewLine, trace));
             Assert.Contains("PAF-PAV-V1.6", avatar.Json!);
         }

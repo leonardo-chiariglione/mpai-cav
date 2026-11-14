@@ -345,7 +345,7 @@ internal static class Program
         // which registers into it, and of Access Control, which recognises from it.
         var gallery = config.Gallery ?? Mpai.Core.MpaiPaths.SharedStorage;
         foreach (var module in new[] { AcrModule, MacModule }.Where(m => modules.Contains(m)))
-            north.SharedStorageInit(module, gallery);
+            north.SharedStorageInit(runner.IdOf(module), gallery);
         // On the server, what a session registers is kept as long as the session.
         if (config.ForgetOnClose)
             north.SharedStorageKeep(gallery, AIF.SharedStorage.RuledStore.Default, new AIF.SharedStorage.StorageTime(AIF.SharedStorage.StorageLifetime.Session));

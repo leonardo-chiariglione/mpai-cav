@@ -31,6 +31,7 @@ public sealed class CaoInTheLoop : IDisposable
     private bool commanding;
 
     public ControllerApi Api => api;
+    public int ModuleId { get; }                                                       // the MODULE_ID the Controller returned when it started the CAO
 
     // What the CAV said: its text, in order; and the AMS Data of each step.
     public List<string> Said { get; } = [];
@@ -51,9 +52,10 @@ public sealed class CaoInTheLoop : IDisposable
         all[MasProvider.Msa] = new JsonObject { ["InitialHeading"] = (sim.Path.At(0).Heading * 180 / Math.PI).ToString(System.Globalization.CultureInfo.InvariantCulture) };
         File.WriteAllText(settings, all.ToJsonString());
         api = new ControllerApi(Repository.Amds, settings, store => new CompositeProvider(new EssProvider(Repository.Root), new AmsProvider(), new MasProvider(), new HciProvider(store, Repository.Root)));
-        var started = api.StartFlow(Cao);
+        var started = api.StartFlow(Cao, out var moduleId);
         if (started != AifError.OK) throw new InvalidOperationException($"{Cao} did not start: {started}");
-        api.SharedStorageInit(Cao, location);
+        ModuleId = moduleId;
+        api.SharedStorageInit(ModuleId, location);
         Write("OSD-BOO-V1.5", 1, sim.Map.ToOfflineMapObject(0));
         // The Avatar HCI's replies animate: given once, kept by Portable Avatar Synthesis.
         Write("OSD-B3O-V1.5", 1, TestAvatar.Datum.Json);
@@ -61,7 +63,7 @@ public sealed class CaoInTheLoop : IDisposable
 
     private void Write(string dataType, int port, string json, int timeoutMs = 10_000)
     {
-        var written = api.InputWrite(Cao, dataType, port, json, timeoutMs);
+        var written = api.InputWrite(ModuleId, dataType, port, json, timeoutMs);
         if (written != AifError.OK) throw new InvalidOperationException($"{dataType}#{port} not written to the CAV: {written}");
     }
 
@@ -78,7 +80,7 @@ public sealed class CaoInTheLoop : IDisposable
         var clock = System.Diagnostics.Stopwatch.StartNew();
         while (true)
         {
-            var read = api.OutputRead(Cao, AmsTypes.Data, 1, Math.Max(1, timeoutMs - (int)clock.ElapsedMilliseconds));
+            var read = api.OutputRead(ModuleId, AmsTypes.Data, 1, Math.Max(1, timeoutMs - (int)clock.ElapsedMilliseconds));
             if (read.Error != AifError.OK) throw new InvalidOperationException($"no AMS Data for {sensed.FrameMs}: {read.Error}");
             Data = JsonNode.Parse(read.Json!)!;
             if (AmsTypes.Ms(Data["AMSDataTime"]) >= sensed.FrameMs) break;
@@ -88,27 +90,27 @@ public sealed class CaoInTheLoop : IDisposable
         var commands = new List<(string, string)>();
         while (true)
         {
-            var read = api.OutputRead(Cao, MasTypes.WheelCommand, 1, commanding ? 10_000 : 0);
+            var read = api.OutputRead(ModuleId, MasTypes.WheelCommand, 1, commanding ? 10_000 : 0);
             if (read.Error != AifError.OK) break;
             commanding = true;
             foreach (var type in new[] { MasTypes.BrakeCommand, MasTypes.MotorCommand })
-                while (api.OutputRead(Cao, type, 1, 0) is { Error: AifError.OK, Json: { } c }) commands.Add((type, c));
+                while (api.OutputRead(ModuleId, type, 1, 0) is { Error: AifError.OK, Json: { } c }) commands.Add((type, c));
             commands.Add((MasTypes.WheelCommand, read.Json!));
             if (MasTypes.Ms(JsonNode.Parse(read.Json!)!["WheelCommandTime"]) >= sensed.FrameMs) break;
             commands.Clear();
         }
         // What the CAV says, and what HCI heard.
-        while (api.OutputRead(Cao, "OSD-BTO-V1.5", 1, 0) is { Error: AifError.OK, Json: { } t }) Said.Add(MpaiJson.FromJson<BasicTextObject>(t)?.GetText() ?? "");
-        while (api.OutputRead(Cao, "OSD-BTO-V1.5", 2, 0) is { Error: AifError.OK, Json: { } r }) Recognised.Add(MpaiJson.FromJson<BasicTextObject>(r)?.GetText() ?? "");
-        while (api.OutputRead(Cao, "PAF-PAV-V1.6", 1, 0) is { Error: AifError.OK, Json: { } sp }) Spoken.Add(MpaiJson.FromJson<PortableAvatar>(sp)?.Speech()?.Data ?? []);
+        while (api.OutputRead(ModuleId, "OSD-BTO-V1.5", 1, 0) is { Error: AifError.OK, Json: { } t }) Said.Add(MpaiJson.FromJson<BasicTextObject>(t)?.GetText() ?? "");
+        while (api.OutputRead(ModuleId, "OSD-BTO-V1.5", 2, 0) is { Error: AifError.OK, Json: { } r }) Recognised.Add(MpaiJson.FromJson<BasicTextObject>(r)?.GetText() ?? "");
+        while (api.OutputRead(ModuleId, "PAF-PAV-V1.6", 1, 0) is { Error: AifError.OK, Json: { } sp }) Spoken.Add(MpaiJson.FromJson<PortableAvatar>(sp)?.Speech()?.Data ?? []);
         foreach (var type in new[] { "OSD-IID-V1.5" })
-            while (api.OutputRead(Cao, type, 1, 0) is { Error: AifError.OK }) { }
+            while (api.OutputRead(ModuleId, type, 1, 0) is { Error: AifError.OK }) { }
         return commands;
     }
 
     public void Dispose()
     {
-        api.StopFlow(Cao);
+        api.StopFlow(ModuleId);
         api.Dispose();
         try { File.Delete(settings); Directory.Delete(location, recursive: true); } catch { }
     }
@@ -168,7 +170,7 @@ public class CaoTests
         result["the drive"] = $"{(sim.Collided ? "collision" : "no collision")}; {(sim.Path.Length - sim.EgoS < 15 ? "Destination reached" : "Destination not reached")}; {(overLimit <= 0.5 ? "within the speed limit" : "above the speed limit")}";
         result["the arrival"] = arrivedAt is not null ? "told" : "not told";
         latencies.Sort();
-        report["the Sub-AIMs"] = cav.Api.Status(CaoInTheLoop.Cao).Aims.Where(x => x.Status.ToString() != "Running" || x.Reports.Count > 0)
+        report["the Sub-AIMs"] = cav.Api.Status(cav.ModuleId).Aims.Where(x => x.Status.ToString() != "Running" || x.Reports.Count > 0)
                                     .Select(x => $"{x.Aim}: {x.Status} {x.Reason} {string.Join("; ", x.Reports.TakeLast(3))}").ToList();
         report["heard"] = cav.Recognised;
         report["said"] = when;
@@ -310,7 +312,7 @@ public class CaoTests
             var trust = new AIF.Controller.CityTrust(turin, turin.Admit(id));
             var discovery = new AIF.Channels.UdpDiscovery(port);
             discoveries.Add(discovery);
-            var hub = cav.Api.StartExternal(CaoInTheLoop.Cao, new AIF.Channels.ExternalHub.Options
+            var hub = cav.Api.StartExternal(cav.ModuleId, new AIF.Channels.ExternalHub.Options
             {
                 ControllerId = id, ModuleType = "CAV-CAO-V2.0", Discovery = discovery, Admission = trust.Admission,
                 InRange = _ => Math.Abs(simA.EgoS - simB.EgoS) <= 300

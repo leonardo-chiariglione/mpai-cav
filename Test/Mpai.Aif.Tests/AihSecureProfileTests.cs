@@ -47,7 +47,7 @@ public class AihSecureProfileTests : IDisposable
     // A Module (the Back End, the Front End) in its Secure Controller, and its User Agent's client through a Non-Secure Controller.
     private sealed class SecureModule : IDisposable
     {
-        private readonly string module;
+        public readonly int ModuleId;                                                                   // the MODULE_ID the Controller returned when it started the Module
         public readonly ControllerApi Controller;
         public readonly SecurityApi Security;
         public readonly SecureController Secure;
@@ -58,7 +58,6 @@ public class AihSecureProfileTests : IDisposable
 
         public SecureModule(SimulatedTpm tpm, ECDsa anchor, string work, string settings, ECDsa userAgent, string module = Hbe, string storage = "secure-storage")
         {
-            this.module = module;
             Security = new SecurityApi(tpm, Path.Combine(work, "security"));
             var security = Security;
             Controller = new ControllerApi(Repository.Amds, settings, store => new AihProvider(store) { Security = security });
@@ -70,27 +69,27 @@ public class AihSecureProfileTests : IDisposable
             var policy = new Attestation.Policy(manufacturer.Value.Root, m => PartyCode.Approve(PartyCode.Of(Bin).ToDictionary(c => c.File, c => c.Sha256, StringComparer.Ordinal), m));
             Client = new SecureControllerClient(NonSecure, userAgent, anchor, policy);
             Assert.Equal(AifError.OK, Client.MPAI_AIFU_Controller_Initialize_Secure());
-            Assert.Equal(AifError.OK, Client.StartFlow(module));
-            Assert.Equal(AifError.OK, Client.SharedStorageInit(module, Path.Combine(work, storage)));
+            Assert.Equal(AifError.OK, Client.StartFlow(module, out ModuleId));
+            Assert.Equal(AifError.OK, Client.SharedStorageInit(ModuleId, Path.Combine(work, storage)));
         }
 
         public void Dispose()
         {
-            Client.StopFlow(module);
+            Client.StopFlow(ModuleId);
             Link.Dispose(); Area.Dispose(); Secure.Dispose(); Controller.Dispose(); Security.Dispose();
         }
     }
 
-    private static void Write(IControllerApi api, string type, int n, JsonNode json, string module = Hbe) => Assert.Equal(AifError.OK, api.InputWrite(module, type, n, json.ToJsonString(), 10_000));
+    private static void Write(SecureModule m, string type, int n, JsonNode json) => Assert.Equal(AifError.OK, m.Client.InputWrite(m.ModuleId, type, n, json.ToJsonString(), 10_000));
 
-    private static JsonObject Read(IControllerApi api, string type, int n, int ms = 15_000, string module = Hbe)
+    private static JsonObject Read(SecureModule m, string type, int n, int ms = 15_000)
     {
-        var read = api.OutputRead(module, type, n, ms);
+        var read = m.Client.OutputRead(m.ModuleId, type, n, ms);
         Assert.True(read.Error == AifError.OK, $"nothing at {type}#{n}: {read.Error}");
         return JsonNode.Parse(read.Json!)!.AsObject();
     }
 
-    private static JsonObject Register(IControllerApi api, string user, params string[] services)
+    private static JsonObject Register(SecureModule api, string user, params string[] services)
     {
         var request = AihSamples.RegisterRequest(user);
         request["RegisterData"]![0]!["Request"]!["RequestedServices"] = new JsonArray(services.Select(s => (JsonNode)new JsonObject { ["Service"] = s }).ToArray());
@@ -98,7 +97,7 @@ public class AihSecureProfileTests : IDisposable
         return (JsonObject)Read(api, AihJson.Register, 2)["RegisterData"]![0]!["Response"]!["Tokens"]!;
     }
 
-    private JsonObject Contract(IControllerApi api)
+    private JsonObject Contract(SecureModule api)
     {
         var asked = Read(api, AihJson.Blockchain, 1);
         var data = asked["AIHDataID"]!.GetValue<string>();
@@ -122,7 +121,7 @@ public class AihSecureProfileTests : IDisposable
             JsonObject tokens;
             using (var hbe = new SecureModule(tpm, anchor.PublicKey, work, settings, userAgent))
             {
-                var api = hbe.Client;
+                var api = hbe;
                 // Registered; the AIH Data uploaded, its Smart Contract made; a de-identified copy made in the Module.
                 tokens = Register(api, "user-1", "Store", "DeIDAndAnonym");
                 Write(api, AihJson.Process, 1, AihBackEndModuleTests.Request("user-1", "Store", tokens, AihBackEndModuleTests.UploadData("ahd-1")));
@@ -150,8 +149,8 @@ public class AihSecureProfileTests : IDisposable
             // The Secure Controller started again on the same root of trust and code: the Back End still knows the End User and gives the AIH Data back.
             using (var again = new SecureModule(tpm, anchor.PublicKey, work, settings, userAgent))
             {
-                Write(again.Client, AihJson.Process, 1, AihBackEndModuleTests.Request("user-1", "Store", tokens, "ahd-1"));
-                var back = AihJson.ResponseOf(Read(again.Client, AihJson.Process, 2))!;
+                Write(again, AihJson.Process, 1, AihBackEndModuleTests.Request("user-1", "Store", tokens, "ahd-1"));
+                var back = AihJson.ResponseOf(Read(again, AihJson.Process, 2))!;
                 Assert.True(back["ProcessingStatus"]!.GetValue<bool>());
                 Assert.StartsWith("sc-", back["AIHDataOrAIHDataID"]![0]!["AIHData"]!["SmartContractID"]!.ToString());
             }
@@ -159,7 +158,7 @@ public class AihSecureProfileTests : IDisposable
 
         // Where there is no Security API, the Secure L3 is not built: the Module is refused with FAILED and the reason (Zero Trust and Profiles 6.3).
         using var basic = new ControllerApi(Repository.Amds, settings, store => new AihProvider(store));
-        Assert.Equal(AifError.Failed, basic.StartFlow(Hbe));
+        Assert.Equal(AifError.Failed, basic.StartFlow(Hbe, out _));
         Assert.Contains("declares the Secure Profile", basic.StartRefusal);
     }
 
@@ -177,7 +176,7 @@ public class AihSecureProfileTests : IDisposable
         File.WriteAllText(hbe, text.Replace("\"APIProfile\":       \"Secure\"", "\"APIProfile\":       \"Basic\""));
         using var security = new SecurityApi(new SecurityApiTests.TestRoot(), Path.Combine(work, "security"));
         using var api = new ControllerApi(amds, Settings(), store => new AihProvider(store) { Security = security });
-        Assert.Equal(AifError.Failed, api.StartFlow(Hbe));
+        Assert.Equal(AifError.Failed, api.StartFlow(Hbe, out _));
         Assert.Contains("declares the Secure Profile and its Composite AIM 1AIH-HBE-V1.1-I02 the Basic Profile", api.StartRefusal);
     }
 
@@ -195,15 +194,15 @@ public class AihSecureProfileTests : IDisposable
     }
 
     // What the End User asks of its Front End: the AIH Data of its Vault, by identifier.
-    private static JsonObject? Kept(IControllerApi api, string id)
+    private static JsonObject? Kept(SecureModule api, string id)
     {
         var ask = new JsonObject
         {
             ["Header"] = "AIH-AHP-V1.1", ["UserID"] = "user-1", ["AIHDataProcessID"] = AihJson.NewId("ahp"), ["AIHDataProcessTime"] = AihJson.Time(),
             ["AIHDataProcess"] = new JsonArray(new JsonObject { ["Request"] = new JsonObject { ["AIHDataOrAIHDataID"] = new JsonArray(id), ["ProcessingType"] = "Store", ["Tokens"] = AihSamples.Tokens() } })
         };
-        Write(api, AihJson.Process, 1, ask, Hfe);
-        return AihJson.ResponseOf(Read(api, AihJson.Process, 2, module: Hfe))!["AIHDataOrAIHDataID"]![0] as JsonObject;
+        Write(api, AihJson.Process, 1, ask);
+        return AihJson.ResponseOf(Read(api, AihJson.Process, 2))!["AIHDataOrAIHDataID"]![0] as JsonObject;
     }
 
     // THE SECURE FRONT END (1AIH-HFE-V1.1-I02) through the split: the End User's Health Data and Model Licence make AIH Data, which Anomaly and Risk Alerting
@@ -225,17 +224,17 @@ public class AihSecureProfileTests : IDisposable
             PartyCode.MeasureInto(tpm, Bin);
             using (var hfe = new SecureModule(tpm, anchor.PublicKey, work, settings, userAgent, Hfe, "secure-data-vault"))
             {
-                var api = hfe.Client;
+                var api = hfe;
                 // A beat every half second (120 a minute): a risk, Yellow. The alert leaves at the boundary; the AIH Data is kept and given back.
-                Write(api, AihJson.HealthData, 1, HealthData(125), Hfe);
-                Write(api, AihJson.ModelLicence, 1, AihSamples.ModelLicence("user-1", "ahd-1"), Hfe);
-                Assert.Equal("Yellow", Read(api, AihJson.AraData, 1, module: Hfe)["ARAData"]!["Risk"]!.ToString());
+                Write(api, AihJson.HealthData, 1, HealthData(125));
+                Write(api, AihJson.ModelLicence, 1, AihSamples.ModelLicence("user-1", "ahd-1"));
+                Assert.Equal("Yellow", Read(api, AihJson.AraData, 1)["ARAData"]!["Risk"]!.ToString());
                 Assert.Equal("Yellow", Kept(api, "ahd-1")!["AIHData"]!["ARAData"]!["ARAData"]!["Risk"]!.ToString());
 
                 // The registration goes to the Back End (at the boundary Output) as the End User wrote it.
                 var register = AihSamples.RegisterRequest("user-1");
-                Write(api, AihJson.Register, 1, register, Hfe);
-                Assert.Equal(register.ToJsonString(), Read(api, AihJson.Register, 1, module: Hfe).ToJsonString());
+                Write(api, AihJson.Register, 1, register);
+                Assert.Equal(register.ToJsonString(), Read(api, AihJson.Register, 1).ToJsonString());
 
                 var relayed = string.Join('\n', hfe.NonSecure.Seen.Select(Encoding.UTF8.GetString));
                 foreach (var word in new[] { "user-1", "ahd-1", "Yellow", "HealthDataData", AihJson.HealthData }) Assert.DoesNotContain(word, relayed);
@@ -248,7 +247,7 @@ public class AihSecureProfileTests : IDisposable
             }
 
             using (var again = new SecureModule(tpm, anchor.PublicKey, work, settings, userAgent, Hfe, "secure-data-vault"))
-                Assert.Equal("Yellow", Kept(again.Client, "ahd-1")!["AIHData"]!["ARAData"]!["ARAData"]!["Risk"]!.ToString());
+                Assert.Equal("Yellow", Kept(again, "ahd-1")!["AIHData"]!["ARAData"]!["ARAData"]!["Risk"]!.ToString());
         }
     }
 }

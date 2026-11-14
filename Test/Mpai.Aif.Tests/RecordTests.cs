@@ -49,8 +49,7 @@ public class RecordTests
     {
         var result = new Dictionary<string, string>();
         using var api = Api();
-        const string rec = "1TST-REC-V1.0-I01";
-        api.StartFlow(rec);
+        api.StartFlow("1TST-REC-V1.0-I01", out var rec);
         result["Record_Start before the Module's scope is initialised"] = api.RecordStart(rec, out _).ToString();
         api.SharedStorageInit(rec, Location());
         result["Record_Start"] = api.RecordStart(rec, out var id).ToString();
@@ -106,16 +105,15 @@ public class RecordTests
         // TST-RCA: its Metadata declares Record Always.
         {
             using var api = Api();
-            const string rca = "1TST-RCA-V1.0-I01";
             var location = Location();
-            api.StartFlow(rca);
+            api.StartFlow("1TST-RCA-V1.0-I01", out var rca);
             api.SharedStorageInit(rca, location);
             var id = api.RecordId(rca);
             result["TST-RCA recorded without being asked"] = id is null ? "no" : "yes";
             for (var i = 0; i < 3; i++) { api.InputWrite(rca, Text, 1, $"x{i}", 2000); api.OutputRead(rca, Text, 1, 2000); }
             result["TST-RCA: Record_Stop"] = api.RecordStop(rca, out _).ToString();
+            var storage = api.ModuleStorageAt(rca, location);                   // taken while its MODULE_ID addresses it; read after its Stop
             api.StopFlow(rca);
-            var storage = api.ModuleStorageAt(rca, location);
             var records = Records(storage, id!);
             result["TST-RCA, after its Stop: what is recorded"] = string.Join(" ", records.Select(r => $"{r["Direction"]}:{r["Json"]}"));
             result["TST-RCA, its header"] = Header(storage, id!) is { } h ? $"always {h["Always"]}" : "none";
@@ -124,8 +122,7 @@ public class RecordTests
         // TST-REX: an exchange, exchange by exchange.
         {
             using var api = Api();
-            const string rex = "1TST-REX-V1.0-I01";
-            api.StartFlow(rex);
+            api.StartFlow("1TST-REX-V1.0-I01", out var rex);
             api.SharedStorageInit(rex, Location());
             api.RecordStart(rex, out var id);
             api.Advance(rex, [new(Text, 1, "hello")]);
@@ -139,8 +136,7 @@ public class RecordTests
         // TST-MPS: its reader AIM may not read the record; the User Agent may.
         {
             using var api = Api();
-            const string mps = "1TST-MPS-V1.0-I01";
-            api.StartFlow(mps);
+            api.StartFlow("1TST-MPS-V1.0-I01", out var mps);
             api.SharedStorageInit(mps, Location());
             api.RecordStart(mps, out var id);
             api.Advance(mps, [new(Text, 2, "nothing")]);
@@ -165,8 +161,7 @@ public class RecordTests
         using var api = Api();
         api.Controller.RecordQueueDepth = 2;
         api.Controller.RecordWriteDelay = TimeSpan.FromMilliseconds(30);
-        const string rec = "1TST-REC-V1.0-I01";
-        api.StartFlow(rec);
+        api.StartFlow("1TST-REC-V1.0-I01", out var rec);
         api.SharedStorageInit(rec, Location());
         api.RecordStart(rec, out _);
         var clock = Stopwatch.StartNew();
@@ -233,15 +228,15 @@ public class RecordTests
                 api.Controller.AimHostKey = HostProcess.Key;
                 foreach (var aim in new[] { "1TST-UPP-V1.0-I01", "1TST-SLP-V1.0-I01", "1TST-RPT-V1.0-I01" }) api.Controller.AimHosts[aim] = hostProcess.Address;
             }
-            api.StartFlow(module);
-            api.SharedStorageInit(module, Location());
-            api.RecordStart(module, out var recordId);
-            foreach (var x in new[] { "x", "y" }) api.Advance(module, [new(Text, 1, x)]);
-            api.RecordStop(module, out _);
+            api.StartFlow(module, out var moduleId);
+            api.SharedStorageInit(moduleId, Location());
+            api.RecordStart(moduleId, out var recordId);
+            foreach (var x in new[] { "x", "y" }) api.Advance(moduleId, [new(Text, 1, x)]);
+            api.RecordStop(moduleId, out _);
             // The outputs of one exchange reach the boundary in no fixed order.
-            seen[module] = string.Join(" ", Records(api.ModuleStorage(module)!, recordId!)
+            seen[module] = string.Join(" ", Records(api.ModuleStorage(moduleId)!, recordId!)
                 .Select(r => $"{r["Direction"]}#{r["PortNumber"]}:{r["Json"]}").Order(StringComparer.Ordinal));
-            api.StopFlow(module);
+            api.StopFlow(moduleId);
         }
         result["TST-RXL, all local"] = seen["1TST-RXL-V1.0-I01"];
         result["TST-RXC, three AIMs on a host: the same"] = seen["1TST-RXC-V1.0-I01"] == seen["1TST-RXL-V1.0-I01"] ? "yes" : seen["1TST-RXC-V1.0-I01"];

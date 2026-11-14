@@ -38,16 +38,20 @@ public sealed class MasInTheLoop : IDisposable
         all[MasProvider.Msa] = new JsonObject { ["InitialHeading"] = initialHeading.ToString(System.Globalization.CultureInfo.InvariantCulture) };
         File.WriteAllText(settings, all.ToJsonString());
         api = new ControllerApi(Repository.Amds, settings, new MasProvider());
-        var started = api.StartFlow(Mas);
+        var started = api.StartFlow(Mas, out moduleId);
         if (started != AifError.OK) throw new InvalidOperationException($"{Mas} did not start: {started}");
-        api.SharedStorageInit(Mas, location);
+        api.SharedStorageInit(moduleId, location);
     }
 
     public ControllerApi Api => api;
 
+    // The MODULE_ID the Controller returned when it started the MAS: every call on the Module after its start addresses it.
+    private readonly int moduleId;
+    public int ModuleId => moduleId;
+
     private void Write(string dataType, string json, int timeoutMs)
     {
-        var written = api.InputWrite(Mas, dataType, 1, json, timeoutMs);
+        var written = api.InputWrite(moduleId, dataType, 1, json, timeoutMs);
         if (written != AifError.OK) throw new InvalidOperationException($"{dataType} not written to the MAS: {written}");
     }
 
@@ -55,7 +59,7 @@ public sealed class MasInTheLoop : IDisposable
     {
         while (true)
         {
-            var read = api.OutputRead(Mas, dataType, 1, timeoutMs);
+            var read = api.OutputRead(moduleId, dataType, 1, timeoutMs);
             if (read.Error != AifError.OK) throw new InvalidOperationException($"no {dataType} from the MAS for {ms}: {read.Error}");
             var json = JsonNode.Parse(read.Json!)!;
             if (time(json) >= ms) return json;                   // an older one is passed over
@@ -68,7 +72,7 @@ public sealed class MasInTheLoop : IDisposable
         foreach (var (dataType, json) in responses) Write(dataType, json, timeoutMs);
         foreach (var (dataType, json) in sensed.Messages.Where(m => m.DataType is MasTypes.Weather or MasTypes.SpatialData)) Write(dataType, json, timeoutMs);
         var attitude = ReadAt(MasTypes.Attitude, j => MasTypes.Ms(j["SpatialAttitudeTime"]), sensed.FrameMs, timeoutMs);
-        while (api.OutputRead(Mas, MasTypes.Weather, 1, 0) is { Error: AifError.OK }) { }   // for the ESS: given it from the sensors here
+        while (api.OutputRead(moduleId, MasTypes.Weather, 1, 0) is { Error: AifError.OK }) { }   // for the ESS: given it from the sensors here
         return attitude;
     }
 
@@ -85,7 +89,7 @@ public sealed class MasInTheLoop : IDisposable
             // The Wheel Command comes last: once it is out, so are the others.
             var wheel = ReadAt(MasTypes.WheelCommand, j => MasTypes.Ms(j["WheelCommandTime"]), ms, timeoutMs);
             foreach (var type in new[] { MasTypes.BrakeCommand, MasTypes.MotorCommand })
-                while (api.OutputRead(Mas, type, 1, 0) is { Error: AifError.OK, Json: { } c }) commands.Add((type, c));
+                while (api.OutputRead(moduleId, type, 1, 0) is { Error: AifError.OK, Json: { } c }) commands.Add((type, c));
             commands.Add((MasTypes.WheelCommand, wheel.ToJsonString()));
         }
         return (Answered(message, timeoutMs), commands);
@@ -99,7 +103,7 @@ public sealed class MasInTheLoop : IDisposable
         var id = (string?)message["AMSMASMessageID"];
         while (true)
         {
-            var read = api.OutputRead(Mas, MasTypes.Message, 1, timeoutMs);
+            var read = api.OutputRead(moduleId, MasTypes.Message, 1, timeoutMs);
             if (read.Error != AifError.OK) throw new InvalidOperationException($"no answer from the MAS to {id}: {read.Error}");
             var json = JsonNode.Parse(read.Json!)!;
             if ((string?)json["DescrMetadata"] == $"The answer to {id}.") return json;
@@ -108,7 +112,7 @@ public sealed class MasInTheLoop : IDisposable
 
     public void Dispose()
     {
-        api.StopFlow(Mas);
+        api.StopFlow(moduleId);
         api.Dispose();
         try { File.Delete(settings); Directory.Delete(location, recursive: true); } catch { }
     }
@@ -230,6 +234,10 @@ public sealed class AmsInTheLoop : IDisposable
 
     public ControllerApi Api => api;
 
+    // The MODULE_ID the Controller returned when it started the AMS.
+    private readonly int moduleId;
+    public int ModuleId => moduleId;
+
     // cavId: the CAV's identity in its city (M3241), which FED sends its Full
     // Environment Descriptors with.
     // destination: none - HCI gives it later (Say).
@@ -244,10 +252,10 @@ public sealed class AmsInTheLoop : IDisposable
             File.WriteAllText(path, all.ToJsonString());
         }
         api = new ControllerApi(Repository.Amds, path, new AmsProvider());
-        var started = api.StartFlow(Ams);
+        var started = api.StartFlow(Ams, out moduleId);
         if (started != AifError.OK) throw new InvalidOperationException($"{Ams} did not start: {started}");
-        api.SharedStorageInit(Ams, location);
-        api.InputWrite(Ams, AmsTypes.Map, 1, sim.Map.ToOfflineMapObject(0), 5000);
+        api.SharedStorageInit(moduleId, location);
+        api.InputWrite(moduleId, AmsTypes.Map, 1, sim.Map.ToOfflineMapObject(0), 5000);
         if (destination is not null) Say(AmsStage1Tests.Destination(destination));
     }
 
@@ -257,30 +265,30 @@ public sealed class AmsInTheLoop : IDisposable
     // An AMS-HCI Message from HCI.
     public void Say(string message)
     {
-        var written = api.InputWrite(Ams, AmsTypes.Hci, 1, message, 5000);
+        var written = api.InputWrite(moduleId, AmsTypes.Hci, 1, message, 5000);
         if (written != AifError.OK) throw new InvalidOperationException($"the AMS-HCI Message not written: {written}");
     }
 
     // data: each AMS Data the step gave, to see.
     public JsonNode? Step(JsonNode bed, IEnumerable<JsonNode> alerts, JsonNode? answer, long frameMs, int timeoutMs = 5000, Action<string>? data = null)
     {
-        foreach (var alert in alerts) api.InputWrite(Ams, AmsTypes.Alert, 1, alert.ToJsonString(), timeoutMs);
-        if (answer is not null) api.InputWrite(Ams, AmsTypes.Message, 1, answer.ToJsonString(), timeoutMs);
-        api.InputWrite(Ams, AmsTypes.Bed, 1, bed.ToJsonString(), timeoutMs);
+        foreach (var alert in alerts) api.InputWrite(moduleId, AmsTypes.Alert, 1, alert.ToJsonString(), timeoutMs);
+        if (answer is not null) api.InputWrite(moduleId, AmsTypes.Message, 1, answer.ToJsonString(), timeoutMs);
+        api.InputWrite(moduleId, AmsTypes.Bed, 1, bed.ToJsonString(), timeoutMs);
         JsonNode? message = null;
-        while (message is null && api.OutputRead(Ams, AmsTypes.Message, 1, timeoutMs) is { Error: AifError.OK, Json: { } json })
+        while (message is null && api.OutputRead(moduleId, AmsTypes.Message, 1, timeoutMs) is { Error: AifError.OK, Json: { } json })
         {
             var m = JsonNode.Parse(json)!;
             if (AmsTypes.Ms(m["AMSMASMessageTime"]) == frameMs) message = m;
         }
-        while (api.OutputRead(Ams, AmsTypes.Data, 1, data is null ? 0 : 50) is { Error: AifError.OK, Json: { } d }) data?.Invoke(d);
-        while (api.OutputRead(Ams, AmsTypes.Hci, 1, 0) is { Error: AifError.OK, Json: { } h }) Told.Add(JsonNode.Parse(h)!);
+        while (api.OutputRead(moduleId, AmsTypes.Data, 1, data is null ? 0 : 50) is { Error: AifError.OK, Json: { } d }) data?.Invoke(d);
+        while (api.OutputRead(moduleId, AmsTypes.Hci, 1, 0) is { Error: AifError.OK, Json: { } h }) Told.Add(JsonNode.Parse(h)!);
         return message;
     }
 
     public void Dispose()
     {
-        api.StopFlow(Ams);
+        api.StopFlow(moduleId);
         api.Dispose();
         try { Directory.Delete(location, recursive: true); if (settings is not null) File.Delete(settings); } catch { }
     }
@@ -426,7 +434,9 @@ public class MasDeliverTests
         const string mas = MasInTheLoop.Mas;
         var result = new Dictionary<string, string>();
         var report = new Dictionary<string, string>();
+        // The workflow names the Module only to start it (UA-3): the Controller returns the MODULE_ID of the MAS the loop started.
         const string body = """
+                ask Controller to start
                 stream Motion (CAV-SPD-V2.0) from device "Vehicle"
                 stream Brakes (CAV-BRR-V2.0) from device "Vehicle"
                 stream Motor (CAV-MRP-V2.0) from device "Vehicle"
@@ -444,7 +454,7 @@ public class MasDeliverTests
             var map = RoadMap.Grid(3);
             var sim = new Simulation(map, map.FastestRoute("W00", "W20")!, [], seed: 7, egoSpeed: 10);
             using var loop = new MasInTheLoop(sim.Path.At(0).Heading * 180 / Math.PI);
-            if (stopAt is { } at) _ = Task.Delay(at).ContinueWith(_ => loop.Api.StopFlow(mas));
+            if (stopAt is { } at) _ = Task.Delay(at).ContinueWith(_ => loop.Api.StopFlow(loop.ModuleId));
             using var vehicle = new VehicleDevice(sim);
             var said = new List<string>();
             var devices = new DeviceRegistry().RegisterDevice("Vehicle", vehicle).RegisterDevice("Planner", new PlannerDevice(sim, fault));

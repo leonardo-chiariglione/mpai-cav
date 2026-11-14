@@ -16,6 +16,7 @@ namespace Mpai.Aif.Tests;
 public class CaeUscV25EaeModuleTests : IDisposable
 {
     private const string Ees = "1CAE-EAE-V2.5-I01";
+    private readonly int moduleId;                                                     // the MODULE_ID the Controller returned when it started the Module
     private static readonly string[] Aims = ["1CAE-SFT-V2.5-I01", "1CAE-SFD-V2.5-I01", "1CAE-SDS-V2.5-I01", "1CAE-NCM-V2.5-I01", "1CAE-AST-V2.5-I01", "1CAE-AMX-V2.5-I01"];
     private readonly string work = Path.Combine(Path.GetTempPath(), "cae-eae-" + Guid.NewGuid().ToString("N"));
     private readonly HostProcess process;
@@ -36,7 +37,7 @@ public class CaeUscV25EaeModuleTests : IDisposable
         api = new ControllerApi(amds, settings, _ => new CompositeProvider());
         api.Controller.AimHostKey = HostProcess.Key;
         foreach (var aim in Aims) api.Controller.AimHosts[aim] = process.Address;
-        Assert.Equal(AifError.OK, api.StartFlow(Ees));
+        Assert.Equal(AifError.OK, api.StartFlow(Ees, out moduleId));
     }
 
     public void Dispose() { api.Dispose(); process.Dispose(); try { Directory.Delete(work, true); } catch { } }
@@ -53,9 +54,9 @@ public class CaeUscV25EaeModuleTests : IDisposable
             return (short)((i < 0.8 * 16000 ? v : 0) + (i >= 0.5 * 16000 ? s2.Channels[m][i] : 0) + ((int)(state >> 8) % 401 - 200));      // the first until 0.8 s, the second from 0.5 s
         }).ToArray()).ToArray(), 16000);
 
-        Assert.Equal(AifError.OK, api.InputWrite(Ees, "OSD-BAO-V1.5", 1, AudioObject.MakeMultichannel("capture", capture, array), 10_000));
+        Assert.Equal(AifError.OK, api.InputWrite(moduleId, "OSD-BAO-V1.5", 1, AudioObject.MakeMultichannel("capture", capture, array), 10_000));
 
-        var read = api.OutputRead(Ees, "OSD-BAS-V1.5", 1, 60_000);
+        var read = api.OutputRead(moduleId, "OSD-BAS-V1.5", 1, 60_000);
         Assert.True(read.Error == AifError.OK, $"nothing at the Audio Scene Descriptors: {read.Error}");
         var root = JsonNode.Parse(read.Json!)!.AsObject();
         Assert.Equal("OSD-BAS-V1.5", root["Header"]!.GetValue<string>()); Assert.Equal(2, root["AudioObjectCount"]!.GetValue<int>());

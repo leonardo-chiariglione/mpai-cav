@@ -119,19 +119,30 @@ internal sealed class VciRig : IDisposable
         return Datum(Bso, 1, MpaiJson.ToJson(new BasicSpeechObject { BasicSpeechObjectID = "voice" }));
     }
 
+    // The MODULE_ID the Controller returned when it started the Module: every other call addresses the Module by it (-1 until Start).
+    public int ModuleId { get; private set; } = -1;
+
+    // The User Agent asks the Controller to start the Module, the one call that names it.
+    public AifError Start()
+    {
+        var error = Api.StartFlow(Vci, out var id);
+        ModuleId = id;
+        return error;
+    }
+
     private string Datum(string type, int port, string json)
     {
-        var error = Api.InputWrite(Vci, type, port, json, 3000);
+        var error = Api.InputWrite(ModuleId, type, port, json, 3000);
         return error.ToString();
     }
 
-    public AifError Write(string type, int port, string json) => Api.InputWrite(Vci, type, port, json, 3000);
+    public AifError Write(string type, int port, string json) => Api.InputWrite(ModuleId, type, port, json, 3000);
 
-    public Mpai.Aif.Api.ControllerApi.Read Read(string type, int port, int timeoutMs = 4000) => Api.OutputRead(Vci, type, port, timeoutMs);
+    public Mpai.Aif.Api.ControllerApi.Read Read(string type, int port, int timeoutMs = 4000) => Api.OutputRead(ModuleId, type, port, timeoutMs);
 
     public void Dispose()
     {
-        try { Api.StopFlow(Vci); } catch { }
+        try { Api.StopFlow(ModuleId); } catch { }
         Api.Dispose();
         Ollama?.Dispose();
         try { Directory.Delete(Folder, true); } catch { }

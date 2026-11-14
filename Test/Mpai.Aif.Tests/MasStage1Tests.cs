@@ -552,22 +552,25 @@ public class MasStage1Tests
     {
         const string rec = "1TST-REC-V1.0-I01";
         const string body = "    stream In (TST-TXT-V1.0:1) from device \"Echo\"\n    deliver Out (TST-TXT-V1.0:1) to device \"Echo\"\n";
+        // The workflow names the Module only to start it (UA-3): the Controller returns the MODULE_ID of the Module the test started. A workflow
+        // refused for a device it does not know addresses no Module, and is read without that line (its refusal names the line of the stream).
+        const string start = "    ask Controller to start\n";
         var result = new Dictionary<string, string>();
         using var api = new ControllerApi(StorageTests.Amds, Path.Combine(StorageTests.Amds, "no-settings.json"), new StorageAims());
 
         async Task<(EchoDevice Device, List<string> Said, string Outcome)> Run(string tail, int stopAfterMs = -1, string device = "Echo")
         {
-            api.StartFlow(rec);
+            api.StartFlow(rec, out var id);
             var echo = new EchoDevice();
             var said = new List<string>();
             var interpreter = new WorkflowInterpreter(api.Async(), new DeviceRegistry().RegisterDevice(device, echo), line => { lock (said) said.Add(line); });
             using var stop = new CancellationTokenSource();
             if (stopAfterMs >= 0) stop.CancelAfter(stopAfterMs);
             string outcome;
-            try { await interpreter.RunAsync(new WorkflowReader().Read($"workflow DELIVER over {rec}\non Start:\n{body}{tail}\n"), stop.Token); outcome = "ended"; }
+            try { await interpreter.RunAsync(new WorkflowReader().Read($"workflow DELIVER over {rec}\non Start:\n{(device == "Echo" ? start : "")}{body}{tail}\n"), stop.Token); outcome = "ended"; }
             catch (OperationCanceledException) { outcome = "stopped"; }
             catch (InvalidOperationException e) { outcome = e.Message; }
-            api.StopFlow(rec);
+            api.StopFlow(id);
             return (echo, said, outcome);
         }
 

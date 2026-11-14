@@ -45,7 +45,7 @@ public sealed class HbeUserAgent : IDisposable
             ("RegisterOut", ""), ("ResponseOut", ""), ("AraOut", ""), ("DeIdOut", ""), ("AuditOut", ""), ("ModelOut", ""),
             ("ContractOut", ""), ("ConfirmOut", ""), ("AuditConfirmOut", ""));
         s.Start();
-        Anchor = api.ExternalAnchor(Module); Rendezvous = api.ExternalRendezvous(Module);
+        Anchor = api.ExternalAnchor(s.ModuleId); Rendezvous = api.ExternalRendezvous(s.ModuleId);
         // What the Module asks of the Blockchain it asks when it needs to, not when this User Agent expects it: each is served as it comes.
         s.Serve("ContractOut", asked => s.Send("ContractIn", Contract(asked)));
         s.Serve("ConfirmOut", asked => { Confirm(asked, out var answer); s.Send("ConfirmIn", answer); });

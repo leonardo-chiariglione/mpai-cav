@@ -70,14 +70,15 @@ public class AsmTranslationInItsOwnPoolTests(Xunit.Abstractions.ITestOutputHelpe
 
         var log = new List<Turn>();
         using var api = new ControllerApi(Repository.Amds, settings, store => new Tracing(new CompositeProvider(new AsmProvider(Repository.Amds), new VciProvider(store), new LeafAimsProvider(store)), log));
+        int id = -1;
         try
         {
-            Assert.Equal(AifError.OK, api.StartFlow(Asm));
-            api.SharedStorageInit(Asm, Path.Combine(work, "assets"));
-            api.InputWrite(Asm, "CAE-UCM-V1.0", 3, Forms.Acquire(MpaiJson.ToJson(english)));
-            Assert.Equal(AifError.OK, api.OutputRead(Asm, "CAE-UCM-V1.0", 3, 60_000).Error);
+            Assert.Equal(AifError.OK, api.StartFlow(Asm, out id));
+            api.SharedStorageInit(id, Path.Combine(work, "assets"));
+            api.InputWrite(id, "CAE-UCM-V1.0", 3, Forms.Acquire(MpaiJson.ToJson(english)));
+            Assert.Equal(AifError.OK, api.OutputRead(id, "CAE-UCM-V1.0", 3, 60_000).Error);
             lock (log) log.Clear();                                                                       // from here: the translation alone
-            api.InputWrite(Asm, "CAE-UCM-V1.0", 3, MpaiJson.ToJson(new UserCommand
+            api.InputWrite(id, "CAE-UCM-V1.0", 3, MpaiJson.ToJson(new UserCommand
             {
                 UserCommandID = Guid.NewGuid().ToString(), UserCommandTime = SimpleTime.At(DateTimeOffset.UtcNow),
                 UserCommandRQ = new UserCommandRQ
@@ -89,8 +90,8 @@ public class AsmTranslationInItsOwnPoolTests(Xunit.Abstractions.ITestOutputHelpe
                     }] }
                 }
             }));
-            Assert.Equal(AifError.OK, api.OutputRead(Asm, "CAE-UCM-V1.0", 3, 300_000).Error);           // the translation is reported
-            var spoken = api.OutputRead(Asm, "OSD-BSO-V1.5", 1, 3_000);                                   // what the VCI would say at the Module's boundary
+            Assert.Equal(AifError.OK, api.OutputRead(id, "CAE-UCM-V1.0", 3, 300_000).Error);           // the translation is reported
+            var spoken = api.OutputRead(id, "OSD-BSO-V1.5", 1, 3_000);                                   // what the VCI would say at the Module's boundary
 
             List<Turn> turns; lock (log) turns = log.ToList();
             foreach (var t in turns)
@@ -115,7 +116,7 @@ public class AsmTranslationInItsOwnPoolTests(Xunit.Abstractions.ITestOutputHelpe
         }
         finally
         {
-            api.StopFlow(Asm);
+            api.StopFlow(id);
             try { Directory.Delete(work, true); } catch { }
         }
     }

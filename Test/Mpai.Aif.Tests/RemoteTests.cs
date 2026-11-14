@@ -52,28 +52,29 @@ public class RemoteTests
     public static string Run(ControllerApi api, string module, bool continuous, RemoteAims aims)
     {
         var name = $"1{module}-V1.0-I01";
-        try { api.StartFlow(name); }
+        int id;
+        try { api.StartFlow(name, out id); }
         catch (InvalidOperationException refused) { return "refused: " + refused.Message; }
         string outcome;
         if (continuous)
         {
-            api.InputWrite(name, Text, 1, "x", 2000);
-            var read = api.OutputRead(name, Text, 1, 2000);
+            api.InputWrite(id, Text, 1, "x", 2000);
+            var read = api.OutputRead(id, Text, 1, 2000);
             outcome = "a write, then #1: " + (read.Ok ? $"'{MetadataTests.Short(read.Json!, 40)}'" : read.Error.ToString());
             if (module == "TST-RPY")
             {
-                var length = api.OutputRead(name, Text, 2, 2000);
+                var length = api.OutputRead(id, Text, 2, 2000);
                 outcome += ", #2: " + (length.Ok ? $"'{length.Json}'" : length.Error.ToString());
             }
-            var remote = api.ChannelAccounts(name).Count(a => a.Contains("(Remote)"));
+            var remote = api.ChannelAccounts(id).Count(a => a.Contains("(Remote)"));
             if (remote > 0) outcome += $"; Channels across the Remote transport: {remote}";
         }
         else
         {
-            var run = api.Advance(name, [new ControllerApi.Datum(Text, "x")]);
+            var run = api.Advance(id, [new ControllerApi.Datum(Text, "x")]);
             outcome = $"an exchange: {run.Error}; " + string.Join("; ", run.Outputs.OrderBy(o => o.PortNumber).Select(o => $"#{o.PortNumber} '{o.Json}'"));
         }
-        api.StopFlow(name);
+        api.StopFlow(id);
         return $"{outcome}; built by the Controller: {string.Join(", ", aims.Built.OrderBy(b => b))}";
     }
 

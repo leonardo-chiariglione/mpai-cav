@@ -52,14 +52,18 @@ public class AccessTests
         var gallery = Path.Combine(Path.GetTempPath(), "mpai-p16-gallery-" + Guid.NewGuid().ToString("N"));
         using var api = new ControllerApi(Repository.Amds, Path.Combine(Repository.Root, "AIMs", "aim-settings.json"),
                                           store => new CompositeProvider(new MacProvider(store), new AcrProvider(store)));
+        int acr = -1, mac = -1;                                                             // the MODULE_IDs the Controller returned when it started ACR and MAC
+        int Start(string module)
+        {
+            var started = api.StartFlow(module, out var id);
+            if (started != AifError.OK) throw new InvalidOperationException($"{module} did not start: {started}");
+            api.SharedStorageInit(id, gallery);
+            return id;
+        }
         try
         {
-            foreach (var module in new[] { Acr, Mac })
-            {
-                var started = api.StartFlow(module);
-                if (started != AifError.OK) throw new InvalidOperationException($"{module} did not start: {started}");
-                api.SharedStorageInit(module, gallery);
-            }
+            acr = Start(Acr);
+            mac = Start(Mac);
 
             // ACR registers the two.
             const string author = "Leonardo", reagan = "Ronald_Reagan";
@@ -68,9 +72,9 @@ public class AccessTests
             var clock = System.Diagnostics.Stopwatch.StartNew();
             foreach (var (name, photo, voice) in new[] { (author, "Leonardo Speaking.jpg", authorVoice), (reagan, "R.Reagan.jpg", reaganVoice) })
             {
-                var r = api.Advance(Acr, [new("OSD-BVO-V1.5", 1, Face(photo)), new("OSD-BSO-V1.5", 1, Voice("My name is " + name.Replace('_', ' ') + ", and I want to register.", voice)),
+                var r = api.Advance(acr, [new("OSD-BVO-V1.5", 1, Face(photo)), new("OSD-BSO-V1.5", 1, Voice("My name is " + name.Replace('_', ' ') + ", and I want to register.", voice)),
                                           new("OSD-BTO-V1.5", 2, Text(name)), TestAvatar.Datum]);
-                if (r.Error != AifError.OK) throw new InvalidOperationException($"ACR, {name}: {r.Error} {JsonSerializer.Serialize(api.Status(Acr).Aims)}");
+                if (r.Error != AifError.OK) throw new InvalidOperationException($"ACR, {name}: {r.Error} {JsonSerializer.Serialize(api.Status(acr).Aims)}");
             }
             var registration = clock.Elapsed.TotalSeconds / 2;
             var registered = new AIF.SharedStorage.FileSharedStorage(gallery, "test", "test");
@@ -81,8 +85,8 @@ public class AccessTests
             // MAC checks.
             (bool? Granted, string? Said) Check(string photo, string voice, string words)
             {
-                var r = api.Advance(Mac, [new("OSD-BVO-V1.5", 1, Face(photo)), new("OSD-BSO-V1.5", 1, Voice(words, voice)), TestAvatar.Datum]);
-                if (r.Error != AifError.OK) throw new InvalidOperationException($"MAC, {photo}: {r.Error} {JsonSerializer.Serialize(api.Status(Mac).Aims)}");
+                var r = api.Advance(mac, [new("OSD-BVO-V1.5", 1, Face(photo)), new("OSD-BSO-V1.5", 1, Voice(words, voice)), TestAvatar.Datum]);
+                if (r.Error != AifError.OK) throw new InvalidOperationException($"MAC, {photo}: {r.Error} {JsonSerializer.Serialize(api.Status(mac).Aims)}");
                 var said = r.ByType("OSD-BTO-V1.5") is { } t ? MpaiJson.FromJson<BasicTextObject>(t)?.GetText() : null;
                 return (r.ByType("boolean") is { } b ? bool.Parse(b) : null, said);
             }
@@ -103,14 +107,14 @@ public class AccessTests
             report["times"] = $"a registration {registration:0.0} s, a check {clock.Elapsed.TotalSeconds / cases.Length:0.0} s";
 
             // MAC speaks the words its workflow gives it (the author: its text input).
-            var prompt = api.Advance(Mac, [new("OSD-BTO-V1.5", 1, Text("Now please say a short sentence.")), TestAvatar.Datum]);
+            var prompt = api.Advance(mac, [new("OSD-BTO-V1.5", 1, Text("Now please say a short sentence.")), TestAvatar.Datum]);
             result["MAC: a prompt"] = TestAvatar.Speech(prompt)?.Data.Length > 1000 && prompt.ByType("boolean") is null
                 ? "spoken; no verdict" : "not spoken, or a verdict given";
         }
         finally
         {
-            api.StopFlow(Acr);
-            api.StopFlow(Mac);
+            api.StopFlow(acr);
+            api.StopFlow(mac);
             try { Directory.Delete(gallery, recursive: true); } catch { }
         }
         File.WriteAllText(Path.Combine(Repository.Root, "Test", "Reports", "access-in-process.json"),
@@ -132,30 +136,34 @@ public class AccessTests
         var gallery = Path.Combine(Path.GetTempPath(), "mpai-p16-session-" + Guid.NewGuid().ToString("N"));
         using var api = new ControllerApi(Repository.Amds, Path.Combine(Repository.Root, "AIMs", "aim-settings.json"),
                                           store => new CompositeProvider(new MacProvider(store), new AcrProvider(store)));
+        int acr = -1, mac = -1;                                                             // the MODULE_IDs the Controller returned when it started ACR and MAC
+        int Start(string module)
+        {
+            var started = api.StartFlow(module, out var id);
+            if (started != AifError.OK) throw new InvalidOperationException($"{module} did not start: {started}");
+            api.SharedStorageInit(id, gallery);
+            return id;
+        }
         try
         {
-            foreach (var module in new[] { Acr, Mac })
-            {
-                var started = api.StartFlow(module);
-                if (started != AifError.OK) throw new InvalidOperationException($"{module} did not start: {started}");
-                api.SharedStorageInit(module, gallery);
-            }
+            acr = Start(Acr);
+            mac = Start(Mac);
             const string author = "Leonardo", reagan = "Ronald_Reagan";
             const string authorVoice = "en_GB-alan-medium", reaganVoice = "en_US-lessiac-medium";
             ControllerApi.Datum[] Registration(string name, string photo, string voice) =>
                 [new("OSD-BVO-V1.5", 1, Face(photo)), new("OSD-BSO-V1.5", 1, Voice("My name is " + name.Replace('_', ' ') + ", and I want to register.", voice)), new("OSD-BTO-V1.5", 2, Text(name)), TestAvatar.Datum];
             bool? Check(string photo, string voice)
             {
-                var r = api.Advance(Mac, [new("OSD-BVO-V1.5", 1, Face(photo)), new("OSD-BSO-V1.5", 1, Voice("Good morning, I would like to come in, please.", voice)), TestAvatar.Datum]);
+                var r = api.Advance(mac, [new("OSD-BVO-V1.5", 1, Face(photo)), new("OSD-BSO-V1.5", 1, Voice("Good morning, I would like to come in, please.", voice)), TestAvatar.Datum]);
                 return r.ByType("boolean") is { } b ? bool.Parse(b) : null;
             }
 
             // Reagan, before the rule: no session's.
-            api.Advance(Acr, Registration(reagan, "R.Reagan.jpg", reaganVoice));
+            api.Advance(acr, Registration(reagan, "R.Reagan.jpg", reaganVoice));
             // The server's rule; the author registered in a client's session.
             api.SharedStorageKeep(gallery, AIF.SharedStorage.RuledStore.Default, new AIF.SharedStorage.StorageTime(AIF.SharedStorage.StorageLifetime.Session));
             const string session = "client-session-1";
-            var r = api.Advance(Acr, Registration(author, "Leonardo Speaking.jpg", authorVoice), session);
+            var r = api.Advance(acr, Registration(author, "Leonardo Speaking.jpg", authorVoice), session);
             if (r.Error != AifError.OK) throw new InvalidOperationException($"ACR: {r.Error}");
             var before = SubjectGallery.Load(new AIF.SharedStorage.FileSharedStorage(gallery, "test", "test"));
             var grantedBefore = Check("Leonardo Speaking.jpg", authorVoice);
@@ -172,8 +180,8 @@ public class AccessTests
         }
         finally
         {
-            api.StopFlow(Acr);
-            api.StopFlow(Mac);
+            api.StopFlow(acr);
+            api.StopFlow(mac);
             try { Directory.Delete(gallery, recursive: true); } catch { }
         }
         Expected.Match("access-session.json", result);

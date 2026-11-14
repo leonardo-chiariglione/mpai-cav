@@ -23,7 +23,11 @@ public sealed class RemoteControllerApiAsync : IAsyncControllerApi
     private readonly PortDataCodecs codecs = PortDataCodecs.Default();
     private string  prefix = "/MPAI/AIFU";
     private string? controllerId;
-    private readonly Dictionary<string, string> modules = new(StringComparer.Ordinal);
+    // THE MODULE_ID THIS CLIENT RETURNS (Basic API 2.2) -> the Module Instance id the MAS server gave ({mid} in its paths); and the MODULE_ID of each
+    // Module started, so that it is not started twice.
+    private readonly Dictionary<int, string> modules = new();
+    private readonly Dictionary<string, int> started = new(StringComparer.Ordinal);
+    private int nextModuleId;
 
     // BOUTS (MPAI-MAS V1.1, API 3.3), as RemoteControllerApi has them. The Trust Anchor the SCI returned verifies its Bouts; this client's key, with the
     // Instance Credential the SCI issued for its Cryptographic Instance Identity, signs the Bouts it gives. In a browser .NET has no ECDSA: the keys are
@@ -76,48 +80,47 @@ public sealed class RemoteControllerApiAsync : IAsyncControllerApi
 
     private async Task<string> RootAsync() => $"{prefix.TrimStart('/')}/{await ControllerAsync()}/MODULE";
 
-    public async Task<AifError> StartFlowAsync(string moduleName)
+    public async Task<(AifError Error, int ModuleId)> StartFlowAsync(string moduleName)
     {
-        if (modules.ContainsKey(moduleName)) return AifError.OK;
+        if (started.TryGetValue(moduleName, out var already)) return (AifError.OK, already);
         var body = new StringContent(new JsonObject { ["module"] = moduleName }.ToJsonString(),
                                      Encoding.UTF8, "application/json");
         var response = await http.PostAsync($"{await RootAsync()}/Start", body);
-        if (!response.IsSuccessStatusCode) return AifError.Failed;
+        if (!response.IsSuccessStatusCode) return (AifError.Failed, -1);
         var json = JsonNode.Parse(await response.Content.ReadAsStringAsync()) as JsonObject;
         var id = (string?)json?["id"];
-        if (string.IsNullOrEmpty(id)) return AifError.Failed;
-        modules[moduleName] = id!;
-        return AifError.OK;
+        if (string.IsNullOrEmpty(id)) return (AifError.Failed, -1);
+        var moduleId = ++nextModuleId;
+        modules[moduleId] = id!;
+        started[moduleName] = moduleId;
+        return (AifError.OK, moduleId);
     }
 
-    public async Task StopFlowAsync(string moduleName)
+    public async Task StopFlowAsync(int moduleId)
     {
-        if (!modules.TryGetValue(moduleName, out var mid)) return;
+        if (!modules.TryGetValue(moduleId, out var mid)) return;
         try { await http.GetAsync($"{await RootAsync()}/{mid}/Stop"); }
         catch { /* a Module already gone is stopped */ }
-        modules.Remove(moduleName);
+        modules.Remove(moduleId);
+        foreach (var name in started.Where(s => s.Value == moduleId).Select(s => s.Key).ToList()) started.Remove(name);
     }
 
     // ONE EXCHANGE. The inputs are written, then every Output Port the client can
     // read is asked for; the first read closes the exchange on the Service and
     // runs the Module on what was written.
-    public Task<ControllerApi.Result> AdvanceAsync(string moduleName, IEnumerable<ControllerApi.Datum> inputs) =>
-        AdvanceAsync(moduleName, inputs, Array.Empty<(string, int)>());
+    public Task<ControllerApi.Result> AdvanceAsync(int moduleId, IEnumerable<ControllerApi.Datum> inputs) =>
+        AdvanceAsync(moduleId, inputs, Array.Empty<(string, int)>());
 
     // ONLY WHAT IS WANTED, when the caller says: asking for every Data Type the
     // client knows on four Ports each is thirty requests a step, nearly all of them
     // "no such output". The Service discards a run's outputs at the next input, so
     // one not asked for is never served to a later step. Nothing said, all asked.
-    public async Task<ControllerApi.Result> AdvanceAsync(string moduleName, IEnumerable<ControllerApi.Datum> inputs,
+    public async Task<ControllerApi.Result> AdvanceAsync(int moduleId, IEnumerable<ControllerApi.Datum> inputs,
                                                          IReadOnlyCollection<(string DataType, int PortNumber)> wanted)
     {
-        if (!modules.ContainsKey(moduleName))
-        {
-            var started = await StartFlowAsync(moduleName);
-            if (started != AifError.OK)
-                return new ControllerApi.Result(started, Array.Empty<ControllerApi.Datum>());
-        }
-        var mid  = modules[moduleName];
+        // On a Module started: it is addressed by its MODULE_ID.
+        if (!modules.TryGetValue(moduleId, out var mid))
+            return new ControllerApi.Result(AifError.NotStarted, Array.Empty<ControllerApi.Datum>());
         var root = await RootAsync();
 
         foreach (var datum in inputs)
@@ -147,9 +150,9 @@ public sealed class RemoteControllerApiAsync : IAsyncControllerApi
     }
 
     // The data path over MPAI-MAS's routes: see RemoteControllerApi.
-    public async Task<AifError> InputWriteAsync(string moduleName, string dataType, int portNumber, string json, int timeoutMs = -1)
+    public async Task<AifError> InputWriteAsync(int moduleId, string dataType, int portNumber, string json, int timeoutMs = -1)
     {
-        if (!modules.TryGetValue(moduleName, out var mid)) return AifError.NotStarted;
+        if (!modules.TryGetValue(moduleId, out var mid)) return AifError.NotStarted;
         if (!codecs.Knows(dataType)) return AifError.Failed;
         var content = await InputContentAsync(mid, dataType, portNumber, codecs.ToWire(dataType, json));
         try
@@ -161,9 +164,9 @@ public sealed class RemoteControllerApiAsync : IAsyncControllerApi
         catch (OperationCanceledException) { return AifError.Timeout; }
     }
 
-    public async Task<ControllerApi.Read> OutputReadAsync(string moduleName, string dataType, int portNumber, int timeoutMs = -1)
+    public async Task<ControllerApi.Read> OutputReadAsync(int moduleId, string dataType, int portNumber, int timeoutMs = -1)
     {
-        if (!modules.TryGetValue(moduleName, out var mid)) return new ControllerApi.Read(AifError.NotStarted, null);
+        if (!modules.TryGetValue(moduleId, out var mid)) return new ControllerApi.Read(AifError.NotStarted, null);
         if (!codecs.Knows(dataType)) return new ControllerApi.Read(AifError.Failed, null);
         try
         {
@@ -179,9 +182,9 @@ public sealed class RemoteControllerApiAsync : IAsyncControllerApi
     }
 
     // ------------------------------------------------------------------ Bouts (MPAI-MAS V1.1, API 3.3), as RemoteControllerApi has them
-    public async Task<AifError> OutputBoutOpenAsync(string moduleName, string dataType, int portNumber, string signingMode = AIF.Bout.BoutSecurity.EachInstance, int chainInterval = 1)
+    public async Task<AifError> OutputBoutOpenAsync(int moduleId, string dataType, int portNumber, string signingMode = AIF.Bout.BoutSecurity.EachInstance, int chainInterval = 1)
     {
-        if (!modules.TryGetValue(moduleName, out var mid)) return AifError.NotStarted;
+        if (!modules.TryGetValue(moduleId, out var mid)) return AifError.NotStarted;
         var root = await RootAsync();
         if (sciKey is null) return AifError.NotTrusted;
         var body = new JsonObject { ["SigningMode"] = signingMode };
@@ -198,9 +201,9 @@ public sealed class RemoteControllerApiAsync : IAsyncControllerApi
         return AifError.OK;
     }
 
-    public async Task<AifError> OutputBoutCloseAsync(string moduleName, string dataType, int portNumber)
+    public async Task<AifError> OutputBoutCloseAsync(int moduleId, string dataType, int portNumber)
     {
-        if (!modules.TryGetValue(moduleName, out var mid)) return AifError.NotStarted;
+        if (!modules.TryGetValue(moduleId, out var mid)) return AifError.NotStarted;
         var response = await http.DeleteAsync($"{await RootAsync()}/{mid}/Output/{Segment(dataType, portNumber)}/Bout");
         if (outputBouts.Remove(BoutKeyOf(mid, dataType, portNumber), out var receiver) && response.IsSuccessStatusCode &&
             JsonNode.Parse(await response.Content.ReadAsStringAsync()) is JsonObject closing)
@@ -208,9 +211,9 @@ public sealed class RemoteControllerApiAsync : IAsyncControllerApi
         return response.IsSuccessStatusCode ? AifError.OK : AifError.NotFound;
     }
 
-    public async Task<AifError> InputBoutGiveAsync(string moduleName, string dataType, int portNumber, string firstJson, string signingMode = AIF.Bout.BoutSecurity.EachInstance, int chainInterval = 1)
+    public async Task<AifError> InputBoutGiveAsync(int moduleId, string dataType, int portNumber, string firstJson, string signingMode = AIF.Bout.BoutSecurity.EachInstance, int chainInterval = 1)
     {
-        if (!modules.TryGetValue(moduleName, out var mid)) return AifError.NotStarted;
+        if (!modules.TryGetValue(moduleId, out var mid)) return AifError.NotStarted;
         var root = await RootAsync();
         if (Credential is null || clientKey is null) return AifError.NotTrusted;
         var giver = new AIF.Bout.BoutGiver(new AIF.Bout.BoutGiver.Options
@@ -225,9 +228,9 @@ public sealed class RemoteControllerApiAsync : IAsyncControllerApi
         return AifError.OK;
     }
 
-    public async Task<AifError> InputBoutEndAsync(string moduleName, string dataType, int portNumber)
+    public async Task<AifError> InputBoutEndAsync(int moduleId, string dataType, int portNumber)
     {
-        if (!modules.TryGetValue(moduleName, out var mid)) return AifError.NotStarted;
+        if (!modules.TryGetValue(moduleId, out var mid)) return AifError.NotStarted;
         if (!inputBouts.Remove(BoutKeyOf(mid, dataType, portNumber), out var giver)) return AifError.NotFound;
         var response = await http.PostAsync($"{await RootAsync()}/{mid}/Input/{Segment(dataType, portNumber)}/Bout/Close",
                                             new StringContent((await giver.CloseAsync()).ToJsonString(), Encoding.UTF8, "application/json"));
@@ -283,16 +286,16 @@ public sealed class RemoteControllerApiAsync : IAsyncControllerApi
     }
 
     // Refused over MPAI-MAS until Phase 15: see RemoteControllerApi.
-    public Task<AifError> PauseAsync(string moduleName) => Task.FromResult(AifError.Failed);
+    public Task<AifError> PauseAsync(int moduleId) => Task.FromResult(AifError.Failed);
 
-    public Task<AifError> ResumeAsync(string moduleName) => Task.FromResult(AifError.Failed);
+    public Task<AifError> ResumeAsync(int moduleId) => Task.FromResult(AifError.Failed);
 
-    public Task<ControllerApi.ModuleStatus> StatusAsync(string moduleName) =>
+    public Task<ControllerApi.ModuleStatus> StatusAsync(int moduleId) =>
         Task.FromResult(new ControllerApi.ModuleStatus(AifError.Failed, Array.Empty<AimReport>()));
 
-    public Task<AifError> StopAimAsync(string moduleName, string aimName) => Task.FromResult(AifError.Failed);
+    public Task<AifError> StopAimAsync(int moduleId, string aimName) => Task.FromResult(AifError.Failed);
 
-    public Task<AifError> SharedStorageInitAsync(string moduleName, string location) => Task.FromResult(AifError.Failed);
+    public Task<AifError> SharedStorageInitAsync(int moduleId, string location) => Task.FromResult(AifError.Failed);
 
     private static System.Threading.CancellationTokenSource Limit(int timeoutMs) =>
         timeoutMs < 0 ? new System.Threading.CancellationTokenSource() : new System.Threading.CancellationTokenSource(Math.Max(timeoutMs, 1));

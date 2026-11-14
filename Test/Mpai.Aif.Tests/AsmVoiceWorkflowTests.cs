@@ -90,9 +90,12 @@ public class AsmVoiceWorkflowTests
             };
             Api = AsmVoiceModules.Controller(Prepared, store => new Provider(store, this, model));
             // The Controller's own business, as the App's: where the Module keeps its Objects and Scenes.
-            Assert.Equal(AifError.OK, Api.StartFlow(AsmVoiceModules.Asm));
-            Assert.Equal(AifError.OK, Api.SharedStorageInit(AsmVoiceModules.Asm, Path.Combine(Prepared.Folder, "storage")));
+            Assert.Equal(AifError.OK, Api.StartFlow(AsmVoiceModules.Asm, out ModuleId));
+            Assert.Equal(AifError.OK, Api.SharedStorageInit(ModuleId, Path.Combine(Prepared.Folder, "storage")));
         }
+
+        // The MODULE_ID the Controller returned for the Module (the workflow's own start returns the same: the Module is running).
+        public readonly int ModuleId;
 
         public void Start()
         {
@@ -233,22 +236,23 @@ public class AsmVoiceWorkflowTests
         Skip.IfNot(TestModels.Can("ggml-small.bin"), "The models cannot be had: the L3s declare them, and Access holds them or cannot obtain them.");
         var prepared = AsmVoiceModules.Prepare(Repository.Root);
         using var api = AsmVoiceModules.Controller(prepared);
+        int id = -1;
         try
         {
-            Assert.Equal(AifError.OK, api.StartFlow(AsmVoiceModules.Asm));
-            Assert.Equal(AifError.OK, api.SharedStorageInit(AsmVoiceModules.Asm, Path.Combine(prepared.Folder, "storage")));
-            Assert.All(api.Status(AsmVoiceModules.Asm).Aims, a => Assert.Equal(AimStatus.Alive, a.Status));
+            Assert.Equal(AifError.OK, api.StartFlow(AsmVoiceModules.Asm, out id));
+            Assert.Equal(AifError.OK, api.SharedStorageInit(id, Path.Combine(prepared.Folder, "storage")));
+            Assert.All(api.Status(id).Aims, a => Assert.Equal(AimStatus.Alive, a.Status));
 
             // The User Agent's own Store, Read, List and Delete on the Module's Shared Storage, through the Controller API (under the rules of the storage).
-            Assert.Equal(AifError.OK, api.SharedStorageStore(AsmVoiceModules.Asm, "ua-note", [1, 2, 3]));
-            Assert.Contains("ua-note", api.SharedStorageList(AsmVoiceModules.Asm, "ua-"));
-            Assert.Equal(AifError.OK, api.SharedStorageRead(AsmVoiceModules.Asm, "ua-note", out var note));
+            Assert.Equal(AifError.OK, api.SharedStorageStore(id, "ua-note", [1, 2, 3]));
+            Assert.Contains("ua-note", api.SharedStorageList(id, "ua-"));
+            Assert.Equal(AifError.OK, api.SharedStorageRead(id, "ua-note", out var note));
             Assert.Equal([1, 2, 3], note);
-            Assert.Equal(AifError.OK, api.SharedStorageDelete(AsmVoiceModules.Asm, "ua-note"));
-            Assert.Equal(AifError.NotFound, api.SharedStorageRead(AsmVoiceModules.Asm, "ua-note", out _));
-            Assert.Equal(AifError.NotStarted, api.SharedStorageStore("no-such-module", "k", [1]));
+            Assert.Equal(AifError.OK, api.SharedStorageDelete(id, "ua-note"));
+            Assert.Equal(AifError.NotFound, api.SharedStorageRead(id, "ua-note", out _));
+            Assert.Equal(AifError.NotStarted, api.SharedStorageStore(-1, "k", [1]));                    // a MODULE_ID the Controller did not return
         }
-        finally { try { api.StopFlow(AsmVoiceModules.Asm); Directory.Delete(prepared.Folder, true); } catch { } }
+        finally { try { api.StopFlow(id); Directory.Delete(prepared.Folder, true); } catch { } }
     }
 
     [Fact]
@@ -257,7 +261,7 @@ public class AsmVoiceWorkflowTests
         using var rig = new Rig(Model, Dialogue);
         rig.Start();
         var first = true;
-        string Why() => "\n--- interpreter:\n" + string.Join("\n", rig.Log().Split('\n').Where(l => !l.StartsWith("[C] send") && !l.StartsWith("[C] routed")).TakeLast(30)) + "\n--- replies: " + string.Join(" | ", rig.ReplyText.All()) + "\n--- spoken: " + string.Join(" | ", rig.Spoken) + "\n--- JSI turns: " + string.Join(" || ", rig.JsiTurns) + "\n--- heard: " + rig.HeardText.All().Count + " scenes: " + rig.Scene.All().Count + " ollama: " + string.Join(" || ", rig.Ollama.Prompts) + "\n--- status: " + string.Join("; ", rig.Api.Status(AsmVoiceModules.Vci).Aims.Select(a => a.Aim + " " + a.Status + " " + a.Reason + " " + string.Join("/", a.Reports)));
+        string Why() => "\n--- interpreter:\n" + string.Join("\n", rig.Log().Split('\n').Where(l => !l.StartsWith("[C] send") && !l.StartsWith("[C] routed")).TakeLast(30)) + "\n--- replies: " + string.Join(" | ", rig.ReplyText.All()) + "\n--- spoken: " + string.Join(" | ", rig.Spoken) + "\n--- JSI turns: " + string.Join(" || ", rig.JsiTurns) + "\n--- heard: " + rig.HeardText.All().Count + " scenes: " + rig.Scene.All().Count + " ollama: " + string.Join(" || ", rig.Ollama.Prompts) + "\n--- status: " + string.Join("; ", rig.Api.Status(rig.ModuleId).Aims.Select(a => a.Aim + " " + a.Status + " " + a.Reason + " " + string.Join("/", a.Reports)));
         async Task<string> Say(string words, int replies)
         {
             var before = rig.ReplyText.All().Count;

@@ -66,17 +66,18 @@ public class AsmVoiceThroughControllerTests
         var work = Path.Combine(Path.GetTempPath(), "asm-voice-start-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(work);
         using var api = Controller();
+        int id = -1;
         try
         {
-            Assert.Equal(AifError.OK, api.StartFlow(Asm));
-            Assert.Equal(AifError.OK, api.SharedStorageInit(Asm, work));
-            var status = api.Status(Asm);
+            Assert.Equal(AifError.OK, api.StartFlow(Asm, out id));
+            Assert.Equal(AifError.OK, api.SharedStorageInit(id, work));
+            var status = api.Status(id);
             Assert.True(status.Ok, "no status: " + status.Error);
             var names = status.Aims.Select(a => a.Aim).ToList();
             foreach (var voice in new[] { "1MMC-ASR-V2.5-I01", "1MMC-EDP-V2.5-I01", "1MMC-TTS-V2.5-I01" })
                 Assert.Contains(names, n => n == voice);
         }
-        finally { api.StopFlow(Asm); try { Directory.Delete(work, true); } catch { } }
+        finally { api.StopFlow(id); try { Directory.Delete(work, true); } catch { } }
     }
 
     [SkippableFact(Skip = "The vocal interface is not part of the ASM Module now; it returns as an extension.")]
@@ -87,48 +88,49 @@ public class AsmVoiceThroughControllerTests
         var work = Path.Combine(Path.GetTempPath(), "asm-voice-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(work);
         using var api = Controller();
+        int id = -1;
         try
         {
-            Assert.Equal(AifError.OK, api.StartFlow(Asm));
-            api.SharedStorageInit(Asm, work);
+            Assert.Equal(AifError.OK, api.StartFlow(Asm, out id));
+            api.SharedStorageInit(id, work);
 
             // The scene being edited, built through the Module: a violin at x = 1, drums at x = 3.
             var ids = new List<string>();
             foreach (var name in new[] { "violin", "drums" })
             {
-                Assert.Equal(AifError.OK, api.InputWrite(Asm, "OSD-BAO-V1.5", 1, MpaiJson.ToJson(Sound(name))));
-                var opened = api.OutputRead(Asm, "OSD-BAO-V1.5", 1, 60_000);
+                Assert.Equal(AifError.OK, api.InputWrite(id, "OSD-BAO-V1.5", 1, MpaiJson.ToJson(Sound(name))));
+                var opened = api.OutputRead(id, "OSD-BAO-V1.5", 1, 60_000);
                 Assert.Equal(AifError.OK, opened.Error);
                 ids.Add((string)JsonNode.Parse(opened.Json!)!["BasicAudioObjectID"]!);
             }
-            api.InputWrite(Asm, "CAE-UCM-V1.0", 1, Command(new UserCommandRQ
+            api.InputWrite(id, "CAE-UCM-V1.0", 1, Command(new UserCommandRQ
             {
                 AddedObjects = new ObjectPlacements { Objects = [ new ObjectPlacement { ObjectID = new ManagedObject { ObjectID = ids[0] }, SpatialAttitude = At(1, 2) },
                                                                   new ObjectPlacement { ObjectID = new ManagedObject { ObjectID = ids[1] }, SpatialAttitude = At(3, 2) } ] }
             }));
-            var scene = api.OutputRead(Asm, "OSD-BAS-V1.5", 1, 60_000);
+            var scene = api.OutputRead(id, "OSD-BAS-V1.5", 1, 60_000);
             Assert.Equal(AifError.OK, scene.Error);
             var violinAt = XOf(JsonNode.Parse(scene.Json!), "violin")!.Value;
 
             // The person's voice, a Speech Object, at Basic Speech Object 2, with the Scene at Basic Audio Scene 2.
             var tts = Mpai.Aims.Tts.TtsFactory.Create(VoiceSettings("1MMC-TTS-V2.5-I01"));
             var voice = tts.ProcessAsync(BasicTextObject.FromText("move the violin to the left")).GetAwaiter().GetResult();
-            var voiceScene = api.InputWrite(Asm, "OSD-BAS-V1.5", 2, scene.Json!);
-            Assert.True(voiceScene == AifError.OK, voiceScene + "; " + string.Join(" | ", api.Status(Asm).Aims.Select(a => $"{a.Aim} {a.Status} {a.Reason} [{string.Join(",", a.Reports)}]")) + " LastRefusal: " + api.Controller.LastRefusal);
-            Assert.Equal(AifError.OK, api.InputWrite(Asm, "OSD-BSO-V1.5", 2, MpaiJson.ToJson(voice)));
+            var voiceScene = api.InputWrite(id, "OSD-BAS-V1.5", 2, scene.Json!);
+            Assert.True(voiceScene == AifError.OK, voiceScene + "; " + string.Join(" | ", api.Status(id).Aims.Select(a => $"{a.Aim} {a.Status} {a.Reason} [{string.Join(",", a.Reports)}]")) + " LastRefusal: " + api.Controller.LastRefusal);
+            Assert.Equal(AifError.OK, api.InputWrite(id, "OSD-BSO-V1.5", 2, MpaiJson.ToJson(voice)));
 
             // The User Command that comes out is given back where the User Agent addresses it.
-            var understood = api.OutputRead(Asm, "CAE-UCM-V1.0", 6, 180_000);
+            var understood = api.OutputRead(id, "CAE-UCM-V1.0", 6, 180_000);
             Assert.True(understood.Error == AifError.OK, "no User Command: " + understood.Error);
             Assert.NotNull(JsonNode.Parse(understood.Json!)!["UserCommandRQ"]!["MovedObjects"]);
-            Assert.Equal(AifError.OK, api.InputWrite(Asm, "CAE-UCM-V1.0", 1, understood.Json!));
+            Assert.Equal(AifError.OK, api.InputWrite(id, "CAE-UCM-V1.0", 1, understood.Json!));
 
-            var report = api.OutputRead(Asm, "CAE-UCM-V1.0", 2, 60_000);
+            var report = api.OutputRead(id, "CAE-UCM-V1.0", 2, 60_000);
             Assert.Equal("Done", MpaiJson.FromJson<UserCommand>(report.Json!).UserCommandRS!.Outcome);
-            var edited = api.OutputRead(Asm, "OSD-BAS-V1.5", 1, 60_000);
+            var edited = api.OutputRead(id, "OSD-BAS-V1.5", 1, 60_000);
             Assert.True(XOf(JsonNode.Parse(edited.Json!), "violin")!.Value < violinAt, "the violin moved to the left");
         }
-        finally { api.StopFlow(Asm); try { Directory.Delete(work, true); } catch { } }
+        finally { api.StopFlow(id); try { Directory.Delete(work, true); } catch { } }
     }
 
     private static Dictionary<string, string> VoiceSettings(string aim) => TestModels.Settings(aim);

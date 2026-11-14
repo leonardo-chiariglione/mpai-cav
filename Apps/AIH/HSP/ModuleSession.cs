@@ -68,6 +68,10 @@ public sealed class ModuleSession : IDisposable
     // The Module the workflow runs (its 'over' clause): an Implementation of the AIM - the Basic one (I01) or the Secure one (I02) - is the workflow's choice.
     public string Module { get; }
 
+    // The MODULE_ID the Controller returned when the workflow started the Module (Basic API 2.2): the User Agent addresses it by this, -1 before it is started.
+    public int ModuleId => interpreter?.ModuleId ?? -1;
+    private WorkflowInterpreter? interpreter;
+
     // devices: the name of each device the workflow binds, and the Data Type of what it streams to the Module (its Data Type matters only for those).
     // trusted: a Trust Authority the User decided to trust - its service, its anchor, where it is reached - and the name this User Agent's Controller is known by there; a workflow joins it by name.
     public ModuleSession(IControllerApi api, string workflowFile, string storageLocation, (string Service, string Anchor, string Rendezvous, string KnownAs)? trusted, params (string Device, string DataType)[] devices)
@@ -88,7 +92,7 @@ public sealed class ModuleSession : IDisposable
 
         var workflow = new WorkflowReader().Read(File.ReadAllText(workflowFile));
         var failure = new TaskCompletionSource<Exception?>();
-        var interpreter = new WorkflowInterpreter(api.Async(), registry, line => { lock (bound) { log.Add(line); if (line.StartsWith("device \"")) bound.Add(line); } });
+        var interpreter = this.interpreter = new WorkflowInterpreter(api.Async(), registry, line => { lock (bound) { log.Add(line); if (line.StartsWith("device \"")) bound.Add(line); } });
         running = Task.Run(async () =>
         {
             try { await interpreter.RunAsync(workflow, stopping.Token); }

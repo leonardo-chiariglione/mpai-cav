@@ -42,7 +42,7 @@ public class EdpAsmTests
         var cases = set["cases"]!.AsArray().Concat(set["withoutNumbers"]!.AsArray()).ToDictionary(c => (string)c!["request"]!, c => (JsonObject)c!["expected"]!);
         using var llm = new OllamaClient(Model, context: 4096);
         using var rig = new VciRig((s, t, schema) => llm.ChatSchemaAsync(s, t, schema), null);
-        Assert.Equal(AIF.Controller.AifError.OK, rig.Api.StartFlow(VciRig.Vci));
+        Assert.Equal(AIF.Controller.AifError.OK, rig.Start());
         Assert.Equal(AIF.Controller.AifError.OK, rig.Write(VciRig.Ucm, 1, JsiRig.Context(scene).ToJsonString()));
 
         var result = new Dictionary<string, string>();

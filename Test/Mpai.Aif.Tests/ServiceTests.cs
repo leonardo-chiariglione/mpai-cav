@@ -132,25 +132,25 @@ public class ServiceTests
 
         using var a = new RemoteControllerApi(ServiceFixture.Url);
         using var b = new RemoteControllerApi(ServiceFixture.Url);
-        Assert.Equal(AifError.OK, a.StartFlow(AMQ));
-        Assert.Equal(AifError.OK, b.StartFlow(AMQ));
+        Assert.Equal(AifError.OK, a.StartFlow(AMQ, out var amqA));
+        Assert.Equal(AifError.OK, b.StartFlow(AMQ, out var amqB));
 
         var alone = new Dictionary<string, string>
         {
-            ["red.jpg"]  = Answer(Ask(a, "red.jpg")),
-            ["blue.jpg"] = Answer(Ask(b, "blue.jpg"))
+            ["red.jpg"]  = Answer(Ask(a, amqA, "red.jpg")),
+            ["blue.jpg"] = Answer(Ask(b, amqB, "blue.jpg"))
         };
         output.WriteLine($"alone: red -> \"{alone["red.jpg"]}\", blue -> \"{alone["blue.jpg"]}\"");
 
         var wrong = new List<string>();
         for (int round = 1; round <= 8; round++)
         {
-            var ta = Task.Run(() => Answer(Ask(a, "red.jpg")));
-            var tb = Task.Run(() => Answer(Ask(b, "blue.jpg")));
+            var ta = Task.Run(() => Answer(Ask(a, amqA, "red.jpg")));
+            var tb = Task.Run(() => Answer(Ask(b, amqB, "blue.jpg")));
             if (ta.Result != alone["red.jpg"])  wrong.Add($"round {round}: red answered \"{ta.Result}\"");
             if (tb.Result != alone["blue.jpg"]) wrong.Add($"round {round}: blue answered \"{tb.Result}\"");
         }
-        a.StopFlow(AMQ); b.StopFlow(AMQ);
+        a.StopFlow(amqA); b.StopFlow(amqB);
 
         output.WriteLine($"{16 - wrong.Count} of 16 answers as when asked alone");
         Assert.True(wrong.Count == 0, string.Join("\n", wrong));
@@ -165,18 +165,18 @@ public class ServiceTests
 
         using var a = new RemoteControllerApi(ServiceFixture.Url);
         using var b = new RemoteControllerApi(ServiceFixture.Url);
-        Assert.Equal(AifError.OK, a.StartFlow(AMQ));
-        Assert.Equal(AifError.OK, b.StartFlow(AMQ));
+        Assert.Equal(AifError.OK, a.StartFlow(AMQ, out var amqA));
+        Assert.Equal(AifError.OK, b.StartFlow(AMQ, out var amqB));
 
-        var turn = Task.Run(() => Answer(Ask(b, "blue.jpg")));
+        var turn = Task.Run(() => Answer(Ask(b, amqB, "blue.jpg")));
         Thread.Sleep(500);
         var stillRunning = !turn.IsCompleted;
-        a.StopFlow(AMQ);
+        a.StopFlow(amqA);
         output.WriteLine($"A stopped AMQ while B's question was {(stillRunning ? "being answered" : "already answered")}");
 
         Assert.False(string.IsNullOrEmpty(turn.Result), "B's question that was being answered when A stopped got no answer");
-        Assert.False(string.IsNullOrEmpty(Answer(Ask(b, "red.jpg"))), "B's next question got no answer");
-        b.StopFlow(AMQ);
+        Assert.False(string.IsNullOrEmpty(Answer(Ask(b, amqB, "red.jpg"))), "B's next question got no answer");
+        b.StopFlow(amqB);
     }
 
     // Six runs each, after one not counted, against the baseline in timing.json:
@@ -212,13 +212,13 @@ public class ServiceTests
     private double Median(string module, ControllerApi.Datum[] inputs)
     {
         using var client = new RemoteControllerApi(ServiceFixture.Url);
-        client.StartFlow(module);
-        client.Advance(module, inputs);                      // not counted
+        client.StartFlow(module, out var id);
+        client.Advance(id, inputs);                          // not counted
         var times = new List<double>();
         for (int i = 0; i < 6; i++)
         {
             var clock = Stopwatch.StartNew();
-            var r = client.Advance(module, inputs);
+            var r = client.Advance(id, inputs);
             times.Add(clock.Elapsed.TotalSeconds);
             Assert.True(r.Ok, $"{module}: {r.Error}\nthe Service's log, last 400 lines:\n{ServiceFixture.Tail(service.Log, 400)}");
 
@@ -228,13 +228,13 @@ public class ServiceTests
             // AMQ gives its answer as words in the Portable Avatar; the other Modules, speech.
             Assert.True(module == AMQ ? AvatarUtterance.TextOfPortableAvatar(r.ByType("PAF-PAV-V1.6")) is not null : AvatarUtterance.FromPortableAvatar(r.ByType("PAF-PAV-V1.6")) is not null, $"{module}: the turn produced no answer");
         }
-        client.StopFlow(module);
+        client.StopFlow(id);
         times.Sort();
         return times[times.Count / 2];
     }
 
-    private static ControllerApi.Result Ask(RemoteControllerApi client, string picture) =>
-        client.Advance(AMQ, new[] { Picture(picture), Text(1, "What color is the picture?"), MachineId });
+    private static ControllerApi.Result Ask(RemoteControllerApi client, int amq, string picture) =>
+        client.Advance(amq, new[] { Picture(picture), Text(1, "What color is the picture?"), MachineId });
 
     private static string Answer(ControllerApi.Result r)
     {

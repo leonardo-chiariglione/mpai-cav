@@ -66,7 +66,7 @@ internal static class Program
         {
             if (module != Asm) return;
             Directory.CreateDirectory(storage);
-            var bound = north.SharedStorageInit(Asm, storage);
+            var bound = north.SharedStorageInit(runner.IdOf(Asm), storage);
             Console.WriteLine($"  {Asm}: started; its Shared Storage is {storage} ({bound})");
             if (keepUntil is not null)
                 Console.WriteLine($"  What is stored from now on is kept until {keepUntil}: {north.SharedStorageKeep(storage, "Data", AIF.SharedStorage.StorageTime.Parse("until " + keepUntil))}");

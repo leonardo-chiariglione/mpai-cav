@@ -224,10 +224,10 @@ public class TrustRootTests(ITestOutputHelper output)
             using (api)
             {
                 var name = "1TST-RXC-V1.0-I01";
-                var outcome = api.StartFlow(name);
+                var outcome = api.StartFlow(name, out var id);
                 result["a host whose code was altered"] = outcome == AifError.NotTrusted
                     ? "NOT_TRUSTED: " + api.Controller.LastRefusal!.Replace(host.Address, "<host>") : outcome.ToString();
-                if (outcome == AifError.OK) api.StopFlow(name);
+                if (outcome == AifError.OK) api.StopFlow(id);
             }
         }
         output.WriteLine($"links opened again after a transport failure, in this run: {RemoteLink.Reopened}");

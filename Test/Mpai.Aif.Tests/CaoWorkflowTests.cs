@@ -88,7 +88,7 @@ public class CaoWorkflowTests
             {
                 while (!world.Finished.IsCompleted && !run.IsCompleted)
                 {
-                    foreach (var x in api.Status("1CAV-CAO-V2.0-I01").Aims.Where(x => x.Status.ToString() != "Alive" && x.Status.ToString() != "Running" || x.Reports.Count > 0))
+                    foreach (var x in api.Status(interpreter.ModuleId).Aims.Where(x => x.Status.ToString() != "Alive" && x.Status.ToString() != "Running" || x.Reports.Count > 0))
                     { var line = $"{x.Aim}: {x.Status} {x.Reason} {string.Join("; ", x.Reports.TakeLast(3))}"; lock (degraded) if (!degraded.Contains(line)) degraded.Add(line); }
                     await Task.Delay(100);
                 }

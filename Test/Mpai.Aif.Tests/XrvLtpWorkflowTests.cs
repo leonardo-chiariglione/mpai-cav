@@ -156,7 +156,7 @@ public class XrvLtpWorkflowTests
             var interpreter = new WorkflowInterpreter(api.Async(), devices, line => { lock (told) told.Add(line); });
             using var stop = new CancellationTokenSource();
             var run = Task.Run(() => interpreter.RunAsync(new WorkflowReader().Read(File.ReadAllText(Workflow)), stop.Token));
-            string Why() { lock (told) return "\nworkflow: " + string.Join(" | ", told) + "\nstage: " + string.Join("; ", virt.Unperformed) + "\nAIMs: " + string.Join("; ", api.Status(XrvProvider.Ltp).Aims.Select(a => a.Aim + " " + a.Status + " " + a.Reason + " " + string.Join("/", a.Reports))); }
+            string Why() { lock (told) return "\nworkflow: " + string.Join(" | ", told) + "\nstage: " + string.Join("; ", virt.Unperformed) + "\nAIMs: " + string.Join("; ", api.Status(interpreter.ModuleId).Aims.Select(a => a.Aim + " " + a.Status + " " + a.Reason + " " + string.Join("/", a.Reports))); }
 
             await show.Given.Task.WaitAsync(TimeSpan.FromSeconds(30));
             Assert.True(await Until(() => show.ParticipantData.Count > 0), "the Participant Data did not come back." + Why());     // the documents have reached the Module
@@ -231,7 +231,7 @@ public class XrvLtpWorkflowTests
             var run = Task.Run(() => interpreter.RunAsync(new WorkflowReader().Read(File.ReadAllText(Workflow)), stop.Token));
             var bot = Task.Run(() => BotAsync(new MmmClient(http, "BotSvc", botToken), stop.Token));
             var watch = Task.Run(async () => { while (!stop.IsCancellationRequested) { if (Intensity("VLamp1") is { } v) lock (intensities) if (intensities.Count == 0 || intensities[^1] != v) intensities.Add(v); await Task.Delay(20); } });
-            string Why() { lock (told) return "\nworkflow: " + string.Join(" | ", told) + "\nstage: " + string.Join("; ", virt.Unperformed) + "\nAIMs: " + string.Join("; ", api.Status(XrvProvider.Ltp).Aims.Select(a => a.Aim + " " + a.Status + " " + a.Reason + " " + string.Join("/", a.Reports))); }
+            string Why() { lock (told) return "\nworkflow: " + string.Join(" | ", told) + "\nstage: " + string.Join("; ", virt.Unperformed) + "\nAIMs: " + string.Join("; ", api.Status(interpreter.ModuleId).Aims.Select(a => a.Aim + " " + a.Status + " " + a.Reason + " " + string.Join("/", a.Reports))); }
 
             await show.Given.Task.WaitAsync(TimeSpan.FromSeconds(30));
             Assert.True(await Until(() => show.ParticipantData.Count > 0), "the Participant Data did not come back." + Why());

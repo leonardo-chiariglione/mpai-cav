@@ -28,35 +28,34 @@ public class PlaybackTests
     private static readonly byte[] Bytes = Enumerable.Range(0, 100_000).Select(i => (byte)(i % 251)).ToArray();
 
     // A test writes the three inputs at their own rates, and the Controller records.
-    private static string MakeRecord(ControllerApi api)
+    private static string MakeRecord(ControllerApi api, int rec)
     {
-        api.RecordStart(Rec, out var id);
+        api.RecordStart(rec, out var id);
         var started = System.Diagnostics.Stopwatch.StartNew();
         for (var i = 0; i < 20; i++)
         {
             while (started.ElapsedMilliseconds < i * 20) Thread.Sleep(1);
-            api.InputWrite(Rec, Text, 1, $"a{i}", 2000);
-            if (i % 4 == 2) api.InputWrite(Rec, Text, 2, $"b{i / 4}", 2000);
+            api.InputWrite(rec, Text, 1, $"a{i}", 2000);
+            if (i % 4 == 2) api.InputWrite(rec, Text, 2, $"b{i / 4}", 2000);
             if (i % 10 == 5)
             {
-                var (_, reference) = api.PayloadPut(Rec, Text, 3, Bytes);
-                api.InputWrite(Rec, Text, 3, new JsonObject { ["Entries"] = new JsonArray(new JsonObject { ["DataLength"] = Bytes.Length, ["DataURI"] = reference }) }.ToJsonString(), 2000);
+                var (_, reference) = api.PayloadPut(rec, Text, 3, Bytes);
+                api.InputWrite(rec, Text, 3, new JsonObject { ["Entries"] = new JsonArray(new JsonObject { ["DataLength"] = Bytes.Length, ["DataURI"] = reference }) }.ToJsonString(), 2000);
             }
         }
         Thread.Sleep(200);                                   // the last echoes
-        api.RecordStop(Rec, out _);
+        api.RecordStop(rec, out _);
         return id!;
     }
 
-    // The record played by a workflow, recorded again.
-    private static async Task<(string Id, WorkflowInterpreter.PlaybackReport Report)> Play(ControllerApi api, string first, string workflowTail)
+    // The record played by a workflow, recorded again. The workflow names the Module only to start it (UA-3): the Controller returns
+    // the MODULE_ID of the Module already running, recorded; when the workflow ends it stops the Module, and with it the record.
+    private static async Task<(string Id, WorkflowInterpreter.PlaybackReport Report)> Play(ControllerApi api, int rec, IRuledStorage records, string first, string workflowTail)
     {
-        var devices = new DeviceRegistry().RegisterRecord("first", new StoredRecord(api.ModuleStorage(Rec)!, first));
+        var devices = new DeviceRegistry().RegisterRecord("first", new StoredRecord(records, first));
         var interpreter = new WorkflowInterpreter(api.Async(), devices);
-        api.RecordStart(Rec, out var id);
-        await interpreter.RunAsync(new WorkflowReader().Read($"workflow PLAY over {Rec}\non Start:\n{workflowTail}"), CancellationToken.None);
-        Thread.Sleep(200);
-        api.RecordStop(Rec, out _);
+        api.RecordStart(rec, out var id);
+        await interpreter.RunAsync(new WorkflowReader().Read($"workflow PLAY over {Rec}\non Start:\n    ask Controller to start\n{workflowTail}"), CancellationToken.None);
         return (id!, interpreter.Playbacks.Single());
     }
 
@@ -94,11 +93,12 @@ public class PlaybackTests
         var result = new Dictionary<string, string>();
         var report = new Dictionary<string, object>();
         using var api = new ControllerApi(StorageTests.Amds, Path.Combine(StorageTests.Amds, "no-settings.json"), new StorageAims());
-        api.StartFlow(Rec);
-        api.SharedStorageInit(Rec, Location());
-        var storage = api.ModuleStorage(Rec)!;
+        var location = Location();
+        api.StartFlow(Rec, out var rec);
+        api.SharedStorageInit(rec, location);
+        var storage = api.ModuleStorageAt(rec, location);   // the records, while the Module runs and after a workflow stops it
 
-        var first = MakeRecord(api);
+        var first = MakeRecord(api, rec);
         var recorded = Read(storage, first);
 
         const string streams = """
@@ -108,8 +108,10 @@ public class PlaybackTests
             """;
         foreach (var (rate, tail) in new[] { (1.0, streams + "\n    wait 3s\n"), (2.0, streams.Replace("\"first\"", "\"first\" at x2") + "\n    wait 3s\n") })
         {
-            var (id, played) = await Play(api, first, tail);
+            var (id, played) = await Play(api, rec, storage, first, tail);
             var again = Read(storage, id);
+            api.StartFlow(Rec, out rec);                     // the workflow stopped the Module: started again, on the same scope
+            api.SharedStorageInit(rec, location);
             var label = rate == 1 ? "at its original rate" : "at twice its rate";
             result[$"played {label}: the same Objects, in the same order, on each Port"] =
                 Tracks(again) == Tracks(recorded) ? "yes" : Tracks(again);
@@ -122,7 +124,7 @@ public class PlaybackTests
                                   StampErrorMs = new { Median = median, Max = max } };
         }
         result["the record played"] = Tracks(recorded);
-        api.StopFlow(Rec);
+        api.StopFlow(rec);
 
         var path = Path.Combine(Repository.Root, "Test", "Reports", "playback.json");
         Directory.CreateDirectory(Path.GetDirectoryName(path)!);
@@ -136,9 +138,9 @@ public class PlaybackTests
     {
         var result = new Dictionary<string, string>();
         using var api = new ControllerApi(StorageTests.Amds, Path.Combine(StorageTests.Amds, "no-settings.json"), new StorageAims());
-        api.StartFlow(Rec);
-        api.SharedStorageInit(Rec, Location());
-        var first = MakeRecord(api);
+        api.StartFlow(Rec, out var rec);
+        api.SharedStorageInit(rec, Location());
+        var first = MakeRecord(api, rec);
 
         async Task<string> Run(DeviceRegistry devices, string line)
         {
@@ -151,17 +153,16 @@ public class PlaybackTests
             catch (Exception refused) { return $"{refused.GetType().Name}: {refused.Message}"; }
         }
 
-        var devices = new DeviceRegistry().RegisterRecord("first", new StoredRecord(api.ModuleStorage(Rec)!, first));
+        var devices = new DeviceRegistry().RegisterRecord("first", new StoredRecord(api.ModuleStorage(rec)!, first));
         result["a track the record does not have"] = await Run(devices, "stream Q (TST-TXT-V1.0:4) from record \"first\"");
         result["a record the User Agent does not know"] = await Run(devices, "stream A (TST-TXT-V1.0:1) from record \"nope\"");
         result["two rates for one record"] = await Run(devices,
             "stream A (TST-TXT-V1.0:1) from record \"first\"\n    stream B (TST-TXT-V1.0:2) from record \"first\" at x2");
-        api.StopFlow(Rec);
+        api.StopFlow(rec);
 
         // A record of which the User Agent is not a reader: its header written by
         // an AIM of TST-MPS for no one else.
-        const string mps = "1TST-MPS-V1.0-I01";
-        api.StartFlow(mps);
+        api.StartFlow("1TST-MPS-V1.0-I01", out var mps);
         api.SharedStorageInit(mps, Location());
         api.Advance(mps, [new(Text, 1, "R9/header={}; category=Private")]);
         var closed = new DeviceRegistry().RegisterRecord("closed", new StoredRecord(api.ModuleStorage(mps)!, "R9"));

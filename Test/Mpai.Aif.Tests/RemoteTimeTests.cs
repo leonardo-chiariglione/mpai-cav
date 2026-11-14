@@ -89,8 +89,8 @@ public class RemoteTimeTests
                 api.Controller.AimHostKey = HostProcess.Key;
                 api.Controller.AimHosts["1TST-ACC-V1.0-I01"] = hostProcess.Address;
             }
-            api.StartFlow(module);
-            for (var i = 0; i < 20; i++) { api.InputWrite(module, Text, 1, "warm"); api.OutputRead(module, Text, 1, 2000); }
+            api.StartFlow(module, out var id);
+            for (var i = 0; i < 20; i++) { api.InputWrite(id, Text, 1, "warm"); api.OutputRead(id, Text, 1, 2000); }
 
             var process = Process.GetCurrentProcess();
             var cpu0 = process.TotalProcessorTime;
@@ -103,21 +103,21 @@ public class RemoteTimeTests
             for (var i = 0; i < 500; i++)
             {
                 var clock = Stopwatch.StartNew();
-                api.InputWrite(module, Text, 1, $"t{i}");
-                api.OutputRead(module, Text, 1, 2000);
+                api.InputWrite(id, Text, 1, $"t{i}");
+                api.OutputRead(id, Text, 1, 2000);
                 latencies.Add(clock.Elapsed.TotalMilliseconds);
             }
             latencies.Sort();
 
             // Throughput: 2000 in as fast as they are taken, then all out.
             var run = Stopwatch.StartNew();
-            var reader = Task.Run(() => { var n = 0; while (api.OutputRead(module, Text, 1, 300).Ok) n++; return n; });
-            for (var i = 0; i < 2000; i++) api.InputWrite(module, Text, 1, $"s{i}");
+            var reader = Task.Run(() => { var n = 0; while (api.OutputRead(id, Text, 1, 300).Ok) n++; return n; });
+            for (var i = 0; i < 2000; i++) api.InputWrite(id, Text, 1, $"s{i}");
             var got = reader.Result;
             run.Stop();
             process.Refresh();
 
-            Match Boundary() => Regex.Match(string.Join(" | ", api.ChannelAccounts(module)),
+            Match Boundary() => Regex.Match(string.Join(" | ", api.ChannelAccounts(id)),
                 @"\(boundary\)\.TST-TXT-V1\.0#1: taken (\d+), dropped (\d+), discarded \d+, pending (\d+)");
             long Sum(Match m) => long.Parse(m.Groups[1].Value) + long.Parse(m.Groups[2].Value) + long.Parse(m.Groups[3].Value);
             var settle = Stopwatch.StartNew();
@@ -133,11 +133,11 @@ public class RemoteTimeTests
                 CpuMs = (process.TotalProcessorTime - cpu0).TotalMilliseconds,
                 HostCpuMs = hosted ? (hostProcess.ProcessorTime - hostCpu0).TotalMilliseconds : 0,
                 MemoryKiB = (GC.GetTotalMemory(false) - memory0) / 1024,
-                Accounts = api.ChannelAccounts(module)
+                Accounts = api.ChannelAccounts(id)
             };
-            api.StopFlow(module);
+            api.StopFlow(id);
             Assert.True(20 + 500 + 2000 == taken + dropped + pending,        // every output read, dropped or pending
-                        $"{label}: {taken + dropped + pending} of 2520 accounted for: " + string.Join(" | ", api.ChannelAccounts(module)));
+                        $"{label}: {taken + dropped + pending} of 2520 accounted for: " + string.Join(" | ", api.ChannelAccounts(id)));
         }
 
         var path = Path.Combine(Repository.Root, "Test", "Reports", "remote-transports.json");

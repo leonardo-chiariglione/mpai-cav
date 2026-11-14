@@ -60,10 +60,11 @@ public class ReferencePopulationEndToEndTests
         Skip.IfNot(Directory.Exists(Lfw) && Published(Fir, "reference-faces"), "The LFW images are absent, or the reference faces are not published yet (their L3 gives the address on GitHub).");
         var gallery = Path.Combine(Path.GetTempPath(), "mpai-ref-gallery-" + Guid.NewGuid().ToString("N"));
         using var api = new ControllerApi(Repository.Amds, Path.Combine(Repository.Root, "AIMs", "aim-settings.json"), store => new MacProvider(store));
+        int moduleId = -1;
         try
         {
-            Assert.Equal(AifError.OK, api.StartFlow(Fir));
-            api.SharedStorageInit(Fir, gallery);
+            Assert.Equal(AifError.OK, api.StartFlow(Fir, out moduleId));
+            api.SharedStorageInit(moduleId, gallery);
             var people = new[] { "George_W_Bush", "Colin_Powell", "Tony_Blair", "Donald_Rumsfeld", "Gerhard_Schroeder", "Ariel_Sharon", "Hugo_Chavez", "Jean_Chretien" };
             var right = new List<string>();
             var wrong = new List<string>();
@@ -71,7 +72,7 @@ public class ReferencePopulationEndToEndTests
             {
                 var photo = Directory.EnumerateFiles(Path.Combine(Lfw, person), "*.jpg").OrderBy(f => f, StringComparer.Ordinal).ElementAt(1);   // not the first
                 var json = MpaiJson.ToJson(BasicVisualObject.FromFile(Path.GetFileName(photo), InAFrame(photo), "Face"));
-                var r = api.Advance(Fir, [new("OSD-BVO-V1.5", 1, json)]);
+                var r = api.Advance(moduleId, [new("OSD-BVO-V1.5", 1, json)]);
                 Assert.Equal(AifError.OK, r.Error);
                 var label = Label(r.ByType("OSD-IID-V1.5"));
                 (label == person ? right : wrong).Add($"{person} -> {label ?? "nobody"}");
@@ -79,7 +80,7 @@ public class ReferencePopulationEndToEndTests
             Console.WriteLine($"FACES right {right.Count}/{people.Length}; wrong: {string.Join("; ", wrong)}");
             Assert.True(right.Count >= people.Length - 1, $"recognised {right.Count} of {people.Length}; wrong: {string.Join("; ", wrong)}");
         }
-        finally { api.StopFlow(Fir); try { Directory.Delete(gallery, true); } catch { } }
+        finally { api.StopFlow(moduleId); try { Directory.Delete(gallery, true); } catch { } }
     }
 
     [SkippableFact]
@@ -88,10 +89,11 @@ public class ReferencePopulationEndToEndTests
         Skip.IfNot(Directory.Exists(Libri) && Published(Sir, "reference-voices"), "The LibriSpeech clips are absent, or the reference voices are not published yet (their L3 gives the address on GitHub).");
         var gallery = Path.Combine(Path.GetTempPath(), "mpai-ref-gallery-" + Guid.NewGuid().ToString("N"));
         using var api = new ControllerApi(Repository.Amds, Path.Combine(Repository.Root, "AIMs", "aim-settings.json"), store => new MacProvider(store));
+        int moduleId = -1;
         try
         {
-            Assert.Equal(AifError.OK, api.StartFlow(Sir));
-            api.SharedStorageInit(Sir, gallery);
+            Assert.Equal(AifError.OK, api.StartFlow(Sir, out moduleId));
+            api.SharedStorageInit(moduleId, gallery);
             var speakers = Directory.EnumerateFiles(Libri, "clip*.wav").Select(f => Path.GetFileNameWithoutExtension(f)["clip".Length..]).OrderBy(s => s, StringComparer.Ordinal).Take(6).ToList();
             var right = new List<string>();
             var wrong = new List<string>();
@@ -107,7 +109,7 @@ public class ReferencePopulationEndToEndTests
                     },
                     Attributes = new SpeechAttributes { Metadata = new SpeechMetadata { Language = new Language { LanguageCode = "en", LanguageFormat = LanguageFormat.Iso639_1 } } }
                 });
-                var r = api.Advance(Sir, [new("OSD-BSO-V1.5", 1, MpaiJson.ToJson(speech))]);
+                var r = api.Advance(moduleId, [new("OSD-BSO-V1.5", 1, MpaiJson.ToJson(speech))]);
                 Assert.Equal(AifError.OK, r.Error);
                 var label = Label(r.ByType("OSD-IID-V1.5"));
                 ("spk" + speaker == label ? right : wrong).Add($"spk{speaker} -> {label ?? "nobody"}");
@@ -115,6 +117,6 @@ public class ReferencePopulationEndToEndTests
             Console.WriteLine($"VOICES right {right.Count}/{speakers.Count}; wrong: {string.Join("; ", wrong)}");
             Assert.True(right.Count >= speakers.Count - 1, $"recognised {right.Count} of {speakers.Count}; wrong: {string.Join("; ", wrong)}");
         }
-        finally { api.StopFlow(Sir); try { Directory.Delete(gallery, true); } catch { } }
+        finally { api.StopFlow(moduleId); try { Directory.Delete(gallery, true); } catch { } }
     }
 }

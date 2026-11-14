@@ -212,12 +212,12 @@ public partial class MainWindow : Window
         try
         {
             using var north = new RemoteControllerApi(ServiceUrl, ServiceToken);
-            if (north.StartFlow(MasModule) != AifError.OK) return null;
-            var said = await Task.Run(() => north.Advance(MasModule, new List<ControllerApi.Datum>
+            if (north.StartFlow(MasModule, out var moduleId) != AifError.OK) return null;
+            var said = await Task.Run(() => north.Advance(moduleId, new List<ControllerApi.Datum>
             {
                 new ControllerApi.Datum("OSD-BSO-V1.5", 1, MpaiJson.ToJson(speech))
             }));
-            north.StopFlow(MasModule);
+            north.StopFlow(moduleId);
             if (!said.Ok || said.ByType("OSD-BTO-V1.5") is not { } json) return null;
             var words = MpaiJson.FromJson<BasicTextObject>(json)?.GetText();
             SpeakLog($"heard: {words}");
@@ -249,15 +249,15 @@ public partial class MainWindow : Window
         try
         {
             using var north = new RemoteControllerApi(ServiceUrl, ServiceToken);
-            var started = north.StartFlow(MasModule);
+            var started = north.StartFlow(MasModule, out var moduleId);
             if (started != AifError.OK) { SpeakLog($"speak: the launcher Module did not start ({started})"); return; }
 
-            var said = await Task.Run(() => north.Advance(MasModule, new List<ControllerApi.Datum>
+            var said = await Task.Run(() => north.Advance(moduleId, new List<ControllerApi.Datum>
             {
                 new ControllerApi.Datum("OSD-BTO-V1.5", 1, MpaiJson.ToJson(WordsIn(words, language))),
                 new ControllerApi.Datum("OSD-B3O-V1.5", 1, AvatarUtterance.AvatarDatum(AvatarModel))
             }));
-            north.StopFlow(MasModule);
+            north.StopFlow(moduleId);
 
             if (!said.Ok) { SpeakLog($"speak: the launcher Module answered {said.Error}"); return; }
 

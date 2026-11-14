@@ -36,9 +36,9 @@ public class StandaloneAppsTests
     private static ControllerApi.Datum Machine => new("string", 1, "\"MPAI as a Service\"");
     private static ControllerApi.Datum Words(int port, string text) => new("OSD-BTO-V1.5", port, MpaiJson.ToJson(BasicTextObject.FromText(text)));
 
-    private static string Why(ControllerApi api, string module)
+    private static string Why(ControllerApi api, int id)
     {
-        var status = api.Status(module);
+        var status = api.Status(id);
         var sb = new System.Text.StringBuilder();
         foreach (var a in status.Aims) sb.Append($"\n  {a.Aim}: {a.Status} {a.Reason} [{string.Join("; ", a.Reports)}]");
         return sb.ToString();
@@ -60,11 +60,11 @@ public class StandaloneAppsTests
         Skip.IfNot(Ollama(), "Ollama is not running with llama3.2:3b.");
         const string module = "1MMC-MCA-V2.5-I01";
         using var api = Api(s => new McaProvider(s));
-        Assert.Equal(AifError.OK, api.StartFlow(module));
+        Assert.Equal(AifError.OK, api.StartFlow(module, out var id));
         try
         {
-            var first = api.Advance(module, new[] { Words(1, "Hello, my name is Anna. How are you today?"), Avatar, Machine });
-            Assert.True(first.Ok, $"{module}: {first.Error}{Why(api, module)}");
+            var first = api.Advance(id, new[] { Words(1, "Hello, my name is Anna. How are you today?"), Avatar, Machine });
+            Assert.True(first.Ok, $"{module}: {first.Error}{Why(api, id)}");
             var (text1, speech1) = Reading(first);
             Assert.False(string.IsNullOrWhiteSpace(text1), "the first reply has no text");
             Assert.True(speech1 > 200, "the first reply carries no speech");
@@ -72,13 +72,13 @@ public class StandaloneAppsTests
             Assert.False(string.IsNullOrWhiteSpace(memory), "the Module gave no memory of the conversation");
             Assert.Contains("Anna", memory!, StringComparison.OrdinalIgnoreCase);
 
-            var second = api.Advance(module, new[] { Words(1, "What is my name?"), Avatar, Machine, new ControllerApi.Datum("MMC-SUM-V2.5", 1, memory!) });
-            Assert.True(second.Ok, $"{module}: {second.Error}{Why(api, module)}");
+            var second = api.Advance(id, new[] { Words(1, "What is my name?"), Avatar, Machine, new ControllerApi.Datum("MMC-SUM-V2.5", 1, memory!) });
+            Assert.True(second.Ok, $"{module}: {second.Error}{Why(api, id)}");
             var (text2, speech2) = Reading(second);
             Assert.True(speech2 > 200, "the second reply carries no speech");
             Assert.Contains("Anna", text2, StringComparison.OrdinalIgnoreCase);
         }
-        finally { api.StopFlow(module); }
+        finally { api.StopFlow(id); }
     }
 
     // MTS: each turn offers the Language Selector, the sentence (typed, or spoken), the Avatar Model and the machine's ID; the Module
@@ -93,11 +93,11 @@ public class StandaloneAppsTests
             { TextQualifierID = Guid.NewGuid().ToString(), Attributes = new TextAttributes { Language = new Language { LanguageCode = "en", LanguageFormat = LanguageFormat.Iso639_1 } } }) };
         var languages = new ControllerApi.Datum("OSD-SEL-V1.5", MpaiJson.ToJson(BasicSelectorObject.Languages("en", "it")));
         using var api = Api(s => new MtsProvider(s));
-        Assert.Equal(AifError.OK, api.StartFlow(module));
+        Assert.Equal(AifError.OK, api.StartFlow(module, out var id));
         try
         {
-            var typed = api.Advance(module, new[] { languages, new ControllerApi.Datum("OSD-BTO-V1.5", 1, MpaiJson.ToJson(english[0])), Avatar, Machine });
-            Assert.True(typed.Ok, $"{module}: {typed.Error}{Why(api, module)}");
+            var typed = api.Advance(id, new[] { languages, new ControllerApi.Datum("OSD-BTO-V1.5", 1, MpaiJson.ToJson(english[0])), Avatar, Machine });
+            Assert.True(typed.Ok, $"{module}: {typed.Error}{Why(api, id)}");
             var translation = MpaiJson.FromJson<BasicTextObject>(typed.ByType("OSD-BTO-V1.5")!)!.GetText();
             Assert.Contains("concert", translation, StringComparison.OrdinalIgnoreCase);       // Italian: "il concerto inizia alle otto"
             Assert.NotEqual(english[0].GetText(), translation);
@@ -105,12 +105,12 @@ public class StandaloneAppsTests
 
             // The same sentence spoken: Text-To-Speech makes the English speech, the Module recognises it, translates it and speaks it.
             var spoken = Mpai.Aims.Tts.TtsFactory.Create(TestModels.Settings("1MMC-TTS-V2.5-I01")).ProcessAsync(english[0]).GetAwaiter().GetResult();
-            var heard = api.Advance(module, new[] { languages, new ControllerApi.Datum("OSD-BSO-V1.5", MpaiJson.ToJson(spoken)), Avatar, Machine });
-            Assert.True(heard.Ok, $"{module}: {heard.Error}{Why(api, module)}");
+            var heard = api.Advance(id, new[] { languages, new ControllerApi.Datum("OSD-BSO-V1.5", MpaiJson.ToJson(spoken)), Avatar, Machine });
+            Assert.True(heard.Ok, $"{module}: {heard.Error}{Why(api, id)}");
             Assert.Contains("concert", MpaiJson.FromJson<BasicTextObject>(heard.ByType("OSD-BTO-V1.5")!)!.GetText(), StringComparison.OrdinalIgnoreCase);
             Assert.True(Reading(heard).SpeechBytes > 200, "the translation of the spoken sentence is not spoken");
         }
-        finally { api.StopFlow(module); }
+        finally { api.StopFlow(id); }
     }
 
     // AMC: speech-only affective dialogue: each turn offers the person's speech and a picture of the face, which the camera takes (a
@@ -125,20 +125,20 @@ public class StandaloneAppsTests
         var photo = Directory.GetFiles(faces).OrderBy(f => f, StringComparer.Ordinal).First();
         const string module = "1MMC-AMC-V2.5-I01";
         using var api = Api(s => new AmcProvider(s));
-        Assert.Equal(AifError.OK, api.StartFlow(module));
+        Assert.Equal(AifError.OK, api.StartFlow(module, out var id));
         try
         {
             var face = new ControllerApi.Datum("OSD-BVO-V1.5", MpaiJson.ToJson(BasicVisualObject.FromFile(Path.GetFileName(photo), File.ReadAllBytes(photo), "Face")));
             // The person speaks: Text-To-Speech makes the speech of the sentence, as the microphone would give it.
             var said = Mpai.Aims.Tts.TtsFactory.Create(TestModels.Settings("1MMC-TTS-V2.5-I01"))
                 .ProcessAsync(BasicTextObject.FromText("I have just received wonderful news! I got the job.")).GetAwaiter().GetResult();
-            var r = api.Advance(module, new[] { new ControllerApi.Datum("OSD-BSO-V1.5", MpaiJson.ToJson(said)), face, Avatar, Machine });
-            Assert.True(r.Ok, $"{module}: {r.Error}{Why(api, module)}");
+            var r = api.Advance(id, new[] { new ControllerApi.Datum("OSD-BSO-V1.5", MpaiJson.ToJson(said)), face, Avatar, Machine });
+            Assert.True(r.Ok, $"{module}: {r.Error}{Why(api, id)}");
             var (_, speech) = Reading(r);
             Assert.True(speech > 200, "the reply carries no speech");
             Assert.False(string.IsNullOrWhiteSpace(r.ByType("MMC-SUM-V2.5")), "the Module gave no memory of the conversation");
         }
-        finally { api.StopFlow(module); }
+        finally { api.StopFlow(id); }
     }
 
     // NPR: the page and a Point at the top of a column (in pixels of the picture) and the machine's ID; the Module answers with a
@@ -156,19 +156,19 @@ public class StandaloneAppsTests
         var truth = column.GetProperty("Text").GetString()!;
         const string module = "1MMC-NPR-V2.5-I01";
         using var api = Api(s => new NprProvider(s));
-        Assert.Equal(AifError.OK, api.StartFlow(module));
+        Assert.Equal(AifError.OK, api.StartFlow(module, out var id));
         try
         {
             var page = BasicVisualObject.FromFile("page.png", File.ReadAllBytes(Path.Combine(folder, "page.png")), "Picture");
             var point = string.Create(System.Globalization.CultureInfo.InvariantCulture,
                 $"{{\"Header\":\"OSD-PNT-V1.5\",\"Coordinates\":{{\"X\":{at[0].GetDouble():0.#},\"Y\":{at[1].GetDouble():0.#}}}}}");
-            var r = api.Advance(module, new[] { new ControllerApi.Datum("OSD-BVO-V1.5", 1, MpaiJson.ToJson(page)), new ControllerApi.Datum("OSD-PNT-V1.5", 1, point), Machine });
-            Assert.True(r.Ok, $"{module}: {r.Error}{Why(api, module)}");
+            var r = api.Advance(id, new[] { new ControllerApi.Datum("OSD-BVO-V1.5", 1, MpaiJson.ToJson(page)), new ControllerApi.Datum("OSD-PNT-V1.5", 1, point), Machine });
+            Assert.True(r.Ok, $"{module}: {r.Error}{Why(api, id)}");
             var (text, speech) = Reading(r);
             var title = truth.Split((char)10)[0].Split(' ', StringSplitOptions.RemoveEmptyEntries).Take(3);
             Assert.Contains(title.First(), text, StringComparison.OrdinalIgnoreCase);
             Assert.True(speech > 200, "the column is not read aloud");
         }
-        finally { api.StopFlow(module); }
+        finally { api.StopFlow(id); }
     }
 }

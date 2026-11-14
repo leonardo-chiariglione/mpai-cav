@@ -46,8 +46,9 @@ public sealed partial class ControllerApi
     }
 
     // ---------------------------------------------------------------- 3.10.1 MPAI_AIFU_Bout_Open
-    public AifError BoutOpen(string moduleName, string dataType, int portNumber, string signingMode, int chainInterval, out int boutId)
+    public AifError BoutOpen(int moduleId, string dataType, int portNumber, string signingMode, int chainInterval, out int boutId)
     {
+        var moduleName = NameOf(moduleId);
         boutId = 0;
         lock (_tables)
         {
@@ -69,9 +70,10 @@ public sealed partial class ControllerApi
 
     // MPAI_AIFU_MODULE_Output_Read while a Bout is in force: the first Message of the Port, from which the Bout is made, is returned as Json; the
     // following ones as Bout Instances (Frame). Without a Bout, as OutputRead.
-    public (AifError Error, string? Json, byte[]? Frame) BoutOutputRead(string moduleName, string dataType, int portNumber, int timeoutMs = -1)
+    public (AifError Error, string? Json, byte[]? Frame) BoutOutputRead(int moduleId, string dataType, int portNumber, int timeoutMs = -1)
     {
-        var read = OutputRead(moduleName, dataType, portNumber, timeoutMs);
+        var moduleName = NameOf(moduleId);
+        var read = OutputRead(moduleId, dataType, portNumber, timeoutMs);
         if (read.Error != AifError.OK || read.Json is null) return (read.Error, read.Json, null);
         BoutGiver? giver;
         lock (_tables) _outputBouts.TryGetValue(BoutKey(moduleName, dataType, portNumber), out giver);
@@ -84,15 +86,17 @@ public sealed partial class ControllerApi
     }
 
     // ---------------------------------------------------------------- 3.10.2 MPAI_AIFU_Bout_Get
-    public AifError BoutGet(string moduleName, string dataType, int portNumber, out JsonObject? bout)
+    public AifError BoutGet(int moduleId, string dataType, int portNumber, out JsonObject? bout)
     {
+        var moduleName = NameOf(moduleId);
         lock (_tables) bout = _outputBouts.TryGetValue(BoutKey(moduleName, dataType, portNumber), out var giver) ? giver.Bout : null;
         return bout is null ? AifError.NotFound : AifError.OK;
     }
 
     // ---------------------------------------------------------------- 3.10.3 MPAI_AIFU_Bout_Close
-    public AifError BoutClose(string moduleName, string dataType, int portNumber, out JsonObject? closeBout)
+    public AifError BoutClose(int moduleId, string dataType, int portNumber, out JsonObject? closeBout)
     {
+        var moduleName = NameOf(moduleId);
         closeBout = null;
         BoutGiver? giver;
         lock (_tables)
@@ -105,8 +109,9 @@ public sealed partial class ControllerApi
     }
 
     // ---------------------------------------------------------------- 3.10.4 MPAI_AIFU_Bout_Give
-    public AifError BoutGive(string moduleName, string dataType, int portNumber, JsonObject bout)
+    public AifError BoutGive(int moduleId, string dataType, int portNumber, JsonObject bout)
     {
+        var moduleName = NameOf(moduleId);
         lock (_tables)
         {
             if (!_running.TryGetValue(moduleName, out var started) || started.Stopped) return AifError.NotStarted;
@@ -125,8 +130,9 @@ public sealed partial class ControllerApi
 
     // MPAI_AIFU_MODULE_Input_Write while a Bout is in force: the Bout Instance is checked and decompressed, and each instance it delivers - one, or in a
     // Chain the instances of a segment that verified - is written to the Port.
-    public AifError BoutInputWrite(string moduleName, string dataType, int portNumber, byte[] frame, int timeoutMs = -1)
+    public AifError BoutInputWrite(int moduleId, string dataType, int portNumber, byte[] frame, int timeoutMs = -1)
     {
+        var moduleName = NameOf(moduleId);
         BoutReceiver.Received got;
         lock (_tables)
         {
@@ -135,13 +141,14 @@ public sealed partial class ControllerApi
         }
         if (!got.Ok) return AifError.NotAuthorised;
         foreach (var instance in got.Delivered)
-            if (InputWrite(moduleName, dataType, portNumber, instance.ToJsonString(), timeoutMs) is var written and not AifError.OK) return written;
+            if (InputWrite(moduleId, dataType, portNumber, instance.ToJsonString(), timeoutMs) is var written and not AifError.OK) return written;
         return AifError.OK;
     }
 
     // ---------------------------------------------------------------- 3.10.5 MPAI_AIFU_Bout_End
-    public AifError BoutEnd(string moduleName, string dataType, int portNumber, JsonObject closeBout)
+    public AifError BoutEnd(int moduleId, string dataType, int portNumber, JsonObject closeBout)
     {
+        var moduleName = NameOf(moduleId);
         BoutReceiver.Received ended;
         lock (_tables)
         {
@@ -150,7 +157,7 @@ public sealed partial class ControllerApi
             if (ended.ErrorCode == BoutReceiver.SignatureFailure) return AifError.NotTrusted;
             _inputBouts.Remove(BoutKey(moduleName, dataType, portNumber));
         }
-        foreach (var instance in ended.Delivered) InputWrite(moduleName, dataType, portNumber, instance.ToJsonString());
+        foreach (var instance in ended.Delivered) InputWrite(moduleId, dataType, portNumber, instance.ToJsonString());
         return ended.Ok ? AifError.OK : AifError.Failed;
     }
 }

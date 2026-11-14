@@ -202,13 +202,13 @@ public class TrustIdentityTests
             foreach (var aim in placed) api.Controller.AimHosts[aim] = hostProcess.Address;
 
             var name = $"1{module}-V1.0-I01";
-            var started = api.StartFlow(name);
+            var started = api.StartFlow(name, out var id);
             Assert.True(started == AIF.Controller.AifError.OK, $"{module}: {started} {api.Controller.LastRefusal}{Environment.NewLine}The host:{Environment.NewLine}{hostProcess.Output}");
             var instance = api.Controller.InstanceName(name)!;
-            api.Pause(name);
-            api.Resume(name);
+            api.Pause(id);
+            api.Resume(id);
             var status = placed.Length > 0 ? HostStatus(api, name) : new Dictionary<string, string>();
-            api.StopFlow(name);
+            api.StopFlow(id);
 
             foreach (var aim in trust.OfModule(instance))
             {

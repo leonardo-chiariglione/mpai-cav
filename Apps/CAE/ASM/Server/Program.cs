@@ -88,7 +88,7 @@ internal static class Program
         var storage = config.SharedStorage ?? Path.Combine(MpaiPaths.SharedStorage, "asm");
         var failure = runner.Start(AsmModule);
         if (failure is not null) { Console.WriteLine($"FATAL: {AsmModule} did not start: {failure}"); return 1; }
-        north.SharedStorageInit(AsmModule, storage);
+        north.SharedStorageInit(runner.IdOf(AsmModule), storage);
         Console.WriteLine($"  {AsmModule}: started; its Shared Storage is {storage}");
         var server = new MasServer(runner, PortDataCodecs.Default(), config.ListenUrl,
             string.IsNullOrWhiteSpace(config.BearerToken) ? null : config.BearerToken, certificate, authority);

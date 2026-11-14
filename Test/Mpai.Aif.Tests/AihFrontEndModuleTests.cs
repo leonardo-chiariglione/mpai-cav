@@ -16,6 +16,7 @@ public class AihFrontEndModuleTests : IDisposable
     private readonly string work = Path.Combine(Path.GetTempPath(), "aih-hfe-" + Guid.NewGuid().ToString("N"));
     private readonly AihApart apart;
     private ControllerApi api => apart.Api;
+    private readonly int moduleId;                                                     // the MODULE_ID the Controller returned when it started HFE
     private static readonly IReadOnlyDictionary<string, Json.Schema.JsonSchema> Schemas = AIF.Metadata.PublishedSchemas.At(Repository.Schemas);
 
     public AihFrontEndModuleTests()
@@ -24,17 +25,17 @@ public class AihFrontEndModuleTests : IDisposable
         var settings = Path.Combine(work, "aim-settings.json");
         File.WriteAllText(settings, new JsonObject { ["1AIH-HDP-V1.1-I01"] = new JsonObject { ["Role"] = "FrontEnd" } }.ToJsonString());
         apart = AihApart.Start(work, settings, Hfe, AihApart.FrontEndAims);
-        Assert.Equal(AifError.OK, api.StartFlow(Hfe));
-        Assert.Equal(AifError.OK, api.SharedStorageInit(Hfe, Path.Combine(work, "secure-data-vault")));
+        Assert.Equal(AifError.OK, api.StartFlow(Hfe, out moduleId));
+        Assert.Equal(AifError.OK, api.SharedStorageInit(moduleId, Path.Combine(work, "secure-data-vault")));
     }
 
     public void Dispose() { apart.Dispose(); try { Directory.Delete(work, true); } catch { } }
 
-    private void Write(string type, int n, JsonNode json) => Assert.Equal(AifError.OK, api.InputWrite(Hfe, type, n, json.ToJsonString(), 10_000));
+    private void Write(string type, int n, JsonNode json) => Assert.Equal(AifError.OK, api.InputWrite(moduleId, type, n, json.ToJsonString(), 10_000));
 
     private JsonObject Read(string type, int n, int ms = 15_000)
     {
-        var read = api.OutputRead(Hfe, type, n, ms);
+        var read = api.OutputRead(moduleId, type, n, ms);
         Assert.True(read.Error == AifError.OK, $"nothing at {type}#{n}: {read.Error}");
         return JsonNode.Parse(read.Json!)!.AsObject();
     }
@@ -115,7 +116,7 @@ public class AihFrontEndModuleTests : IDisposable
         var ara = Read(AihJson.AraData, 1);
         Assert.Equal("valid", Valid("ARAData", ara));
         Assert.Equal("Yellow", ara["ARAData"]!["Risk"]!.ToString());
-        Assert.Equal(AifError.NotProduced, api.OutputRead(Hfe, AihJson.Process, 2, 500).Error);          // and no response of AIH Data Processing carries an alert
+        Assert.Equal(AifError.NotProduced, api.OutputRead(moduleId, AihJson.Process, 2, 500).Error);          // and no response of AIH Data Processing carries an alert
 
         // It is kept in the End User's Secure Data Vault by AIH Data Processing - there is no Storage AIM - and, asked for by identifier, it is given back.
         var back = Kept("ahd-1");
@@ -148,7 +149,7 @@ public class AihFrontEndModuleTests : IDisposable
 
         Write(AihJson.HealthData, 1, HealthData(125));
         Write(AihJson.ModelLicence, 1, AihSamples.ModelLicence("user-1", "ahd-1"));
-        Assert.Equal(AifError.NotProduced, api.OutputRead(Hfe, AihJson.AraData, 1, 1500).Error);          // no AIH Data was made: nothing to judge, no alert
+        Assert.Equal(AifError.NotProduced, api.OutputRead(moduleId, AihJson.AraData, 1, 1500).Error);          // no AIH Data was made: nothing to judge, no alert
 
         var store = new JsonObject
         {
@@ -157,19 +158,19 @@ public class AihFrontEndModuleTests : IDisposable
         };
         Write(AihJson.Process, 1, store);
         Assert.False(AihJson.ResponseOf(Read(AihJson.Process, 2))!["ProcessingStatus"]!.GetValue<bool>());   // refused here
-        Assert.Equal(AifError.NotProduced, api.OutputRead(Hfe, AihJson.Process, 1, 500).Error);            // and not sent to the Back End
+        Assert.Equal(AifError.NotProduced, api.OutputRead(moduleId, AihJson.Process, 1, 500).Error);            // and not sent to the Back End
 
         // A request to de-identify, or to audit, likewise: refused here, with the identifier of the request, and not sent to the Back End.
         Write(AihJson.DeId, 1, DeIdRequest("ada", "d9"));
         var deId = Read(AihJson.DeId, 2);
         Assert.Equal("d9", deId["DeIDAndAnonymID"]!.ToString());
         Assert.False(deId["DeIDAndAnonymData"]![0]!["Response"]!["ProcessingState"]!.GetValue<bool>());
-        Assert.Equal(AifError.NotProduced, api.OutputRead(Hfe, AihJson.DeId, 1, 500).Error);
+        Assert.Equal(AifError.NotProduced, api.OutputRead(moduleId, AihJson.DeId, 1, 500).Error);
         Write(AihJson.Audit, 1, AuditRequest("ada", "a9"));
         var audit = Read(AihJson.Audit, 2);
         Assert.Equal("a9", audit["AuditID"]!.ToString());
         Assert.False(audit["Audit"]!["Response"]!["ProcessingState"]!.GetValue<bool>());
-        Assert.Equal(AifError.NotProduced, api.OutputRead(Hfe, AihJson.Audit, 1, 500).Error);
+        Assert.Equal(AifError.NotProduced, api.OutputRead(moduleId, AihJson.Audit, 1, 500).Error);
     }
 
     [Fact]

@@ -172,10 +172,11 @@ public class TrustLinkTests(ITestOutputHelper output)
     {
         var name = $"1{module}-V1.0-I01";
         AifError outcome;
-        try { outcome = api.StartFlow(name); }
+        int id;
+        try { outcome = api.StartFlow(name, out id); }
         catch (InvalidOperationException refused) { return "refused: " + refused.Message.Replace(host.Address, "<host>"); }
         if (outcome == AifError.NotTrusted) return "NOT_TRUSTED: " + api.Controller.LastRefusal!.Replace(host.Address, "<host>");
-        api.StopFlow(name);
+        api.StopFlow(id);
         return outcome.ToString();
     }
 

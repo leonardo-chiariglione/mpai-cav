@@ -105,9 +105,9 @@ public class TrustTraceTests
             api.Controller.HostAnchors.Add(host.Anchor!);
             foreach (var aim in RemoteTests.Hosted["TST-RXC"]) api.Controller.AimHosts[aim] = host.Address;
             var name = "1TST-RXC-V1.0-I01";
-            result["TST-RXC started"] = api.StartFlow(name).ToString();
-            api.Advance(name, [new ControllerApi.Datum(RemoteTests.Text, "x")]);
-            api.StopFlow(name);
+            result["TST-RXC started"] = api.StartFlow(name, out var id).ToString();
+            api.Advance(id, [new ControllerApi.Datum(RemoteTests.Text, "x")]);
+            api.StopFlow(id);
         }
         using (var host = TrustedParties.Host(controllers: TrustedParties.AnchorOf(TrustedParties.Save("controller-2"))))
         {
@@ -115,7 +115,7 @@ public class TrustTraceTests
             api.Controller.Trust = new TrustDomain(anchor, key, null, file);           // the same Controller, started again
             api.Controller.HostAnchors.Add(host.Anchor!);
             foreach (var aim in RemoteTests.Hosted["TST-RXC"]) api.Controller.AimHosts[aim] = host.Address;
-            result["TST-RXC, on a host that does not trust this Controller"] = api.StartFlow("1TST-RXC-V1.0-I01").ToString();
+            result["TST-RXC, on a host that does not trust this Controller"] = api.StartFlow("1TST-RXC-V1.0-I01", out _).ToString();
         }
         var records = TrustTrace.Load(file);
         result["the Trace"] = TrustTrace.Verify(records, anchor.Object()) ?? "intact";

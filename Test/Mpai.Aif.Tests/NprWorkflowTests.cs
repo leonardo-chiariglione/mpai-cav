@@ -15,24 +15,30 @@ public class NprWorkflowTests
         public readonly List<ControllerApi.Datum> Offered = new();
         public Action? Answered;
 
-        public Task<AifError> StartFlowAsync(string m) { lock (Calls) Calls.Add("start " + m); return Task.FromResult(AifError.OK); }
-        public Task StopFlowAsync(string m) { lock (Calls) Calls.Add("stop " + m); return Task.CompletedTask; }
-        public Task<ControllerApi.Result> AdvanceAsync(string m, IEnumerable<ControllerApi.Datum> inputs)
+        // The MODULE_IDs handed out and the Module each names: a call with an id not handed out shows as "#id".
+        private readonly Dictionary<int, string> started = new();
+        private int nextId = 1;
+        private string Of(int id) { lock (Calls) return started.TryGetValue(id, out var m) ? m : "#" + id; }
+
+        public Task<(AifError Error, int ModuleId)> StartFlowAsync(string m)
+        { int id; lock (Calls) { id = nextId++; started[id] = m; Calls.Add("start " + m); } return Task.FromResult((AifError.OK, id)); }
+        public Task StopFlowAsync(int id) { lock (Calls) { Calls.Add("stop " + Of(id)); started.Remove(id); } return Task.CompletedTask; }
+        public Task<ControllerApi.Result> AdvanceAsync(int id, IEnumerable<ControllerApi.Datum> inputs)
         {
-            lock (Calls) { Calls.Add("advance " + m); Offered.AddRange(inputs); }
+            lock (Calls) { Calls.Add("advance " + Of(id)); Offered.AddRange(inputs); }
             Answered?.Invoke();
             return Task.FromResult(new ControllerApi.Result(AifError.OK, new[]
             {
                 new ControllerApi.Datum("PAF-PAV-V1.6", 1, "{\"TextObject\":{\"Data\":\"the words of the column\"}}")
             }));
         }
-        public Task<AifError> InputWriteAsync(string m, string t, int p, string j, int timeoutMs = -1) => Task.FromResult(AifError.OK);
-        public Task<ControllerApi.Read> OutputReadAsync(string m, string t, int p, int timeoutMs = -1) => throw new NotSupportedException();
-        public Task<AifError> PauseAsync(string m) => Task.FromResult(AifError.OK);
-        public Task<AifError> ResumeAsync(string m) => Task.FromResult(AifError.OK);
-        public Task<ControllerApi.ModuleStatus> StatusAsync(string m) => throw new NotSupportedException();
-        public Task<AifError> StopAimAsync(string m, string a) => Task.FromResult(AifError.OK);
-        public Task<AifError> SharedStorageInitAsync(string m, string l) => Task.FromResult(AifError.OK);
+        public Task<AifError> InputWriteAsync(int id, string t, int p, string j, int timeoutMs = -1) => Task.FromResult(AifError.OK);
+        public Task<ControllerApi.Read> OutputReadAsync(int id, string t, int p, int timeoutMs = -1) => throw new NotSupportedException();
+        public Task<AifError> PauseAsync(int id) => Task.FromResult(AifError.OK);
+        public Task<AifError> ResumeAsync(int id) => Task.FromResult(AifError.OK);
+        public Task<ControllerApi.ModuleStatus> StatusAsync(int id) => throw new NotSupportedException();
+        public Task<AifError> StopAimAsync(int id, string a) => Task.FromResult(AifError.OK);
+        public Task<AifError> SharedStorageInitAsync(int id, string l) => Task.FromResult(AifError.OK);
     }
 
     [Fact]

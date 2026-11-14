@@ -91,18 +91,18 @@ public class FinancialModelTests
             var name = Path.GetFileNameWithoutExtension(model);
             Environment.SetEnvironmentVariable("MPAI_ACCESS", Path.Combine(work, "access-" + name));
             using var api = new ControllerApi(Repo.AmdsWithModel(Path.Combine(work, "amds-" + name), model), Path.Combine(Repo.Root, "AIMs", "aim-settings.json"), new CuiProvider());
-            Assert.Equal(AifError.OK, api.StartFlow(module));
+            Assert.Equal(AifError.OK, api.StartFlow(module, out var id));
             try
             {
-                void Write(string type, JsonNode json) => Assert.Equal(AifError.OK, api.InputWrite(module, type, 1, json.ToJsonString(), 2000));
+                void Write(string type, JsonNode json) => Assert.Equal(AifError.OK, api.InputWrite(id, type, 1, json.ToJsonString(), 2000));
                 Write(CuiTypes.PredictionHorizon, JsonValue.Create(12)!);
                 Write(CuiTypes.FinancialDescriptors, Companies.Financial(false));
                 Write(CuiTypes.GovernanceDescriptors, Companies.Governance(false));
-                var read = api.OutputRead(module, CuiTypes.PrimaryDefault, 1, 5000);
+                var read = api.OutputRead(id, CuiTypes.PrimaryDefault, 1, 5000);
                 Assert.True(read is { Ok: true, Json: { } }, "the Primary Default Descriptors");
                 return (double)JsonNode.Parse(read.Json!)!["PrimaryDefaultDescriptors"]![0]!["PrimaryDefaultProbability"]!;
             }
-            finally { api.StopFlow(module); Environment.SetEnvironmentVariable("MPAI_ACCESS", null); }
+            finally { api.StopFlow(id); Environment.SetEnvironmentVariable("MPAI_ACCESS", null); }
         }
         try
         {

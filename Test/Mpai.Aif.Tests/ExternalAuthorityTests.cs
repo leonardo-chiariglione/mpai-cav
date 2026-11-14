@@ -331,35 +331,37 @@ public class ExternalAuthorityTests
         using var server = Make();
         using var client = Make();
         using var stranger = Make();
-        foreach (var api in new[] { server, client, stranger }) Assert.Equal(AifError.OK, api.StartFlow(module));
+        Assert.Equal(AifError.OK, server.StartFlow(module, out var serverId));
+        Assert.Equal(AifError.OK, client.StartFlow(module, out var clientId));
+        Assert.Equal(AifError.OK, stranger.StartFlow(module, out var strangerId));
 
-        Assert.Equal(AifError.OK, server.ExternalAuthority(module, Open));
-        var anchor = server.ExternalAnchor(module)!;
-        var rendezvous = server.ExternalRendezvous(module)!;
+        Assert.Equal(AifError.OK, server.ExternalAuthority(serverId, Open));
+        var anchor = server.ExternalAnchor(serverId)!;
+        var rendezvous = server.ExternalRendezvous(serverId)!;
 
         // A Controller told to trust another anchor.
         var (other, _) = NewAnchor("Another-Authority");
-        Assert.Equal(AifError.NotTrusted, stranger.ExternalJoin(module, other.Object().ToJsonString(), rendezvous));
+        Assert.Equal(AifError.NotTrusted, stranger.ExternalJoin(strangerId, other.Object().ToJsonString(), rendezvous));
         Assert.Contains("does not prove", stranger.ExternalError);
         // A role the service does not admit.
-        Assert.Equal(AifError.NotAuthorised, stranger.ExternalJoin(module, anchor, rendezvous, role: "Moderator"));
+        Assert.Equal(AifError.NotAuthorised, stranger.ExternalJoin(strangerId, anchor, rendezvous, role: "Moderator"));
 
-        Assert.Equal(AifError.OK, client.ExternalJoin(module, anchor, rendezvous));
-        var hubServer = Assert.Single(server.ExternalHubsOf(module));
-        var hubClient = Assert.Single(client.ExternalHubsOf(module));
+        Assert.Equal(AifError.OK, client.ExternalJoin(clientId, anchor, rendezvous));
+        var hubServer = Assert.Single(server.ExternalHubsOf(serverId));
+        var hubClient = Assert.Single(client.ExternalHubsOf(clientId));
         Assert.True(await Until(() => hubServer.Linked.Count == 1 && hubClient.Linked.Count == 1 && hubServer.PayloadLinked.Count == 1 && hubClient.PayloadLinked.Count == 1),
                     "linked, with a payload channel");
 
         // The client's Module writes a payload by reference; it reaches the server apart, and the server's reader resolves it.
-        Assert.Equal(AifError.OK, client.InputWrite(module, ContinuousTests.Text, 1, "hello", 2000));
+        Assert.Equal(AifError.OK, client.InputWrite(clientId, ContinuousTests.Text, 1, "hello", 2000));
         Assert.True(await Until(() => hubServer.Received >= 1 && hubClient.Fetched >= 1), "the payload was fetched on the payload channel");
         Assert.Equal(0, hubServer.Refused);
         Assert.Equal(0, hubClient.Refused);
 
         // Leave closes the links and discards the credential.
-        Assert.Equal(AifError.OK, client.ExternalLeave(module));
+        Assert.Equal(AifError.OK, client.ExternalLeave(clientId));
         Assert.True(await Until(() => hubServer.Linked.Count == 0), "the server's link closed");
-        foreach (var api in new[] { server, client, stranger }) api.StopFlow(module);
+        server.StopFlow(serverId); client.StopFlow(clientId); stranger.StopFlow(strangerId);
         Directory.Delete(dir, true);
     }
 
@@ -382,11 +384,12 @@ public class ExternalAuthorityTests
         ControllerApi Make() => new(dir, Path.Combine(dir, "no-settings.json"), new ContinuousAims()) { ExternalPull = true };
         using var server = Make();
         using var client = Make();
-        foreach (var api in new[] { server, client }) Assert.Equal(AifError.OK, api.StartFlow(module));
-        Assert.Equal(AifError.OK, server.ExternalAuthority(module, Open));
-        Assert.Equal(AifError.OK, client.ExternalJoin(module, server.ExternalAnchor(module)!, server.ExternalRendezvous(module)!));
-        var toServer = Assert.Single(client.ExternalHubsOf(module));
-        var atServer = Assert.Single(server.ExternalHubsOf(module));
+        Assert.Equal(AifError.OK, server.StartFlow(module, out var serverId));
+        Assert.Equal(AifError.OK, client.StartFlow(module, out var clientId));
+        Assert.Equal(AifError.OK, server.ExternalAuthority(serverId, Open));
+        Assert.Equal(AifError.OK, client.ExternalJoin(clientId, server.ExternalAnchor(serverId)!, server.ExternalRendezvous(serverId)!));
+        var toServer = Assert.Single(client.ExternalHubsOf(clientId));
+        var atServer = Assert.Single(server.ExternalHubsOf(serverId));
         Assert.True(await Until(() => toServer.List().Count == 1 && atServer.List().Count == 1 && toServer.List()[0].Metadata.Length > 0));
 
         // External_List: the Controllers linked, with the Metadata of their Modules; the controllerID is the link's, and the Messages carry the Controller's name.
@@ -415,12 +418,12 @@ public class ExternalAuthorityTests
         Assert.False(string.IsNullOrEmpty(read.Json));
         Assert.True((DateTimeOffset.UtcNow - read.Stamp).Duration() < TimeSpan.FromMinutes(1));               // the stamp of the Controller that wrote it
         Assert.True(atServer.Refused + toServer.Refused == 0, string.Join("; ", said));
-        Assert.Equal(1, server.ExternalDropped(module));                                                       // the write to an AIM the Module does not have: dropped, and counted
+        Assert.Equal(1, server.ExternalDropped(serverId));                                                       // the write to an AIM the Module does not have: dropped, and counted
 
         // The link closes, and so does the controllerID: nothing is reached through it.
-        Assert.Equal(AifError.OK, client.ExternalLeave(module));
+        Assert.Equal(AifError.OK, client.ExternalLeave(clientId));
         Assert.Equal(ExternalOutcome.NoSuchController, await toServer.ProbeAsync(peer.ControllerID, module, text, 1, 500));
-        foreach (var api in new[] { server, client }) api.StopFlow(module);
+        server.StopFlow(serverId); client.StopFlow(clientId);
         Directory.Delete(dir, true);
     }
 
@@ -444,23 +447,25 @@ public class ExternalAuthorityTests
         using var server = Make();
         using var client = Make();
         using var stranger = Make();
-        foreach (var api in new[] { server, client, stranger }) Assert.Equal(AifError.OK, api.StartFlow(module));
+        Assert.Equal(AifError.OK, server.StartFlow(module, out var serverId));
+        Assert.Equal(AifError.OK, client.StartFlow(module, out var clientId));
+        Assert.Equal(AifError.OK, stranger.StartFlow(module, out var strangerId));
 
-        Assert.Equal(AifError.OK, server.ExternalAuthority(module, Open));
-        var anchor = server.ExternalAnchor(module)!;
+        Assert.Equal(AifError.OK, server.ExternalAuthority(serverId, Open));
+        var anchor = server.ExternalAnchor(serverId)!;
 
         var (other, _) = NewAnchor("Another-Authority");
         stranger.ExternalAnnouncementWait = TimeSpan.FromSeconds(1);
-        Assert.Equal(AifError.Failed, stranger.ExternalJoin(module, other.Object().ToJsonString(), null));      // nothing of that Authority is announced in range
+        Assert.Equal(AifError.Failed, stranger.ExternalJoin(strangerId, other.Object().ToJsonString(), null));      // nothing of that Authority is announced in range
         Assert.Contains("announcement", stranger.ExternalError);
 
-        var joined = client.ExternalJoin(module, anchor, null);
+        var joined = client.ExternalJoin(clientId, anchor, null);
         Assert.True(joined == AifError.OK, client.ExternalError);
-        var hubServer = Assert.Single(server.ExternalHubsOf(module));
-        var hubClient = Assert.Single(client.ExternalHubsOf(module));
+        var hubServer = Assert.Single(server.ExternalHubsOf(serverId));
+        var hubClient = Assert.Single(client.ExternalHubsOf(clientId));
         Assert.True(await Until(() => hubServer.Linked.Count == 1 && hubClient.Linked.Count == 1), "linked");
 
-        foreach (var api in new[] { server, client, stranger }) api.StopFlow(module);
+        server.StopFlow(serverId); client.StopFlow(clientId); stranger.StopFlow(strangerId);
         Directory.Delete(dir, true);
     }
 

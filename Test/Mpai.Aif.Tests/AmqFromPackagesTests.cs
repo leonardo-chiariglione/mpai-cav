@@ -44,14 +44,15 @@ public class AmqFromPackagesTests
         var said = new List<string>();
         using var api = new ControllerApi(amds, Path.Combine(Repository.Root, "AIMs", "aim-settings.json"),
             store => new PackageAimProvider(store, Path.Combine(work, "cache"), line => { lock (said) said.Add(line); }));
+        int id = -1;
         try
         {
-            Assert.Equal(AifError.OK, api.StartFlow(Module));
+            Assert.Equal(AifError.OK, api.StartFlow(Module, out id));
             var picture = new ControllerApi.Datum("OSD-BVO-V1.5", 1, MpaiJson.ToJson(BasicVisualObject.FromFile("red.jpg",
                 File.ReadAllBytes(Path.Combine(Mpai.Core.MpaiPaths.TestData, "red.jpg")), "Picture")));
             var question = new ControllerApi.Datum("OSD-BTO-V1.5", 1, MpaiJson.ToJson(BasicTextObject.FromText("What color is the picture?")));
             var machine = new ControllerApi.Datum("string", 1, "\"MPAI as a Service\"");
-            var r = api.Advance(Module, new[] { picture, question, machine });
+            var r = api.Advance(id, new[] { picture, question, machine });
             Assert.True(r.Ok, $"{Module}: {r.Error} :: {string.Join(" / ", said)}");
 
             var pav = r.ByType("PAF-PAV-V1.6");
@@ -59,6 +60,6 @@ public class AmqFromPackagesTests
             Assert.True(AvatarUtterance.FromPortableAvatar(pav) is { MachineSpeechWav.Length: > 200 }, "the answer carries no speech");
             Assert.True(said.Count(l => l.Contains("from the package")) >= 4, "the AIMs did not come from packages: " + string.Join(" / ", said));
         }
-        finally { api.StopFlow(Module); try { Directory.Delete(work, true); } catch { } }
+        finally { api.StopFlow(id); try { Directory.Delete(work, true); } catch { } }
     }
 }

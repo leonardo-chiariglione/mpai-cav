@@ -30,8 +30,8 @@ public class MmcControllerProcessTests
             controller.BeginOutputReadLine();
             Assert.True(ready.Wait(TimeSpan.FromSeconds(60)), "the Controller did not come up");
             using var api = new RemoteControllerApi(url);
-            Assert.Equal(AifError.OK, api.StartFlow(module));
-            api.StopFlow(module);
+            Assert.Equal(AifError.OK, api.StartFlow(module, out var id));
+            api.StopFlow(id);
         }
         finally { try { controller.Kill(entireProcessTree: true); } catch { } }
     }

@@ -20,6 +20,7 @@ public sealed class XrvModuleRig : IDisposable
     private readonly string work = Path.Combine(Path.GetTempPath(), "xrv-" + Guid.NewGuid().ToString("N"));
     private readonly ControllerApi api;
     public string ModuleName { get; }
+    public int ModuleId { get; }                                                                                     // the MODULE_ID the Controller returned when it started the Module
 
     // gate: the AIMs begin to read their Ports when it completes. only: a Module of one AIM, all of whose Ports are the Module's.
     public XrvModuleRig(Task? gate = null, string? only = null)
@@ -31,18 +32,19 @@ public sealed class XrvModuleRig : IDisposable
         File.WriteAllText(Path.Combine(amds, ModuleName + ".json"), (only is null ? ModuleL3() : SingleL3(only, amds)).ToJsonString());
         var settings = Path.Combine(work, "aim-settings.json"); File.WriteAllText(settings, "{}");
         api = new ControllerApi(amds, settings, new XrvProvider(gate));
-        var started = api.StartFlow(ModuleName);
+        var started = api.StartFlow(ModuleName, out var moduleId);
         if (started != AifError.OK) throw new InvalidOperationException($"{ModuleName} did not start: {started}");
+        ModuleId = moduleId;
     }
 
-    public void Dispose() { try { api.StopFlow(ModuleName); } catch { } api.Dispose(); try { Directory.Delete(work, true); } catch { } }
+    public void Dispose() { try { api.StopFlow(ModuleId); } catch { } api.Dispose(); try { Directory.Delete(work, true); } catch { } }
 
-    public AifError Write(string dataType, string json, int number = 1) => api.InputWrite(ModuleName, dataType, number, json, 10_000);
+    public AifError Write(string dataType, string json, int number = 1) => api.InputWrite(ModuleId, dataType, number, json, 10_000);
 
     // The text of the next Basic Text Object on an ID Port (1 RE Action ID, 2 VE Action ID, 3 Cue Point ID), null when none comes in time.
     public string? ReadId(int port, int timeoutMs = 10_000)
     {
-        var read = api.OutputRead(ModuleName, Types.BasicTextObject, port, timeoutMs);
+        var read = api.OutputRead(ModuleId, Types.BasicTextObject, port, timeoutMs);
         return read.Error == AifError.OK ? TextId.Read(read.Json!).Text : null;
     }
 
@@ -55,7 +57,7 @@ public sealed class XrvModuleRig : IDisposable
 
     public string? ReadRaw(string dataType, int port = 1, int timeoutMs = 10_000)
     {
-        var read = api.OutputRead(ModuleName, dataType, port, timeoutMs);
+        var read = api.OutputRead(ModuleId, dataType, port, timeoutMs);
         return read.Error == AifError.OK ? read.Json : null;
     }
 
@@ -67,7 +69,7 @@ public sealed class XrvModuleRig : IDisposable
         Assert.Equal(AifError.OK, Write(Types.ScriptVenueAssociations, associations ?? XrvShow.Text("ScriptVenueAssociations.json")));
     }
 
-    public ControllerApi.ModuleStatus Status => api.Status(ModuleName);
+    public ControllerApi.ModuleStatus Status => api.Status(ModuleId);
 
     // ---- the L3 of the test Module -------------------------------------------------------------------------------------------------------------------
 

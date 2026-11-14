@@ -92,21 +92,21 @@ public sealed class MasBoutTests
     {
         var (url, _) = Server.Value;
         using var client = new RemoteControllerApi(url);
-        Assert.Equal(AifError.OK, client.StartFlow("echo"));
+        Assert.Equal(AifError.OK, client.StartFlow("echo", out var id));
 
         // A Port whose AIM Description states no Bout is not given as one.
-        Assert.Equal(AifError.NotAuthorised, client.OutputBoutOpen("echo", Text, 2));
+        Assert.Equal(AifError.NotAuthorised, client.OutputBoutOpen(id, Text, 2));
 
-        Assert.Equal(AifError.OK, client.OutputBoutOpen("echo", Text, 1));
+        Assert.Equal(AifError.OK, client.OutputBoutOpen(id, Text, 1));
         for (var k = 1; k <= 4; k++)
         {
-            Assert.Equal(AifError.OK, client.InputWrite("echo", Text, 1, TextJson($"turn {k}")));
-            var read = client.OutputRead("echo", Text, 1);
+            Assert.Equal(AifError.OK, client.InputWrite(id, Text, 1, TextJson($"turn {k}")));
+            var read = client.OutputRead(id, Text, 1);
             Assert.Equal(AifError.OK, read.Error);
             Assert.Equal($"turn {k}", TextOf(read.Json));
         }
         Assert.Equal(3, client.BoutInstancesReceived);                       // the first output made the Bout; the next three were frames
-        Assert.Equal(AifError.OK, client.OutputBoutClose("echo", Text, 1));
+        Assert.Equal(AifError.OK, client.OutputBoutClose(id, Text, 1));
     }
 
     [Fact]
@@ -114,18 +114,18 @@ public sealed class MasBoutTests
     {
         var (url, runner) = Server.Value;
         using var client = new RemoteControllerApi(url) { GivesBouts = true };
-        Assert.Equal(AifError.OK, client.StartFlow("echo"));
+        Assert.Equal(AifError.OK, client.StartFlow("echo", out var id));
         Assert.NotNull(client.Credential);
         Assert.Equal("ProcessInstance", (string?)client.Credential!["Subject"]!["InstanceType"]);
 
-        Assert.Equal(AifError.OK, client.InputBoutGive("echo", Text, 1, TextJson("first")));
+        Assert.Equal(AifError.OK, client.InputBoutGive(id, Text, 1, TextJson("first")));
         for (var k = 1; k <= 3; k++)
         {
-            Assert.Equal(AifError.OK, client.InputWrite("echo", Text, 1, TextJson($"compressed {k}")));
-            Assert.Equal($"compressed {k}", TextOf(client.OutputRead("echo", Text, 1).Json));
+            Assert.Equal(AifError.OK, client.InputWrite(id, Text, 1, TextJson($"compressed {k}")));
+            Assert.Equal($"compressed {k}", TextOf(client.OutputRead(id, Text, 1).Json));
         }
         Assert.Equal(3, client.BoutInstancesSent);
-        Assert.Equal(AifError.OK, client.InputBoutEnd("echo", Text, 1));
+        Assert.Equal(AifError.OK, client.InputBoutEnd(id, Text, 1));
     }
 
     [Fact]
@@ -133,9 +133,9 @@ public sealed class MasBoutTests
     {
         var (url, _) = Server.Value;
         using var client = new RemoteControllerApi(url);
-        Assert.Equal(AifError.OK, client.StartFlow("echo"));
+        Assert.Equal(AifError.OK, client.StartFlow("echo", out var id));
         Assert.Null(client.Credential);
-        Assert.Equal(AifError.NotTrusted, client.InputBoutGive("echo", Text, 1, TextJson("first")));
+        Assert.Equal(AifError.NotTrusted, client.InputBoutGive(id, Text, 1, TextJson("first")));
     }
 
     [Fact]
@@ -155,19 +155,20 @@ public sealed class MasBoutTests
                 return Task.FromResult<AIF.Bout.BoutKey?>(new BoutTests.AsyncOnlyKey(k));
             }
         };
-        Assert.Equal(AifError.OK, await client.StartFlowAsync("echo"));
+        var (started, id) = await client.StartFlowAsync("echo");
+        Assert.Equal(AifError.OK, started);
         Assert.NotNull(client.Credential);
 
-        Assert.Equal(AifError.OK, await client.OutputBoutOpenAsync("echo", Text, 1, AIF.Bout.BoutSecurity.Chain, 1));
-        Assert.Equal(AifError.OK, await client.InputBoutGiveAsync("echo", Text, 1, TextJson("first")));
+        Assert.Equal(AifError.OK, await client.OutputBoutOpenAsync(id, Text, 1, AIF.Bout.BoutSecurity.Chain, 1));
+        Assert.Equal(AifError.OK, await client.InputBoutGiveAsync(id, Text, 1, TextJson("first")));
         for (var k = 1; k <= 3; k++)
         {
-            Assert.Equal(AifError.OK, await client.InputWriteAsync("echo", Text, 1, TextJson($"both ways {k}")));
-            Assert.Equal($"both ways {k}", TextOf((await client.OutputReadAsync("echo", Text, 1)).Json));
+            Assert.Equal(AifError.OK, await client.InputWriteAsync(id, Text, 1, TextJson($"both ways {k}")));
+            Assert.Equal($"both ways {k}", TextOf((await client.OutputReadAsync(id, Text, 1)).Json));
         }
         Assert.Equal(3, client.BoutInstancesSent);
         Assert.Equal(2, client.BoutInstancesReceived);                       // the first output made the Bout
-        Assert.Equal(AifError.OK, await client.InputBoutEndAsync("echo", Text, 1));
-        Assert.Equal(AifError.OK, await client.OutputBoutCloseAsync("echo", Text, 1));
+        Assert.Equal(AifError.OK, await client.InputBoutEndAsync(id, Text, 1));
+        Assert.Equal(AifError.OK, await client.OutputBoutCloseAsync(id, Text, 1));
     }
 }

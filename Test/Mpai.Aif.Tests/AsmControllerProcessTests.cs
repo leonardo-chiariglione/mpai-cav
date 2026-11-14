@@ -33,18 +33,18 @@ public class AsmControllerProcessTests
             Assert.True(ready.Wait(TimeSpan.FromSeconds(60)), "the Controller did not come up");
 
             using var api = new RemoteControllerApi(url);
-            Assert.Equal(AifError.OK, api.StartFlow(Asm));                           // the User Agent tells the Controller to start; the Controller starts the Module and its AIMs
+            Assert.Equal(AifError.OK, api.StartFlow(Asm, out var id));                           // the User Agent tells the Controller to start; the Controller starts the Module and its AIMs
 
             var words = MpaiJson.ToJson(BasicTextObject.FromText("place a room 6 by 4 with a ceiling of 3"));
-            Assert.Equal(AifError.OK, api.InputWrite(Asm, "OSD-BTO-V1.5", 1, words, 30_000));
-            var answer = api.OutputRead(Asm, "OSD-BTO-V1.5", 2, 60_000);              // the response, in text
+            Assert.Equal(AifError.OK, api.InputWrite(id, "OSD-BTO-V1.5", 1, words, 30_000));
+            var answer = api.OutputRead(id, "OSD-BTO-V1.5", 2, 60_000);              // the response, in text
             Assert.Equal(AifError.OK, answer.Error);
             Assert.False(string.IsNullOrWhiteSpace(MpaiJson.FromJson<BasicTextObject>(answer.Json!)?.GetText()));
 
-            var scene = api.OutputRead(Asm, "OSD-ASD-V1.5", 1, 30_000);              // the scene as edited: a room is in it
+            var scene = api.OutputRead(id, "OSD-ASD-V1.5", 1, 30_000);              // the scene as edited: a room is in it
             Assert.Equal(AifError.OK, scene.Error);
             Assert.Contains("ClosedSpace", scene.Json);
-            api.StopFlow(Asm);
+            api.StopFlow(id);
         }
         finally
         {

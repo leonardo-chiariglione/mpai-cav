@@ -161,14 +161,15 @@ public class TrustVerificationTests
         api.Controller.Trust = trust;
         var name = $"1{module}-V1.0-I01";
         AifError outcome;
-        try { outcome = api.StartFlow(name); }
+        int id;
+        try { outcome = api.StartFlow(name, out id); }
         catch (InvalidOperationException refused) { return "refused: " + refused.Message; }
         if (outcome == AifError.NotTrusted)
             return "NOT_TRUSTED: " + Regex.Replace(api.Controller.LastRefusal ?? "", @"1TST-RXP-V1\.0-I01#[0-9a-f]{32}", "<instance>");
         if (outcome != AifError.OK) return outcome.ToString();
         instance = api.Controller.InstanceName(name);
-        var run = api.Advance(name, [new ControllerApi.Datum(RemoteTests.Text, "abc")]);
-        api.StopFlow(name);
+        var run = api.Advance(id, [new ControllerApi.Datum(RemoteTests.Text, "abc")]);
+        api.StopFlow(id);
         return $"started; an exchange: {run.Error}; " + string.Join("; ", run.Outputs.OrderBy(o => o.PortNumber).Select(o => $"#{o.PortNumber} '{o.Json}'"));
     }
 

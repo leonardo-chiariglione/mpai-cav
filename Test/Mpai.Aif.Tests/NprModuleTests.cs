@@ -35,7 +35,7 @@ public class NprModuleTests
         return m.Groups[1].Value.Trim();
     }
 
-    private static string Read(ControllerApi api, double? x, double? y)
+    private static string Read(ControllerApi api, int moduleId, double? x, double? y)
     {
         var inputs = new List<ControllerApi.Datum>
         {
@@ -44,7 +44,7 @@ public class NprModuleTests
         };
         if (x is not null)
             inputs.Add(new("OSD-PNT-V1.5", 1, $"{{\"Header\":\"OSD-PNT-V1.5\",\"Coordinates\":{{\"X\":{x},\"Y\":{y}}}}}"));
-        var r = api.Advance(NPR, inputs);
+        var r = api.Advance(moduleId, inputs);
         Assert.True(r.Ok, $"{NPR}: {r.Error}");
         var pav = JsonNode.Parse(r.ByType("PAF-PAV-V1.6") ?? "{}") as JsonObject;
         return pav?["TextObject"] is JsonObject txo ? MpaiJson.FromJson<BasicTextObject>(txo.ToJsonString()).GetText() : "";
@@ -77,9 +77,9 @@ public class NprModuleTests
     {
         Skip.IfNot(TestModels.Can("ocr-det") && Directory.Exists(Folder), "Models/OCR or the page in D:\\Images\\NPR is absent.");
         using var api = Controller();
-        Assert.Equal(AifError.OK, api.StartFlow(NPR));
-        try { Judge(Read(api, x, y), Truth(column), $"column {column}"); }
-        finally { api.StopFlow(NPR); }
+        Assert.Equal(AifError.OK, api.StartFlow(NPR, out var moduleId));
+        try { Judge(Read(api, moduleId, x, y), Truth(column), $"column {column}"); }
+        finally { api.StopFlow(moduleId); }
     }
 
     [SkippableFact]
@@ -87,9 +87,9 @@ public class NprModuleTests
     {
         Skip.IfNot(TestModels.Can("ocr-det") && Directory.Exists(Folder), "Models/OCR or the page in D:\\Images\\NPR is absent.");
         using var api = Controller();
-        Assert.Equal(AifError.OK, api.StartFlow(NPR));
-        try { Judge(Read(api, null, null), Truth(1), "no point"); }
-        finally { api.StopFlow(NPR); }
+        Assert.Equal(AifError.OK, api.StartFlow(NPR, out var moduleId));
+        try { Judge(Read(api, moduleId, null, null), Truth(1), "no point"); }
+        finally { api.StopFlow(moduleId); }
     }
 
     // THE APP, NOT ONLY THE MODULE: Apps/MMC/NPR/MMC-NPR.orch run by the User Agent's interpreter with simulated
@@ -138,10 +138,10 @@ public class NprModuleTests
         using var http = new HttpClient { Timeout = TimeSpan.FromSeconds(3), BaseAddress = new Uri("https://localhost:5105/") };
         try { http.GetAsync("MPAI/AIFU/Apps").Wait(); } catch { Skip.If(true, "no Service on 5105"); }
         using var api = new Mpai.Mas.Client.RemoteControllerApi("https://localhost:5105/");
-        Assert.Equal(AifError.OK, api.StartFlow(NPR));
+        Assert.Equal(AifError.OK, api.StartFlow(NPR, out var moduleId));
         try
         {
-            var r = api.Advance(NPR, new[]
+            var r = api.Advance(moduleId, new[]
             {
                 new ControllerApi.Datum("OSD-BVO-V1.5", 1, MpaiJson.ToJson(BasicVisualObject.FromFile("npr-page.png", File.ReadAllBytes(Path.Combine(Folder, "npr-page.png")), "Picture"))),
                 new ControllerApi.Datum("OSD-PNT-V1.5", 1, "{\"Header\":\"OSD-PNT-V1.5\",\"Coordinates\":{\"X\":560,\"Y\":472}}"),
@@ -152,7 +152,7 @@ public class NprModuleTests
             var words = pav?["TextObject"] is JsonObject txo ? MpaiJson.FromJson<BasicTextObject>(txo.ToJsonString()).GetText() : "";
             Judge(words, Truth(1), "column 1 through the running Service");
         }
-        finally { api.StopFlow(NPR); }
+        finally { api.StopFlow(moduleId); }
     }
 
     // A DENSE PAGE: Le Petit Journal, 19 August 1893 (Gallica, public domain), six narrow columns. A point in the middle of
@@ -163,10 +163,10 @@ public class NprModuleTests
         var page = Path.Combine(Folder, "db", "fr-le-petit-journal-1893-08-19.png");
         Skip.IfNot(TestModels.Can("ocr-det") && File.Exists(page), "Models/OCR or the page is absent.");
         using var api = Controller();
-        Assert.Equal(AifError.OK, api.StartFlow(NPR));
+        Assert.Equal(AifError.OK, api.StartFlow(NPR, out var moduleId));
         try
         {
-            var r = api.Advance(NPR, new[]
+            var r = api.Advance(moduleId, new[]
             {
                 new ControllerApi.Datum("OSD-BVO-V1.5", 1, MpaiJson.ToJson(BasicVisualObject.FromFile("page.png", File.ReadAllBytes(page), "Picture"))),
                 new ControllerApi.Datum("OSD-PNT-V1.5", 1, "{\"Header\":\"OSD-PNT-V1.5\",\"Coordinates\":{\"X\":596,\"Y\":994}}"),
@@ -180,7 +180,7 @@ public class NprModuleTests
             Assert.True(Words(words).Length > 40, "too little text: " + words);
             Assert.DoesNotContain("Clemenceau", words, StringComparison.OrdinalIgnoreCase);
         }
-        finally { api.StopFlow(NPR); }
+        finally { api.StopFlow(moduleId); }
     }
 
     // THE LANGUAGE OF THE COLUMN IS STAMPED on its text: English for the author's page.
@@ -189,10 +189,10 @@ public class NprModuleTests
     {
         Skip.IfNot(TestModels.Can("ocr-det") && Directory.Exists(Folder), "Models/OCR or the page in D:\\Images\\NPR is absent.");
         using var api = Controller();
-        Assert.Equal(AifError.OK, api.StartFlow(NPR));
+        Assert.Equal(AifError.OK, api.StartFlow(NPR, out var moduleId));
         try
         {
-            var r = api.Advance(NPR, new[]
+            var r = api.Advance(moduleId, new[]
             {
                 new ControllerApi.Datum("OSD-BVO-V1.5", 1, MpaiJson.ToJson(BasicVisualObject.FromFile("npr-page.png", File.ReadAllBytes(Path.Combine(Folder, "npr-page.png")), "Picture"))),
                 new ControllerApi.Datum("OSD-PNT-V1.5", 1, "{\"Header\":\"OSD-PNT-V1.5\",\"Coordinates\":{\"X\":560,\"Y\":1500}}"),
@@ -201,7 +201,7 @@ public class NprModuleTests
             Assert.True(r.Ok, r.Error.ToString());
             Assert.Equal("en", AvatarUtterance.LanguageOfPortableAvatar(r.ByType("PAF-PAV-V1.6")));
         }
-        finally { api.StopFlow(NPR); }
+        finally { api.StopFlow(moduleId); }
     }
 
     // A BLACKLETTER PAGE: the Correspondent für Untersteiermark, Marburg, 30 March 1862 (Europeana, public domain). A point in the
@@ -212,10 +212,10 @@ public class NprModuleTests
         var page = Path.Combine(Folder, "db", "de-correspondent-untersteiermark-1862-03-30.jpg");
         Skip.IfNot(TestModels.Can("ocr-det") && File.Exists(page), "Models/OCR or the page is absent.");
         using var api = Controller();
-        Assert.Equal(AifError.OK, api.StartFlow(NPR));
+        Assert.Equal(AifError.OK, api.StartFlow(NPR, out var moduleId));
         try
         {
-            var r = api.Advance(NPR, new[]
+            var r = api.Advance(moduleId, new[]
             {
                 new ControllerApi.Datum("OSD-BVO-V1.5", 1, MpaiJson.ToJson(BasicVisualObject.FromFile("page.jpg", File.ReadAllBytes(page), "Picture"))),
                 new ControllerApi.Datum("OSD-PNT-V1.5", 1, "{\"Header\":\"OSD-PNT-V1.5\",\"Coordinates\":{\"X\":1662,\"Y\":1431}}"),
@@ -229,7 +229,7 @@ public class NprModuleTests
             Assert.Contains("Blatt", words);
             Assert.DoesNotContain("Sonntag", words);
         }
-        finally { api.StopFlow(NPR); }
+        finally { api.StopFlow(moduleId); }
     }
 
     [SkippableFact]
@@ -241,7 +241,7 @@ public class NprModuleTests
         try { http.GetAsync("MPAI/AIFU/Apps").Wait(); } catch { Skip.If(true, "no Service on 5105"); }
         using var api = new Mpai.Mas.Client.RemoteControllerApi("https://localhost:5105/");
         const string mas = "1MAS-APP-V1.1-I01";
-        Assert.Equal(AifError.OK, api.StartFlow(mas));
+        Assert.Equal(AifError.OK, api.StartFlow(mas, out var moduleId));
         try
         {
             var speech = BasicSpeechObject.FromData(File.ReadAllBytes(wav), new SpeechQualifier
@@ -250,13 +250,13 @@ public class NprModuleTests
                 Format = new SpeechFormat { ContentFormats = new SpeechContentFormats { RawData = new Pcm { SamplingFrequency = 16000, Precision = 16 } }, TransportFormats = new SpeechTransportFormats { FileFormat = SpeechFileFormat.Wav } },
                 Attributes = new SpeechAttributes { Metadata = new SpeechMetadata { Language = new Language { LanguageCode = "en", LanguageFormat = LanguageFormat.Iso639_1 } } }
             });
-            var r = api.Advance(mas, new[]
+            var r = api.Advance(moduleId, new[]
             {
                 new ControllerApi.Datum("OSD-BSO-V1.5", 1, MpaiJson.ToJson(speech)),
                 new ControllerApi.Datum("OSD-B3O-V1.5", 1, AvatarUtterance.AvatarDatum("cav-avatar.glb"))
             });
             File.WriteAllText(Path.Combine(Repository.Root, "Test", "Reports", "mic-last-asr.txt"), $"ok={r.Ok} error={r.Error} text=[{(r.ByType("OSD-BTO-V1.5") ?? "").Replace("\r"," ")}]");
         }
-        finally { api.StopFlow(mas); }
+        finally { api.StopFlow(moduleId); }
     }
 }

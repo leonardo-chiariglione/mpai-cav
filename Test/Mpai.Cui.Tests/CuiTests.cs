@@ -275,8 +275,8 @@ public class ModuleTests
 {
     private const string Module = "1CUI-CPP-V2.1-I01";
 
-    private static JsonNode? Read(ControllerApi api, string type, int wait = 5000) =>
-        api.OutputRead(Module, type, 1, wait) is { Ok: true, Json: { } json } ? JsonNode.Parse(json) : null;
+    private static JsonNode? Read(ControllerApi api, int id, string type, int wait = 5000) =>
+        api.OutputRead(id, type, 1, wait) is { Ok: true, Json: { } json } ? JsonNode.Parse(json) : null;
 
     [Fact]
     public void TheModuleGivesTheDescriptorsOfACompany()
@@ -285,10 +285,10 @@ public class ModuleTests
         var work = Path.Combine(Path.GetTempPath(), "cui-module-" + Guid.NewGuid().ToString("N"));
         Environment.SetEnvironmentVariable("MPAI_ACCESS", Path.Combine(work, "access"));
         using var api = new ControllerApi(Repo.AmdsWithModel(work, null), Path.Combine(Repo.Root, "AIMs", "aim-settings.json"), new CuiProvider());
-        Assert.Equal(AifError.OK, api.StartFlow(Module));
+        Assert.Equal(AifError.OK, api.StartFlow(Module, out var id));
         try
         {
-            void Write(string type, JsonNode json) => Assert.Equal(AifError.OK, api.InputWrite(Module, type, 1, json.ToJsonString(), 2000));
+            void Write(string type, JsonNode json) => Assert.Equal(AifError.OK, api.InputWrite(id, type, 1, json.ToJsonString(), 2000));
             Write(CuiTypes.PredictionHorizon, JsonValue.Create(12)!);
             Write(CuiTypes.FinancialDescriptors, Companies.Financial(false));
             Write(CuiTypes.GovernanceDescriptors, Companies.Governance(false));
@@ -296,10 +296,10 @@ public class ModuleTests
             Write(CuiTypes.CyberRisk, Companies.Cyber());
             Write(CuiTypes.SecondaryStatements, Companies.SecondaryRisks());
 
-            var organisation = Read(api, CuiTypes.Organisation);
-            var primaryDefault = Read(api, CuiTypes.PrimaryDefault);
-            var discontinuity = Read(api, CuiTypes.PrimaryDiscontinuity);
-            var secondary = Read(api, CuiTypes.SecondaryProbability);
+            var organisation = Read(api, id, CuiTypes.Organisation);
+            var primaryDefault = Read(api, id, CuiTypes.PrimaryDefault);
+            var discontinuity = Read(api, id, CuiTypes.PrimaryDiscontinuity);
+            var secondary = Read(api, id, CuiTypes.SecondaryProbability);
             Assert.True(organisation is not null, "ORD"); Assert.True(primaryDefault is not null, "PDD"); Assert.True(discontinuity is not null, "PSD"); Assert.True(secondary is not null, "the Secondary Discontinuity Probability");
             Assert.Equal("CUI-PDD-V2.1", (string?)primaryDefault!["Header"]);
             var pd = (double)primaryDefault["PrimaryDefaultDescriptors"]![0]!["PrimaryDefaultProbability"]!;
@@ -309,6 +309,6 @@ public class ModuleTests
             Assert.True(pc >= pd - 1e-9, $"discontinuity {pc:F3} at least the default {pd:F3}");
             Assert.True(sd > pd, $"the secondary risks perturb the default {pd:F3} to {sd:F3}");
         }
-        finally { api.StopFlow(Module); Environment.SetEnvironmentVariable("MPAI_ACCESS", null); try { Directory.Delete(work, true); } catch { } }
+        finally { api.StopFlow(id); Environment.SetEnvironmentVariable("MPAI_ACCESS", null); try { Directory.Delete(work, true); } catch { } }
     }
 }

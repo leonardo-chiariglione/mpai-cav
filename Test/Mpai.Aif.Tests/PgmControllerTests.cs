@@ -39,13 +39,13 @@ public class PgmControllerTests : IDisposable
 
     private static string Run(ControllerApi api, int seconds)
     {
-        if (api.StartFlow(PgmRig.Module) != AifError.OK) return "the Module did not start: " + api.StartFlow(PgmRig.Module);
-        var written = api.InputWrite(PgmRig.Module, "PGM-HCM-V1.0", 1, PgmRig.HumanCommand().ToJsonString(), 5000);
-        written = written == AifError.OK ? api.InputWrite(PgmRig.Module, "OSD-BTO-V1.5", 1, PgmAim.Text("go and open the doors").ToJsonString(), 5000) : written;
+        if (api.StartFlow(PgmRig.Module, out var moduleId) is var started && started != AifError.OK) return "the Module did not start: " + started;
+        var written = api.InputWrite(moduleId, "PGM-HCM-V1.0", 1, PgmRig.HumanCommand().ToJsonString(), 5000);
+        written = written == AifError.OK ? api.InputWrite(moduleId, "OSD-BTO-V1.5", 1, PgmAim.Text("go and open the doors").ToJsonString(), 5000) : written;
         if (written != AifError.OK) return "write: " + written;
-        var answer = api.OutputRead(PgmRig.Module, "PGM-HCM-V1.0", 1, seconds * 1000);
-        var speech = api.OutputRead(PgmRig.Module, "OSD-BSO-V1.5", 1, seconds * 1000);
-        var action = api.OutputRead(PgmRig.Module, "MMM-ACT-V2.2", 1, seconds * 1000);
+        var answer = api.OutputRead(moduleId, "PGM-HCM-V1.0", 1, seconds * 1000);
+        var speech = api.OutputRead(moduleId, "OSD-BSO-V1.5", 1, seconds * 1000);
+        var action = api.OutputRead(moduleId, "MMM-ACT-V2.2", 1, seconds * 1000);
         return $"answer {answer.Error} {(answer.Json is { } j ? (string?)JsonNode.Parse(j)?["ExecutionResult"] : "-")}; speech {speech.Error}; action {action.Error} {(action.Json is { } a ? (string?)JsonNode.Parse(a)?["Action"] : "-")}";
     }
 

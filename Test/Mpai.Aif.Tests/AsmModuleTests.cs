@@ -70,40 +70,41 @@ public class AsmModuleTests
 
         var r = new Dictionary<string, string>();
         using var api = new ControllerApi(Repository.Amds, settings, store => new CompositeProvider(new AsmProvider(Repository.Amds), new LeafAimsProvider(store), new VciStandIn()));
+        int id = -1;
         try
         {
-            r["the Module starts"] = api.StartFlow(Asm).ToString();
-            api.SharedStorageInit(Asm, Path.Combine(work, "assets"));
+            r["the Module starts"] = api.StartFlow(Asm, out id).ToString();
+            api.SharedStorageInit(id, Path.Combine(work, "assets"));
 
             // 1. Two sounds the User Agent captured: each a Basic Audio Object, back as the open Object.
             string Played()
             {
-                var read = api.OutputRead(Asm, "OSD-AUO-V1.5", 1, 60_000);
+                var read = api.OutputRead(id, "OSD-AUO-V1.5", 1, 60_000);
                 return read.Error == AifError.OK ? Forms.Bao(read.Json!) : $"nothing ({read.Error})";
             }
-            api.InputWrite(Asm, "CAE-UCM-V1.0", 1, Forms.Acquire(Forms.Auo(Captured("low", 440))));
+            api.InputWrite(id, "CAE-UCM-V1.0", 1, Forms.Acquire(Forms.Auo(Captured("low", 440))));
             var first = Played();
-            api.InputWrite(Asm, "CAE-UCM-V1.0", 1, Forms.Acquire(Forms.Auo(Captured("high", 880))));
+            api.InputWrite(id, "CAE-UCM-V1.0", 1, Forms.Acquire(Forms.Auo(Captured("high", 880))));
             var second = Played();
             r["a sound the User Agent captured, the open Object"] = first.StartsWith('{') ? $"{JsonNode.Parse(first)!["Header"]}, {Valid("OSD/V1.5/data/BasicAudioObject.json", first)}" : first;
             r["a second sound, the open Object"] = second.StartsWith('{') ? $"{JsonNode.Parse(second)!["Header"]}, {Valid("OSD/V1.5/data/BasicAudioObject.json", second)}" : second;
 
             // 1b. An Object of Shared Storage, given by its identifier: opened.
-            api.InputWrite(Asm, "CAE-UCM-V1.0", 1, Forms.Acquire(Forms.Auo(first)));
+            api.InputWrite(id, "CAE-UCM-V1.0", 1, Forms.Acquire(Forms.Auo(first)));
             var stored = Played();
             r["an Object of Shared Storage, opened"] = stored.StartsWith('{') ? $"{JsonNode.Parse(stored)!["Header"]} {JsonNode.Parse(stored)!["BasicAudioObjectID"]}, {Valid("OSD/V1.5/data/BasicAudioObject.json", stored)}" : stored;
 
             // 2. One User Command: both in a Basic Audio Scene, heard from the User.
             var user = new PointOfView { PointOfViewID = "user", CartPosition = [0, 0, 1.6], Orientation = [0, 0, 0] };
-            api.InputWrite(Asm, "CAE-UCM-V1.0", 2, Command(new UserCommandRQ                     // an Audio Scene command: Port 2 (Audio Scene Editing)
+            api.InputWrite(id, "CAE-UCM-V1.0", 2, Command(new UserCommandRQ                     // an Audio Scene command: Port 2 (Audio Scene Editing)
             {
                 UserPoV = user,
                 AddedObjects = new ObjectPlacements { ObjectID = "stage", Objects = [new ObjectPlacement { ObjectID = new ManagedObject { ObjectID = "low" }, SpatialAttitude = At(-1.5, 1.5) },
                                                                                       new ObjectPlacement { ObjectID = new ManagedObject { ObjectID = "high" }, SpatialAttitude = At(1.5, 1.5) }] }
             }));
-            var scene = api.OutputRead(Asm, "OSD-ASD-V1.5", 1, 60_000);
+            var scene = api.OutputRead(id, "OSD-ASD-V1.5", 1, 60_000);
             // Each editor has its own User Command Port (1 Audio Object, 2 Audio Scene, 3 Speech Object, 4 Speech Scene, 5 Multimodal Scene): the command above reached Audio Scene Editing only, which reports at Port 2.
-            api.OutputRead(Asm, "CAE-UCM-V1.0", 2, 5_000);
+            api.OutputRead(id, "CAE-UCM-V1.0", 2, 5_000);
             var basScene = scene.Error == AifError.OK ? Forms.Bas(scene.Json!) : null;
             r["the Scene leaving the Module"] = scene.Error == AifError.OK
                 ? $"{JsonNode.Parse(basScene!)!["BasicAudioSceneDescriptorsData"]!.AsArray().Count} members, {Valid("OSD/V1.5/data/AudioSceneDescriptors.json", scene.Json!)}"
@@ -119,19 +120,19 @@ public class AsmModuleTests
             // 3. The speech chain: a Speech Object the User Agent captured, placed by a
             // Speech Scene Command in a Basic Speech Scene; Speech Scene Editing reports it.
             var hello = new BasicSpeechObject { BasicSpeechObjectID = "hello", Data = SceneAudio.Wav(Tone(300), 1, 48000) };
-            api.InputWrite(Asm, "CAE-UCM-V1.0", 3, Forms.Acquire(MpaiJson.ToJson(hello)));
-            var kept = api.OutputRead(Asm, "OSD-SPO-V1.5", 1, 60_000);
+            api.InputWrite(id, "CAE-UCM-V1.0", 3, Forms.Acquire(MpaiJson.ToJson(hello)));
+            var kept = api.OutputRead(id, "OSD-SPO-V1.5", 1, 60_000);
             r["a Speech Object, the open Object"] = kept.Error == AifError.OK ? $"{JsonNode.Parse(Forms.Bso(kept.Json!))!["BasicSpeechObjectID"]}, {Valid("OSD/V1.5/data/SpeechObject.json", kept.Json!)}" : $"nothing ({kept.Error})";
-            api.InputWrite(Asm, "CAE-UCM-V1.0", 4, Command(new UserCommandRQ                     // a Speech Scene command: Port 4 (Speech Scene Editing)
+            api.InputWrite(id, "CAE-UCM-V1.0", 4, Command(new UserCommandRQ                     // a Speech Scene command: Port 4 (Speech Scene Editing)
             {
                 UserPoV = user,
                 AddedObjects = new ObjectPlacements { ObjectID = "dialogue", Objects = [new ObjectPlacement { ObjectID = new ManagedObject { ObjectID = "hello" }, SpatialAttitude = At(0, 2) }] }
             }));
-            var speechScene = api.OutputRead(Asm, "OSD-SSD-V1.5", 1, 60_000);
+            var speechScene = api.OutputRead(id, "OSD-SSD-V1.5", 1, 60_000);
             r["the Speech Scene leaving the Module"] = speechScene.Error == AifError.OK
                 ? $"{JsonNode.Parse(Forms.Bss(speechScene.Json!))!["BasicSpeechSceneDescriptors"]!.AsArray().Count} member(s), {Valid("OSD/V1.5/data/SpeechSceneDescriptors.json", speechScene.Json!)}"
                 : $"nothing ({speechScene.Error})";
-            var sseReport = api.OutputRead(Asm, "CAE-UCM-V1.0", 4, 60_000);
+            var sseReport = api.OutputRead(id, "CAE-UCM-V1.0", 4, 60_000);
             r["the report of Speech Scene Editing"] = sseReport.Error == AifError.OK && MpaiJson.FromJson<UserCommand>(sseReport.Json!).UserCommandRS is { } done
                 ? $"{done.Outcome}; " + string.Join("; ", done.Actions.Select(a => $"{a.Action} {a.Outcome}")) + $", {Valid("CAE3/V1.0/data/UserCommand.json", sseReport.Json!)}"
                 : $"nothing ({sseReport.Error})";
@@ -141,7 +142,7 @@ public class AsmModuleTests
             string? IdIn(AifError error, string? json, string field) => error == AifError.OK ? (string?)JsonNode.Parse(json!)![field] : null;
             var basId = IdIn(scene.Error, scene.Json, "AudioSceneDescriptorsID");
             var bssId = IdIn(speechScene.Error, speechScene.Json, "SpeechSceneDescriptorsID");
-            api.InputWrite(Asm, "CAE-UCM-V1.0", 5, Command(new UserCommandRQ                     // a Multimodal Scene command: Port 5 (Multimodal Scene Editing)
+            api.InputWrite(id, "CAE-UCM-V1.0", 5, Command(new UserCommandRQ                     // a Multimodal Scene command: Port 5 (Multimodal Scene Editing)
             {
                 UserPoV = user,
                 AddedObjects = new ObjectPlacements { ObjectID = "mix", Objects = [new ObjectPlacement { ObjectID = new ManagedObject { ObjectID = basId }, SpatialAttitude = At(0, 0) },
@@ -153,19 +154,19 @@ public class AsmModuleTests
                 return string.Join(" + ", (node["SubAudioScenes"]?.AsArray() ?? []).Select(m => "Audio Scene " + (string?)m!["SubAudioScene"]!["AudioSceneDescriptorsID"])
                     .Concat((node["SubSpeechScenes"]?.AsArray() ?? []).Select(m => "Speech Scene " + (string?)m!["SubSpeechScene"]!["SpeechSceneDescriptorsID"])));
             }
-            var bms = api.OutputRead(Asm, "OSD-MSD-V1.5", 1, 60_000);
+            var bms = api.OutputRead(id, "OSD-MSD-V1.5", 1, 60_000);
             r["the Multimodal Scene leaving the Module"] = bms.Error == AifError.OK ? $"{Members(bms.Json!)}, {Valid("OSD/V1.5/data/MultimodalSceneDescriptors.json", bms.Json!)}" : $"nothing ({bms.Error})";
-            var bmeReport = api.OutputRead(Asm, "CAE-UCM-V1.0", 5, 60_000);
+            var bmeReport = api.OutputRead(id, "CAE-UCM-V1.0", 5, 60_000);
             r["the report of Multimodal Scene Editing"] = bmeReport.Error == AifError.OK && MpaiJson.FromJson<UserCommand>(bmeReport.Json!).UserCommandRS is { } bmeDone
                 ? $"{bmeDone.Outcome}; " + string.Join("; ", bmeDone.Actions.Select(a => $"{a.Action} {a.Outcome}"))
                 : $"nothing ({bmeReport.Error})";
 
-            api.InputWrite(Asm, "CAE-UCM-V1.0", 4, Command(new UserCommandRQ                     // the Speech Scene edited again: Port 4
+            api.InputWrite(id, "CAE-UCM-V1.0", 4, Command(new UserCommandRQ                     // the Speech Scene edited again: Port 4
             {
                 MovedObjects = new ObjectMovements { Objects = [new ObjectMovement { ObjectID = new ManagedObject { ObjectID = "hello" }, NewSpatialAttitude = At(1, 3) }] }
             }));
-            var movedSpeech = api.OutputRead(Asm, "OSD-SSD-V1.5", 1, 60_000);
-            var followed = api.OutputRead(Asm, "OSD-MSD-V1.5", 1, 60_000);
+            var movedSpeech = api.OutputRead(id, "OSD-SSD-V1.5", 1, 60_000);
+            var followed = api.OutputRead(id, "OSD-MSD-V1.5", 1, 60_000);
             // The Speech Scene keeps its name when it is edited: the Multimodal Scene holds it by that name, as it now is.
             r["the Speech Scene edited again, followed"] = followed.Error != AifError.OK || movedSpeech.Error != AifError.OK ? $"nothing ({followed.Error})"
                 : JsonNode.Parse(followed.Json!)!["SubSpeechScenes"]!.AsArray().Any(m => JsonNode.DeepEquals(m!["SubSpeechScene"], JsonNode.Parse(movedSpeech.Json!)) && !JsonNode.DeepEquals(JsonNode.Parse(speechScene.Json!), JsonNode.Parse(movedSpeech.Json!)))
@@ -173,7 +174,7 @@ public class AsmModuleTests
         }
         finally
         {
-            api.StopFlow(Asm);
+            api.StopFlow(id);
             try { Directory.Delete(work, true); } catch { }
         }
         Expected.Match("asm-module.json", r);

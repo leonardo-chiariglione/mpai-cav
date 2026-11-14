@@ -55,18 +55,22 @@ public class SecureProfileSplitTests : IDisposable
             var client = new SecureControllerClient(nonSecure, userAgent, anchor.PublicKey, policy);
 
             // Before the Secure Profile is switched on, nothing reaches the Module.
-            Assert.Equal(AifError.NotInitialized, client.Advance(Module, [new ControllerApi.Datum(ControllerTests.Text, Secret)]).Error);
+            Assert.Equal(AifError.NotInitialized, client.StartFlow(Module, out _));
+            Assert.Equal(AifError.NotInitialized, client.Advance(-1, [new ControllerApi.Datum(ControllerTests.Text, Secret)]).Error);
 
             // Switched on: the Attestation of the Secure Controller verified, a key agreed. The Module answers as it answers directly.
             Assert.Equal(AifError.OK, client.MPAI_AIFU_Controller_Initialize_Secure());
-            var through = client.Advance(Module, [new ControllerApi.Datum(ControllerTests.Text, Secret)]);
+            Assert.Equal(AifError.OK, client.StartFlow(Module, out var module));
+            var through = client.Advance(module, [new ControllerApi.Datum(ControllerTests.Text, Secret)]);
             Assert.Equal(AifError.OK, through.Error);
             using (var direct = Direct())
             {
-                var expected = direct.Advance(Module, [new ControllerApi.Datum(ControllerTests.Text, Secret)]);
+                direct.StartFlow(Module, out var directModule);
+                var expected = direct.Advance(directModule, [new ControllerApi.Datum(ControllerTests.Text, Secret)]);
+                direct.StopFlow(directModule);
                 Assert.Equal(expected.Outputs.Select(o => (o.DataType, o.PortNumber, o.Json)), through.Outputs.Select(o => (o.DataType, o.PortNumber, o.Json)));
             }
-            using (var direct = Direct()) Assert.Equal(direct.Status(Module).Error, client.Status(Module).Error);        // not started: NotStarted, either way
+            using (var direct = Direct()) Assert.Equal(direct.Status(-1).Error, client.Status(-1).Error);                // not started: NotStarted, either way
 
             // The Non-Secure Controller relayed every frame and read none of the data of the Module: neither the words given nor the words returned.
             Assert.True(nonSecure.Relayed >= 3);
@@ -91,10 +95,10 @@ public class SecureProfileSplitTests : IDisposable
                 f["Data"] = Convert.ToBase64String(data);
                 return Frames.Bytes(f);
             };
-            Assert.Equal(AifError.NotTrusted, client.Pause(Module));
+            Assert.Equal(AifError.NotTrusted, client.Pause(module));
             Assert.Contains("altered", client.Refusal);
             nonSecure.Tamper = null;
-            Assert.Equal(AifError.NotStarted, client.Status(Module).Error);                                    // the session goes on
+            Assert.Equal(AifError.NotStarted, client.Status(-1).Error);                                        // the session goes on
 
             // A session the Non-Secure Controller tries to open with a key of its own: refused - it is not a User Agent this Controller serves.
             using (var impostor = ECDsa.Create(ECCurve.NamedCurves.nistP256))
@@ -115,9 +119,9 @@ public class SecureProfileSplitTests : IDisposable
             altered[altered.Keys.First(k => k.StartsWith("AIF.SecureProfile", StringComparison.Ordinal))] = new string('0', 64);
             var wrongCode = new SecureControllerClient(nonSecure, userAgent, anchor.PublicKey, new Attestation.Policy(manufacturer.Value.Root, m => PartyCode.Approve(altered, m)));
             Assert.Equal(AifError.NotTrusted, wrongCode.MPAI_AIFU_Controller_Initialize_Secure());
-            Assert.Equal(AifError.NotInitialized, wrongCode.Advance(Module, [new ControllerApi.Datum(ControllerTests.Text, "x")]).Error);
+            Assert.Equal(AifError.NotInitialized, wrongCode.Advance(module, [new ControllerApi.Datum(ControllerTests.Text, "x")]).Error);
 
-            client.StopFlow(Module);
+            client.StopFlow(module);
         }
         finally
         {

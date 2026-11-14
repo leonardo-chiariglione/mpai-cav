@@ -16,22 +16,29 @@ internal sealed class ScriptedController : IAsyncControllerApi
     public ScriptedController(List<string> log, Func<int, IReadOnlyList<ControllerApi.Datum>, IEnumerable<ControllerApi.Datum>> answer)
     { Log = log; _answer = answer; }
 
-    public Task<AifError> StartFlowAsync(string m) { lock (Log) Log.Add("start " + m); return Task.FromResult(AifError.OK); }
-    public Task StopFlowAsync(string m) { lock (Log) Log.Add("stop " + m); return Task.CompletedTask; }
-    public Task<ControllerApi.Result> AdvanceAsync(string m, IEnumerable<ControllerApi.Datum> inputs)
+    // The MODULE_IDs this Controller handed out, and the Module each one names (Basic API 2.2): the log shows the Module a call reached,
+    // and a call with an id it did not hand out shows as "#id", which no expected order contains.
+    private readonly Dictionary<int, string> _started = new();
+    private int _nextId = 1;
+    private string Of(int id) { lock (Log) return _started.TryGetValue(id, out var m) ? m : "#" + id; }
+
+    public Task<(AifError Error, int ModuleId)> StartFlowAsync(string m)
+    { int id; lock (Log) { id = _nextId++; _started[id] = m; Log.Add("start " + m); } return Task.FromResult((AifError.OK, id)); }
+    public Task StopFlowAsync(int id) { lock (Log) { Log.Add("stop " + Of(id)); _started.Remove(id); } return Task.CompletedTask; }
+    public Task<ControllerApi.Result> AdvanceAsync(int id, IEnumerable<ControllerApi.Datum> inputs)
     {
         var offered = inputs.ToList();
         int turn;
-        lock (Log) { Turns.Add(offered); turn = Turns.Count; Log.Add("advance " + m); }
+        lock (Log) { Turns.Add(offered); turn = Turns.Count; Log.Add("advance " + Of(id)); }
         return Task.FromResult(new ControllerApi.Result(AifError.OK, _answer(turn, offered).ToList()));
     }
-    public Task<AifError> InputWriteAsync(string m, string t, int p, string j, int timeoutMs = -1) => Task.FromResult(AifError.OK);
-    public Task<ControllerApi.Read> OutputReadAsync(string m, string t, int p, int timeoutMs = -1) => throw new NotSupportedException();
-    public Task<AifError> PauseAsync(string m) => Task.FromResult(AifError.OK);
-    public Task<AifError> ResumeAsync(string m) => Task.FromResult(AifError.OK);
-    public Task<ControllerApi.ModuleStatus> StatusAsync(string m) => throw new NotSupportedException();
-    public Task<AifError> StopAimAsync(string m, string a) => Task.FromResult(AifError.OK);
-    public Task<AifError> SharedStorageInitAsync(string m, string l) => Task.FromResult(AifError.OK);
+    public Task<AifError> InputWriteAsync(int id, string t, int p, string j, int timeoutMs = -1) => Task.FromResult(AifError.OK);
+    public Task<ControllerApi.Read> OutputReadAsync(int id, string t, int p, int timeoutMs = -1) => throw new NotSupportedException();
+    public Task<AifError> PauseAsync(int id) => Task.FromResult(AifError.OK);
+    public Task<AifError> ResumeAsync(int id) => Task.FromResult(AifError.OK);
+    public Task<ControllerApi.ModuleStatus> StatusAsync(int id) => throw new NotSupportedException();
+    public Task<AifError> StopAimAsync(int id, string a) => Task.FromResult(AifError.OK);
+    public Task<AifError> SharedStorageInitAsync(int id, string l) => Task.FromResult(AifError.OK);
 }
 
 internal static class AppWorkflow

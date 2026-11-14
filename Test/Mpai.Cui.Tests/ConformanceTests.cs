@@ -217,16 +217,16 @@ public class ConformanceTests
         ReferenceModels.AsOf = AsOf;
         Environment.SetEnvironmentVariable("MPAI_ACCESS", Path.Combine(work, "access-" + name));
         using var api = new ControllerApi(Repo.AmdsWithModel(Path.Combine(work, "amds-" + name), model), Path.Combine(Repo.Root, "AIMs", "aim-settings.json"), new CuiProvider());
-        Assert.Equal(AifError.OK, api.StartFlow(module));
+        Assert.Equal(AifError.OK, api.StartFlow(module, out var id));
         try
         {
             foreach (var (type, json) in Inputs(company, 12, only))
-                Assert.Equal(AifError.OK, api.InputWrite(module, type, 1, json.ToJsonString(), 2000));
+                Assert.Equal(AifError.OK, api.InputWrite(id, type, 1, json.ToJsonString(), 2000));
             // An AIM computes again when an optional Input comes after the first computation: the Module gives each result in turn, and the last is the one that has all the company gave.
             JsonNode? Read(string type, int wait = 5000)
             {
                 JsonNode? last = null;
-                for (var next = wait; api.OutputRead(module, type, 1, next) is { Ok: true, Json: { } j }; next = 700) last = JsonNode.Parse(j);
+                for (var next = wait; api.OutputRead(id, type, 1, next) is { Ok: true, Json: { } j }; next = 700) last = JsonNode.Parse(j);
                 return last;
             }
             var pdd = Read(CuiTypes.PrimaryDefault);
@@ -235,7 +235,7 @@ public class ConformanceTests
             var sdp = company["SecondaryRiskStatements"] is null ? null : Read(CuiTypes.SecondaryProbability);
             return pdd is null ? null : new Result(pdd, org!, psd!, sdp);
         }
-        finally { api.StopFlow(module); Environment.SetEnvironmentVariable("MPAI_ACCESS", null); ReferenceModels.AsOf = null; }
+        finally { api.StopFlow(id); Environment.SetEnvironmentVariable("MPAI_ACCESS", null); ReferenceModels.AsOf = null; }
     }
 
     [Fact]

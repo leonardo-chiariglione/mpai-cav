@@ -47,8 +47,7 @@ public class ContinuousTests
         {
             using var api = Api();
             api.Controller.DefaultTransport = transport;
-            const string module = "1TST-LOP-V1.0-I01";
-            result[$"{transport}: start"] = api.StartFlow(module).ToString();
+            result[$"{transport}: start"] = api.StartFlow("1TST-LOP-V1.0-I01", out var module).ToString();
 
             var outputs = new List<string>();
             for (var i = 1; i <= 50; i++)
@@ -92,8 +91,7 @@ public class ContinuousTests
     public void Restart()
     {
         using var api = Api();
-        const string module = "1TST-RST-V1.0-I01";
-        api.StartFlow(module);
+        api.StartFlow("1TST-RST-V1.0-I01", out var module);
         var result = new Dictionary<string, string>();
         for (var i = 1; i <= 3; i++)
         {
@@ -118,8 +116,7 @@ public class ContinuousTests
         {
             using var api = Api();
             api.Controller.DefaultTransport = transport;
-            const string module = "1TST-LOP-V1.0-I01";
-            api.StartFlow(module);
+            api.StartFlow("1TST-LOP-V1.0-I01", out var module);
             for (var i = 0; i < 20; i++) { api.InputWrite(module, Text, 1, "warm"); api.OutputRead(module, Text, 1, 2000); }
 
             var process = System.Diagnostics.Process.GetCurrentProcess();
@@ -200,8 +197,7 @@ public class ContinuousTests
 
         // the Module: two writers and two readers, joined by no Topology
         using var api = Api();
-        const string module = "1TST-BUS-V1.0-I01";
-        Assert.Equal(AifError.OK, api.StartFlow(module));
+        Assert.Equal(AifError.OK, api.StartFlow("1TST-BUS-V1.0-I01", out var module));
         api.InputWrite(module, Text, 1, "from one", 2000);
         var got = api.OutputRead(module, Text, 1, 3000);
         Assert.True(got.Ok, got.Error.ToString());
@@ -236,8 +232,7 @@ public class ContinuousTests
 
         using (var api = Api())
         {
-            const string module = "1TST-PER-V1.0-I01";
-            result["TST-PER starts"] = api.StartFlow(module).ToString();
+            result["TST-PER starts"] = api.StartFlow("1TST-PER-V1.0-I01", out var module).ToString();
 
             // The ticker, Period 50 ms, for 1 s.
             await Task.Delay(1000);
@@ -266,8 +261,7 @@ public class ContinuousTests
         // TST-PBH, given nothing: the reader with MaxAge 100 ms is DEGRADED, the others not.
         using (var api = Api())
         {
-            const string module = "1TST-PBH-V1.0-I01";
-            api.StartFlow(module);
+            api.StartFlow("1TST-PBH-V1.0-I01", out var module);
             await Task.Delay(400);
             foreach (var aim in api.Status(module).Aims)
                 result[$"TST-PBH given nothing for 400 ms: {aim.Aim}"] = aim.Status + (aim.Reason.Length > 0 ? $" ({aim.Reason})" : "");
@@ -279,7 +273,7 @@ public class ContinuousTests
 
     private static string Refusal(ControllerApi api, string module)
     {
-        try { var started = api.StartFlow(module); api.StopFlow(module); return "started: " + started; }
+        try { var started = api.StartFlow(module, out var id); api.StopFlow(id); return "started: " + started; }
         catch (InvalidOperationException refused) { return "refused: " + refused.Message; }
     }
 
@@ -299,8 +293,7 @@ public class ContinuousTests
     {
         var result = new Dictionary<string, string>();
         using var api = Api();
-        const string module = "1TST-PAY-V1.0-I01";
-        api.StartFlow(module);
+        api.StartFlow("1TST-PAY-V1.0-I01", out var module);
 
         for (var i = 1; i <= 4; i++)
         {
@@ -364,9 +357,9 @@ public class ContinuousTests
         using var api = Api();
         foreach (var name in modules)
         {
-            var module = $"1{name}-V1.0-I01";
+            int module = -1;
             string started;
-            try { started = api.StartFlow(module).ToString(); }
+            try { started = api.StartFlow($"1{name}-V1.0-I01", out module).ToString(); }
             catch (Exception failure) { result[name] = "does not start: " + MetadataTests.Short(failure.Message, 140); continue; }
             if (started != "OK") { result[name] = "does not start: " + started; continue; }
             api.SharedStorageInit(module, storage);             // not the repository's own Shared Storage

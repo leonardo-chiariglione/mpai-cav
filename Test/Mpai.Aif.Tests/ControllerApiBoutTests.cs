@@ -37,15 +37,15 @@ public sealed class ControllerApiBoutTests
     public void OutputBout_TheControllerGivesFramesTheUserAgentVerifies()
     {
         using var api = Api();
-        Assert.Equal(AifError.OK, api.StartFlow(Module));
-        Assert.Equal(AifError.NotAuthorised, api.BoutOpen(Module, Text, 2, BoutSecurity.EachInstance, 1, out _));
-        Assert.Equal(AifError.OK, api.BoutOpen(Module, Text, 1, BoutSecurity.EachInstance, 1, out var boutId));
+        Assert.Equal(AifError.OK, api.StartFlow(Module, out var moduleId));
+        Assert.Equal(AifError.NotAuthorised, api.BoutOpen(moduleId, Text, 2, BoutSecurity.EachInstance, 1, out _));
+        Assert.Equal(AifError.OK, api.BoutOpen(moduleId, Text, 1, BoutSecurity.EachInstance, 1, out var boutId));
 
         // The first Message makes the Bout and is read whole.
-        Assert.Equal(AifError.OK, api.InputWrite(Module, Text, 1, Message("first"), 5000));
-        var first = api.BoutOutputRead(Module, Text, 1, 5000);
+        Assert.Equal(AifError.OK, api.InputWrite(moduleId, Text, 1, Message("first"), 5000));
+        var first = api.BoutOutputRead(moduleId, Text, 1, 5000);
         Assert.Equal("first", TextOf(first.Json));
-        Assert.Equal(AifError.OK, api.BoutGet(Module, Text, 1, out var bout));
+        Assert.Equal(AifError.OK, api.BoutGet(moduleId, Text, 1, out var bout));
         Assert.Equal(boutId, (int)bout!["BoutID"]!);
 
         var anchorKey = BoutKey.FromSpki(Convert.FromHexString((string)api.BoutAnchor()["PublicKey"]!["KeyValue"]!))!;
@@ -54,23 +54,23 @@ public sealed class ControllerApiBoutTests
         Assert.True(receiver.Accept(bout).Ok);
         for (var k = 1; k <= 3; k++)
         {
-            Assert.Equal(AifError.OK, api.InputWrite(Module, Text, 1, Message($"frame {k}"), 5000));
-            var read = api.BoutOutputRead(Module, Text, 1, 5000);
+            Assert.Equal(AifError.OK, api.InputWrite(moduleId, Text, 1, Message($"frame {k}"), 5000));
+            var read = api.BoutOutputRead(moduleId, Text, 1, 5000);
             Assert.NotNull(read.Frame);
             var got = receiver.Receive(read.Frame!);
             Assert.True(got.Ok, got.Reason);
             Assert.Equal($"frame {k}", (string?)Assert.Single(got.Delivered)["Text"]);
         }
-        Assert.Equal(AifError.OK, api.BoutClose(Module, Text, 1, out var closing));
+        Assert.Equal(AifError.OK, api.BoutClose(moduleId, Text, 1, out var closing));
         Assert.True(receiver.Close(closing!).Ok);
-        api.StopFlow(Module);
+        api.StopFlow(moduleId);
     }
 
     [Fact]
     public void InputBout_TheUserAgentGivesABoutWithItsCredential()
     {
         using var api = Api();
-        Assert.Equal(AifError.OK, api.StartFlow(Module));
+        Assert.Equal(AifError.OK, api.StartFlow(Module, out var moduleId));
         var key = BoutKey.Create();
         var now = DateTimeOffset.UtcNow;
         var giver = new BoutGiver(new BoutGiver.Options
@@ -81,24 +81,24 @@ public sealed class ControllerApiBoutTests
         var bout = giver.Open(JsonNode.Parse(Message("first"))!.AsObject());
 
         // Without a credential the Bout is refused; with one, accepted.
-        Assert.Equal(AifError.NotTrusted, api.BoutGive(Module, Text, 1, bout));
+        Assert.Equal(AifError.NotTrusted, api.BoutGive(moduleId, Text, 1, bout));
         Assert.Equal(AifError.OK, api.CredentialObtain(BoutCredentials.Proof(key, "UA-1", now), out var credential));
         Assert.Equal("ProcessInstance", (string?)credential!["Subject"]!["InstanceType"]);
-        Assert.Equal(AifError.NotAuthorised, api.BoutGive(Module, Text, 2, bout));
-        Assert.Equal(AifError.OK, api.BoutGive(Module, Text, 1, bout));
+        Assert.Equal(AifError.NotAuthorised, api.BoutGive(moduleId, Text, 2, bout));
+        Assert.Equal(AifError.OK, api.BoutGive(moduleId, Text, 1, bout));
 
         // A Chain of two: the AIMs read the first only when the second has verified it.
-        Assert.Equal(AifError.OK, api.BoutInputWrite(Module, Text, 1, giver.Instance(JsonNode.Parse(Message("one"))!.AsObject()), 5000));
-        Assert.Equal(AifError.NotProduced, api.OutputRead(Module, Text, 1, 300).Error);
-        Assert.Equal(AifError.OK, api.BoutInputWrite(Module, Text, 1, giver.Instance(JsonNode.Parse(Message("two"))!.AsObject()), 5000));
-        Assert.Equal("one", TextOf(api.OutputRead(Module, Text, 1, 5000).Json));
-        Assert.Equal("two", TextOf(api.OutputRead(Module, Text, 1, 5000).Json));
+        Assert.Equal(AifError.OK, api.BoutInputWrite(moduleId, Text, 1, giver.Instance(JsonNode.Parse(Message("one"))!.AsObject()), 5000));
+        Assert.Equal(AifError.NotProduced, api.OutputRead(moduleId, Text, 1, 300).Error);
+        Assert.Equal(AifError.OK, api.BoutInputWrite(moduleId, Text, 1, giver.Instance(JsonNode.Parse(Message("two"))!.AsObject()), 5000));
+        Assert.Equal("one", TextOf(api.OutputRead(moduleId, Text, 1, 5000).Json));
+        Assert.Equal("two", TextOf(api.OutputRead(moduleId, Text, 1, 5000).Json));
 
         // A tampered frame is refused.
         var frame = giver.Instance(JsonNode.Parse(Message("three"))!.AsObject(), last: true);
         frame[^3] ^= 0x55;
-        Assert.NotEqual(AifError.OK, api.BoutInputWrite(Module, Text, 1, frame, 5000));
-        Assert.Equal(AifError.Failed, api.BoutEnd(Module, Text, 1, giver.Close()));   // CloseBout reports the instance that did not arrive
-        api.StopFlow(Module);
+        Assert.NotEqual(AifError.OK, api.BoutInputWrite(moduleId, Text, 1, frame, 5000));
+        Assert.Equal(AifError.Failed, api.BoutEnd(moduleId, Text, 1, giver.Close()));   // CloseBout reports the instance that did not arrive
+        api.StopFlow(moduleId);
     }
 }

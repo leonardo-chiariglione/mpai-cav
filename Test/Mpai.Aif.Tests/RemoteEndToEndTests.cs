@@ -58,7 +58,7 @@ public class RemoteEndToEndTests
                     var trust = new AIF.Controller.CityTrust(turin, turin.Admit(id));
                     var discovery = new UdpDiscovery(port);
                     discoveries.Add(discovery);
-                    var hub = ams.Api.StartExternal(CavInTheLoop.Ams, new ExternalHub.Options
+                    var hub = ams.Api.StartExternal(ams.ModuleId, new ExternalHub.Options
                     {
                         ControllerId = id, ModuleType = "CAV-AMS-V2.0", Discovery = discovery, Admission = trust.Admission,
                         InRange = _ => Volatile.Read(ref distance) <= Range
@@ -108,8 +108,8 @@ public class RemoteEndToEndTests
                 result["the stopped vehicle, from A's report"] = knownAt is { } placed && seenAt is { } v && placed < v - 1 ? "placed before B's camera could see it" : "not placed before B's camera could see it";
                 result["what B received"] = hubB!.Received > 0 && hubB.Refused == 0 ? "signed by A, verified, none refused" : $"{hubB.Received} received, {hubB.Refused} refused";
             }
-            amsA?.Api.StopFlow(CavInTheLoop.Ams);
-            amsB.Api.StopFlow(CavInTheLoop.Ams);
+            amsA?.Api.StopFlow(amsA.ModuleId);
+            amsB.Api.StopFlow(amsB.ModuleId);
             foreach (var d in discoveries) await d.DisposeAsync();
         }
         result["with the exchange, against without"] = atPullOut["with the exchange"] < atPullOut["without the exchange"] - 1 ? "slower when A pulls out" : "no slower when A pulls out";

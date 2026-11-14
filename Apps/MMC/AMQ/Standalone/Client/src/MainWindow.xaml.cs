@@ -148,12 +148,14 @@ public partial class MainWindow : Window
 
     // Speak a line through PAF-RSR (text -> machine speech + face), presented on the avatar.
     private bool _rsrStarted = false;
+    // The MODULE_IDs the Controller returned when it started PAF-RSR and AMQ (Basic API 2.2); -1 while not started.
+    private int _rsrId = -1, _amqId = -1;
     private async Task RenderPromptAsync(string words)
     {
         if (_north is null || _avatar is null) return;
         if (!_rsrStarted)
         {
-            var s = await Task.Run(() => _north!.StartFlow(RsrModule));
+            var s = await Task.Run(() => _north!.StartFlow(RsrModule, out _rsrId));
             Diag("StartFlow RSR -> " + s);
             _rsrStarted = (s == AifError.OK);
         }
@@ -168,7 +170,7 @@ public partial class MainWindow : Window
             new ControllerApi.Datum("OSD-B3O-V1.5", 1, AvatarUtterance.AvatarDatum("cav-avatar.glb")),
             new ControllerApi.Datum("string", 1, System.Text.Json.JsonSerializer.Serialize(MachineName))
         };
-        var r = await Task.Run(() => _north!.Advance(RsrModule, inputs));
+        var r = await Task.Run(() => _north!.Advance(_rsrId, inputs));
         if (!r.Ok) { Diag("RSR err=" + r.Error); return; }
         // The Portable Avatar: the speech, and the face and body that move with it.
         if (AvatarUtterance.FromPortableAvatar(r.ByType("PAF-PAV-V1.6")) is not { } utterance) { Diag("RSR gave no speech"); return; }
@@ -238,14 +240,14 @@ public partial class MainWindow : Window
             inputs.Add(new ControllerApi.Datum(BTO, MpaiJson.ToJson(BasicTextObject.FromText(typedQuestion))));
         inputs.Add(new ControllerApi.Datum("string", 1, System.Text.Json.JsonSerializer.Serialize(MachineName)));
 
-        var started = await Task.Run(() => _north!.StartFlow(AmqModule));
+        var started = await Task.Run(() => _north!.StartFlow(AmqModule, out _amqId));
         Diag("StartFlow AMQ -> " + started);
         if (started != AifError.OK) { SetStatus("could not start " + AmqModule); return; }
 
         Diag("Advance AMQ: inputs=[" + string.Join(",", inputs.ConvertAll(d => d.DataType)) + "]" + (spokenQuestion!=null?(" speechBytes="+spokenQuestion.Data.Length):"") + (typedQuestion!=null?(" typed='"+typedQuestion+"'"):""));
-        var r = await Task.Run(() => _north!.Advance(AmqModule, inputs));
+        var r = await Task.Run(() => _north!.Advance(_amqId, inputs));
         Diag("Advance AMQ done ok=" + r.Ok + " err=" + r.Error + " PAV text=[" + (AvatarUtterance.TextOfPortableAvatar(r.ByType("PAF-PAV-V1.6")) ?? "nil") + "]");
-        await Task.Run(() => _north!.StopFlow(AmqModule));
+        await Task.Run(() => _north!.StopFlow(_amqId));
         if (!r.Ok) { Diag("AMQ err=" + r.Error); SetStatus("no answer: " + r.Error); return; }
 
         // The Module answers with a Portable Avatar that carries the answer as a Text Object.
@@ -271,5 +273,5 @@ public partial class MainWindow : Window
     private void SetStatus(string s) => Dispatcher.Invoke(() => StatusText.Text = s);
 
     protected override void OnClosed(EventArgs e)
-    { try { _north?.StopFlow(AmqModule); } catch { } base.OnClosed(e); }
+    { try { if (_amqId >= 0) _north?.StopFlow(_amqId); if (_rsrId >= 0) _north?.StopFlow(_rsrId); } catch { } base.OnClosed(e); }
 }

@@ -73,21 +73,22 @@ public class AsmOnAnAimHostTests
         using var api = new ControllerApi(amds, settings, _ => new CompositeProvider());
         api.Controller.AimHostKey = HostProcess.Key;
         foreach (var aim in Placed) api.Controller.AimHosts[aim] = host.Address;
+        int id = -1;
         try
         {
-            try { Assert.Equal(AifError.OK, api.StartFlow(Asm)); }
+            try { Assert.Equal(AifError.OK, api.StartFlow(Asm, out id)); }
             catch (InvalidOperationException e) { throw new InvalidOperationException(e.Message + "\nThe AIM host said:\n" + host.Output, e); }
-            api.SharedStorageInit(Asm, Path.Combine(work, "assets"));
+            api.SharedStorageInit(id, Path.Combine(work, "assets"));
 
             // A sound arrives in a User Command (AcquiredObject), at the Port of Audio Object Editing.
-            api.InputWrite(Asm, "CAE-UCM-V1.0", 1, MpaiJson.ToJson(AsmRig.Command(new UserCommandRQ { AcquiredObject = new ManagedObject { BasicAudioObject = Captured("low", 440) } })));
-            var read = api.OutputRead(Asm, "OSD-AUO-V1.5", 1, 60_000);
+            api.InputWrite(id, "CAE-UCM-V1.0", 1, MpaiJson.ToJson(AsmRig.Command(new UserCommandRQ { AcquiredObject = new ManagedObject { BasicAudioObject = Captured("low", 440) } })));
+            var read = api.OutputRead(id, "OSD-AUO-V1.5", 1, 60_000);
             Assert.True(read.Error == AifError.OK, $"the sound did not come back as the open Object ({read.Error})");
             Assert.Equal("OSD-AUO-V1.5", JsonNode.Parse(read.Json!)!["Header"]!.ToString());
 
             // The placed AIMs ran in the host's process: the Channels between them and the Controller cross the Remote transport.
-            Assert.Contains(api.ChannelAccounts(Asm), a => a.Contains("(Remote)"));
+            Assert.Contains(api.ChannelAccounts(id), a => a.Contains("(Remote)"));
         }
-        finally { api.StopFlow(Asm); }
+        finally { api.StopFlow(id); }
     }
 }

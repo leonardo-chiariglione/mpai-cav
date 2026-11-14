@@ -36,8 +36,12 @@ public class ControllerTests
     public void Routing()
     {
         using var api = Api();
-        var result = api.Advance("1TST-RTE-V1.0-I01", [new ControllerApi.Datum(Text, "x")]);
-        var groups = api.Advance("1TST-GRP-V1.0-I01", [new ControllerApi.Datum(Text, "x")]);
+        api.StartFlow("1TST-RTE-V1.0-I01", out var rte);
+        var result = api.Advance(rte, [new ControllerApi.Datum(Text, "x")]);
+        api.StopFlow(rte);
+        api.StartFlow("1TST-GRP-V1.0-I01", out var grp);
+        var groups = api.Advance(grp, [new ControllerApi.Datum(Text, "x")]);
+        api.StopFlow(grp);
 
         Expected.Match("controller-routing.json", new Dictionary<string, string>
         {
@@ -53,14 +57,14 @@ public class ControllerTests
     public void Outcomes()
     {
         using var api = Api();
-        const string module = "1TST-DGR-V1.0-I01";
+        const int notStarted = -1;                                                    // a MODULE_ID the Controller did not return
         var result = new Dictionary<string, string>
         {
-            ["write, Module not started"]         = api.InputWrite(module, Text, 1, "x").ToString(),
-            ["read, Module not started"]          = api.OutputRead(module, Text, 1).Error.ToString()
+            ["write, Module not started"]         = api.InputWrite(notStarted, Text, 1, "x").ToString(),
+            ["read, Module not started"]          = api.OutputRead(notStarted, Text, 1).Error.ToString()
         };
 
-        api.StartFlow(module);
+        api.StartFlow("1TST-DGR-V1.0-I01", out var module);
         result["write, a Port it declares"]                   = api.InputWrite(module, Text, 1, "x").ToString();
         result["write, a Port it does not declare (#2)"]      = api.InputWrite(module, Text, 2, "x").ToString();
         result["write, a Data Type it has no Port for"]       = api.InputWrite(module, "TST-NUM-V1.0", 1, "1").ToString();
@@ -75,7 +79,7 @@ public class ControllerTests
         api.StopFlow(module);
 
         result["Advance, a Module that is not in the Store"] =
-            api.Advance("1TST-XXX-V1.0-I01", [new ControllerApi.Datum(Text, "x")]).Error.ToString();
+            api.StartFlow("1TST-XXX-V1.0-I01", out _).ToString();                    // the Module is named only to start it: its refusal
 
         Expected.Match("controller-outcomes.json", result);
     }
@@ -90,8 +94,7 @@ public class ControllerTests
         using var api = Api();
 
         // Continue: the others run on what they have; the AIM that threw runs again.
-        const string cont = "1TST-DGR-V1.0-I01";
-        api.StartFlow(cont);
+        api.StartFlow("1TST-DGR-V1.0-I01", out var cont);
         api.InputWrite(cont, Text, 1, "x");
         result["Continue: outputs"] = string.Join("; ", new[] { 1, 2, 3, 4 }.Select(n => $"#{n} " + Shown(api.OutputRead(cont, Text, n))));
         result["Continue: status after a run"] = StatusOf(api.Status(cont));
@@ -107,8 +110,7 @@ public class ControllerTests
         api.StopFlow(cont);
 
         // StopAIM: the AIM that threw is stopped, and skipped from then on.
-        const string aim = "1TST-DGA-V1.0-I01";
-        api.StartFlow(aim);
+        api.StartFlow("1TST-DGA-V1.0-I01", out var aim);
         api.InputWrite(aim, Text, 1, "x");
         result["StopAIM: outputs"] = string.Join("; ", new[] { 1, 3 }.Select(n => $"#{n} " + Shown(api.OutputRead(aim, Text, n))));
         result["StopAIM: status"] = StatusOf(api.Status(aim), "1TST-THR-V1.0-I01");
@@ -118,18 +120,17 @@ public class ControllerTests
 
         // StopModule, the default: the run ends, its outputs are not produced, and
         // the Module is stopped.
-        const string stop = "1TST-DGS-V1.0-I01";
-        api.StartFlow(stop);
+        const string stopModule = "1TST-DGS-V1.0-I01";
+        api.StartFlow(stopModule, out var stop);
         api.InputWrite(stop, Text, 1, "x");
         result["StopModule: #1"] = Shown(api.OutputRead(stop, Text, 1));
         result["StopModule: a write after"] = api.InputWrite(stop, Text, 1, "y").ToString();
         result["StopModule: status"] = StatusOf(api.Status(stop));
-        result["StopModule: started again"] = api.StartFlow(stop) + ", " + api.InputWrite(stop, Text, 1, "z");
-        api.StopFlow(stop);
+        result["StopModule: started again"] = api.StartFlow(stopModule, out var again) + ", " + api.InputWrite(again, Text, 1, "z");
+        api.StopFlow(again);
 
         // An AIM stopping another (MPAI_AIFM_AIM_Stop).
-        const string kill = "1TST-KLM-V1.0-I01";
-        api.StartFlow(kill);
+        api.StartFlow("1TST-KLM-V1.0-I01", out var kill);
         api.InputWrite(kill, Text, 1, "x");
         result["MPAI_AIFM_AIM_Stop: outputs"] = string.Join("; ", new[] { 1, 2 }.Select(n => $"#{n} " + Shown(api.OutputRead(kill, Text, n))));
         result["MPAI_AIFM_AIM_Stop: status"] = StatusOf(api.Status(kill), "1TST-UPP-V1.0-I01");
@@ -229,8 +230,7 @@ public class ControllerTests
         // timeout; after Resume the run completes.
         using (var api = Api())
         {
-            const string module = "1TST-NST-V1.0-I01";
-            api.StartFlow(module);
+            api.StartFlow("1TST-NST-V1.0-I01", out var module);
             result["Controller API: the Module's state before Pause"] = api.Status(module).State.ToString();
             result["Controller API: Pause"] = api.Pause(module).ToString();
             result["Controller API: the Module's state after Pause"] = api.Status(module).State.ToString();
@@ -253,8 +253,7 @@ public class ControllerTests
     public void Time()
     {
         using var api = Api();
-        const string module = "1TST-SLW-V1.0-I01";
-        api.StartFlow(module);
+        api.StartFlow("1TST-SLW-V1.0-I01", out var module);
         var result = new Dictionary<string, string>();
 
         api.InputWrite(module, Text, 1, "a");

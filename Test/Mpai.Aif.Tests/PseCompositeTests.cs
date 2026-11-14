@@ -53,9 +53,9 @@ public class PseCompositeTests
     private static EntityPersonalStatus Run(string settings, params (string Type, int Port, string Json)[] inputs)
     {
         using var api = new ControllerApi(Repository.Amds, settings, s => new LeafAimsProvider(s));
-        Assert.Equal(AifError.OK, api.StartFlow(Pse));
-        foreach (var (type, port, json) in inputs) Assert.Equal(AifError.OK, api.InputWrite(Pse, type, port, json));
-        var r = api.OutputRead(Pse, "MMC-EPS-V2.5", 1, 300_000);
+        Assert.Equal(AifError.OK, api.StartFlow(Pse, out var moduleId));
+        foreach (var (type, port, json) in inputs) Assert.Equal(AifError.OK, api.InputWrite(moduleId, type, port, json));
+        var r = api.OutputRead(moduleId, "MMC-EPS-V2.5", 1, 300_000);
         Assert.Equal(AifError.OK, r.Error);
         return MpaiJson.FromJson<EntityPersonalStatus>(r.Json!)!;
     }

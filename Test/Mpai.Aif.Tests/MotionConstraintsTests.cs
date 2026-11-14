@@ -133,26 +133,26 @@ public sealed class MotionConstraintsTests
         var location = Path.Combine(Path.GetTempPath(), "mpai-bus-" + Guid.NewGuid().ToString("N"));
         using var api = new Mpai.Aif.Api.ControllerApi(Repository.Amds, Path.Combine(Repository.Root, "AIMs", "aim-settings.json"), new Mpai.Cav.Ams.AmsProvider());
         const string ams = "1CAV-AMS-V2.0-I01";
-        Assert.Equal(AIF.Controller.AifError.OK, api.StartFlow(ams));
+        Assert.Equal(AIF.Controller.AifError.OK, api.StartFlow(ams, out var moduleId));
         try
         {
-            api.SharedStorageInit(ams, location);
+            api.SharedStorageInit(moduleId, location);
             var answer = new JsonObject
             {
                 ["Header"] = "CAV-AMM-V2.0", ["AMSMASMessageID"] = "AMM-test",
                 ["MASMessage"] = new JsonObject { ["RoadState"] = new JsonObject { ["Header"] = "CAV-RDS-V2.0", ["SurfaceCondition"] = new JsonObject { ["FrictionCoefficientEstimate"] = 0.15 } } }
             };
-            Assert.Equal(AIF.Controller.AifError.OK, api.InputWrite(ams, "CAV-AMM-V2.0", 1, answer.ToJsonString(), 5000));
+            Assert.Equal(AIF.Controller.AifError.OK, api.InputWrite(moduleId, "CAV-AMM-V2.0", 1, answer.ToJsonString(), 5000));
             string accounts = "";
             for (var i = 0; i < 40 && !accounts.Contains("1CAV-MSP-V2.0-I01.CAV-RDS-V2.0#1: taken 1"); i++)
             {
                 await Task.Delay(100);
-                accounts = string.Join(" | ", api.ChannelAccounts(ams));
+                accounts = string.Join(" | ", api.ChannelAccounts(moduleId));
             }
             Assert.Contains("(Bus) wrote 1", accounts);
             Assert.Contains("1CAV-MSP-V2.0-I01.CAV-RDS-V2.0#1: taken 1", accounts);
         }
-        finally { api.StopFlow(ams); try { Directory.Delete(location, true); } catch { } }
+        finally { api.StopFlow(moduleId); try { Directory.Delete(location, true); } catch { } }
     }
 
     // ---- the check of a trajectory (S-3)

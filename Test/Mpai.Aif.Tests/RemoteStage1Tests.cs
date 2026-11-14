@@ -152,7 +152,7 @@ public class RemoteStage1Tests
         var port = 43000 + Environment.ProcessId % 1000;
         var sim = HiddenVehicle();
         var all = JsonNode.Parse(File.ReadAllText(Path.Combine(Repository.Root, "AIMs", "aim-settings.json")))!.AsObject();
-        var cavs = new List<(string Id, ControllerApi Api, ExternalHub Hub, UdpDiscovery Discovery, string Settings, string Storage)>();
+        var cavs = new List<(string Id, ControllerApi Api, int Module, ExternalHub Hub, UdpDiscovery Discovery, string Settings, string Storage)>();
         var fromA = false;
         try
         {
@@ -163,16 +163,16 @@ public class RemoteStage1Tests
                 mine[AmsProvider.Fed] = new JsonObject { ["CAVID"] = id };
                 File.WriteAllText(settings, mine.ToJsonString());
                 var api = new ControllerApi(Repository.Amds, settings, new AmsProvider());
-                if (api.StartFlow(ams) != AIF.Controller.AifError.OK) throw new InvalidOperationException($"{id}: the AMS did not start");
+                if (api.StartFlow(ams, out var module) != AIF.Controller.AifError.OK) throw new InvalidOperationException($"{id}: the AMS did not start");
                 var storage = Path.Combine(Path.GetTempPath(), $"mpai-p10-{id}-{Guid.NewGuid():N}");
-                api.SharedStorageInit(ams, storage);
-                api.InputWrite(ams, AmsTypes.Map, 1, sim.Map.ToOfflineMapObject(0), 5000);
-                api.InputWrite(ams, AmsTypes.Hci, 1, AmsStage1Tests.Destination("W21"), 5000);
+                api.SharedStorageInit(module, storage);
+                api.InputWrite(module, AmsTypes.Map, 1, sim.Map.ToOfflineMapObject(0), 5000);
+                api.InputWrite(module, AmsTypes.Hci, 1, AmsStage1Tests.Destination("W21"), 5000);
                 var trust = new AIF.Controller.CityTrust(turin, turin.Admit(id));
                 var discovery = new UdpDiscovery(port);
-                var hub = api.StartExternal(ams, new ExternalHub.Options { ControllerId = id, ModuleType = "CAV-AMS-V2.0", Discovery = discovery, Admission = trust.Admission },
+                var hub = api.StartExternal(module, new ExternalHub.Options { ControllerId = id, ModuleType = "CAV-AMS-V2.0", Discovery = discovery, Admission = trust.Admission },
                                             trust.Sign, trust.Verify);
-                cavs.Add((id, api, hub, discovery, settings, storage));
+                cavs.Add((id, api, module, hub, discovery, settings, storage));
             }
             var (a, b) = (cavs[0], cavs[1]);
             var clock = System.Diagnostics.Stopwatch.StartNew();
@@ -182,13 +182,13 @@ public class RemoteStage1Tests
             for (var step = 0; step < 100 && !fromA; step++)
             {
                 var sensed = sim.Sense(camera: false);
-                foreach (var (id, api, _, _, _, _) in cavs)
+                foreach (var (id, api, module, _, _, _, _) in cavs)
                 {
                     var bed = id == "CAV-A" ? TruthBed.OfVehicle(sim, sensed, "A") : TruthBed.Of(sim, sensed, occlude: true);
-                    api.InputWrite(ams, AmsTypes.Bed, 1, bed, 5000);
-                    while (api.OutputRead(ams, AmsTypes.Message, 1, 5000) is { Error: AIF.Controller.AifError.OK, Json: { } json })
+                    api.InputWrite(module, AmsTypes.Bed, 1, bed, 5000);
+                    while (api.OutputRead(module, AmsTypes.Message, 1, 5000) is { Error: AIF.Controller.AifError.OK, Json: { } json })
                         if (AmsTypes.Ms(JsonNode.Parse(json)!["AMSMASMessageTime"]) == sensed.FrameMs) break;
-                    while (api.OutputRead(ams, AmsTypes.Data, 1, id == "CAV-B" ? 100 : 0) is { Error: AIF.Controller.AifError.OK, Json: { } data })
+                    while (api.OutputRead(module, AmsTypes.Data, 1, id == "CAV-B" ? 100 : 0) is { Error: AIF.Controller.AifError.OK, Json: { } data })
                         if (id == "CAV-B" && data.Contains("\"CAV-A/stopped\"") && data.Contains("\"Remote\"")) fromA = true;
                 }
                 sim.Advance(0);
@@ -210,9 +210,9 @@ public class RemoteStage1Tests
         }
         finally
         {
-            foreach (var (_, api, _, discovery, settings, storage) in cavs)
+            foreach (var (_, api, module, _, discovery, settings, storage) in cavs)
             {
-                api.StopFlow(ams);
+                api.StopFlow(module);
                 api.Dispose();
                 await discovery.DisposeAsync();
                 try { File.Delete(settings); Directory.Delete(storage, recursive: true); } catch { }

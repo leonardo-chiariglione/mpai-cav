@@ -40,14 +40,14 @@ internal sealed class ControllerApiRunner : IModuleRunner, IContinuousModuleRunn
     public string? Write(string moduleName, string key, string json)
     {
         var (type, number) = Split(key);
-        var error = north.InputWrite(moduleName, type, number, json, 30_000);
+        var error = north.InputWrite(IdOf(moduleName), type, number, json, 30_000);
         return error == AifError.OK ? null : error.ToString();
     }
 
     public (string? Json, string Outcome) Read(string moduleName, string key, int timeoutMs)
     {
         var (type, number) = Split(key);
-        var read = north.OutputRead(moduleName, type, number, timeoutMs);
+        var read = north.OutputRead(IdOf(moduleName), type, number, timeoutMs);
         return read.Error == AifError.OK ? (read.Json, "OK") : (null, read.Error.ToString());
     }
 
@@ -64,6 +64,10 @@ internal sealed class ControllerApiRunner : IModuleRunner, IContinuousModuleRunn
     // Service's own start at load time counts as one, and is never undone, so a
     // person pressing Stop ends their own App and nobody else's.
     private readonly Dictionary<string, int> holders = new(StringComparer.Ordinal);
+
+    // THE MODULE_ID THE CONTROLLER RETURNED for each Module started (Basic API 2.2): every call after Start addresses the Module by it. -1 for one not started.
+    private readonly ConcurrentDictionary<string, int> ids = new(StringComparer.Ordinal);
+    public int IdOf(string moduleName) => ids.TryGetValue(moduleName, out var id) ? id : -1;
 
     // And the shared instance runs one exchange at a time: its AIMs' lifecycles
     // are reset at each run, so two runs of one Module overlapping would cancel
@@ -109,8 +113,9 @@ internal sealed class ControllerApiRunner : IModuleRunner, IContinuousModuleRunn
         // say) should say which failed rather than never start at all.
         try
         {
-            var error = north.StartFlow(moduleName);
+            var error = north.StartFlow(moduleName, out var moduleId);
             if (error != AifError.OK) return error.ToString();
+            ids[moduleName] = moduleId;
 
             lock (holders)
                 holders[moduleName] = holders.GetValueOrDefault(moduleName) + 1;
@@ -136,7 +141,7 @@ internal sealed class ControllerApiRunner : IModuleRunner, IContinuousModuleRunn
         // The last holder: no run of it can be in progress for anyone else.
         var turn = turns.GetOrAdd(moduleName, _ => new SemaphoreSlim(1, 1));
         turn.Wait();
-        try { north.StopFlow(moduleName); }
+        try { north.StopFlow(IdOf(moduleName)); ids.TryRemove(moduleName, out _); }
         finally { turn.Release(); }
     }
 
@@ -165,7 +170,7 @@ internal sealed class ControllerApiRunner : IModuleRunner, IContinuousModuleRunn
         var clock = System.Diagnostics.Stopwatch.StartNew();
         turn.Wait();
         var waited = clock.ElapsedMilliseconds;
-        try { result = session is null ? north.Advance(moduleName, data) : north.Advance(moduleName, data, session); }
+        try { result = session is null ? north.Advance(IdOf(moduleName), data) : north.Advance(IdOf(moduleName), data, session); }
         finally
         {
             turn.Release();

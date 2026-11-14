@@ -44,8 +44,7 @@ public class RemoteLifecycleTests
         // AN EXCHANGE: TST-UPP, TST-SLP, TST-RPT on the host.
         using (var api = Api(hostProcess, "1TST-UPP-V1.0-I01", "1TST-SLP-V1.0-I01", "1TST-RPT-V1.0-I01"))
         {
-            const string rxc = "1TST-RXC-V1.0-I01";
-            api.StartFlow(rxc);
+            api.StartFlow("1TST-RXC-V1.0-I01", out var rxc);
             result["exchange: a run"] = Outputs(api.Advance(rxc, [new ControllerApi.Datum(Text, "x")]));
             result["exchange: TST-RPT's report"] = StatusOf(api.Status(rxc), "1TST-RPT-V1.0-I01");
 
@@ -64,8 +63,7 @@ public class RemoteLifecycleTests
         // AN AIM ON THE HOST STOPPING ONE HERE: TST-KIL stops TST-UPP.
         using (var api = Api(hostProcess, "1TST-KIL-V1.0-I01"))
         {
-            const string rkm = "1TST-RKM-V1.0-I01";
-            api.StartFlow(rkm);
+            api.StartFlow("1TST-RKM-V1.0-I01", out var rkm);
             api.Advance(rkm, [new ControllerApi.Datum(Text, "x")]);
             result["TST-KIL on the host stopped TST-UPP here"] = StatusOf(api.Status(rkm), "1TST-UPP-V1.0-I01");
             result["TST-RKM: the next run"] = Outputs(api.Advance(rkm, [new ControllerApi.Datum(Text, "y")]));
@@ -75,8 +73,7 @@ public class RemoteLifecycleTests
         // A CONTINUOUS MODULE: TST-ACC on the host.
         using (var api = Api(hostProcess, "1TST-ACC-V1.0-I01"))
         {
-            const string rlp = "1TST-RLP-V1.0-I01";
-            api.StartFlow(rlp);
+            api.StartFlow("1TST-RLP-V1.0-I01", out var rlp);
             api.InputWrite(rlp, Text, 1, "a", 2000);
             result["continuous: a write, then #1"] = Shown(api.OutputRead(rlp, Text, 1, 2000));
             result["continuous: TST-ACC's status, from its host"] = StatusOf(api.Status(rlp), "1TST-ACC-V1.0-I01");
@@ -107,25 +104,23 @@ public class RemoteLifecycleTests
         {
             using var hostProcess = new HostProcess();
             using var api = Api(hostProcess, "1TST-ACC-V1.0-I01");
-            var name = $"1{module}-V1.0-I01";
-            api.StartFlow(name);
-            api.InputWrite(name, Text, 1, "a", 2000);
-            var before = Shown(api.OutputRead(name, Text, 1, 2000));
+            api.StartFlow($"1{module}-V1.0-I01", out var id);
+            api.InputWrite(id, Text, 1, "a", 2000);
+            var before = Shown(api.OutputRead(id, Text, 1, 2000));
             hostProcess.Kill();
             Thread.Sleep(500);
-            var write = api.InputWrite(name, Text, 1, "b", 1000);
-            var read = Shown(api.OutputRead(name, Text, 1, 800));
+            var write = api.InputWrite(id, Text, 1, "b", 1000);
+            var read = Shown(api.OutputRead(id, Text, 1, 800));
             result[$"{module}, OnDegraded {policy}"] =
-                $"before: #1 {before}; the host killed; a write: {write}, #1 {read}; TST-ACC {StatusOf(api.Status(name), "1TST-ACC-V1.0-I01")}";
-            api.StopFlow(name);
+                $"before: #1 {before}; the host killed; a write: {write}, #1 {read}; TST-ACC {StatusOf(api.Status(id), "1TST-ACC-V1.0-I01")}";
+            api.StopFlow(id);
         }
 
         // An exchange: the AIM fails when fired, and OnDegraded Continue applies.
         using (var hostProcess = new HostProcess())
         using (var api = Api(hostProcess, "1TST-UPP-V1.0-I01", "1TST-SLP-V1.0-I01", "1TST-RPT-V1.0-I01"))
         {
-            const string rxc = "1TST-RXC-V1.0-I01";
-            api.StartFlow(rxc);
+            api.StartFlow("1TST-RXC-V1.0-I01", out var rxc);
             var before = Outputs(api.Advance(rxc, [new ControllerApi.Datum(Text, "a")]));
             hostProcess.Kill();
             Thread.Sleep(500);

@@ -49,13 +49,13 @@ public class StorageTests
         {
             using var api = Api();
             var name = $"1{module}-V1.0-I01";
-            api.StartFlow(name);
-            api.SharedStorageInit(name, Location());
+            api.StartFlow(name, out var id);
+            api.SharedStorageInit(id, Location());
             var inputs = new List<ControllerApi.Datum> { new(Text, 1, "k=v; readers=1TST-SWR-V1.0-I01") };
             if (module == "TST-MPC") inputs.Add(new(Text, 3, "category Notes: writers 1TST-SWR-V1.0-I01, readers none"));
-            result[$"{module}: rules given, then a write"] = Outputs(api.Advance(name, inputs));
-            result[$"{module}: the other AIM reads it"] = Outputs(api.Advance(name, [new(Text, 2, "k")]));
-            api.StopFlow(name);
+            result[$"{module}: rules given, then a write"] = Outputs(api.Advance(id, inputs));
+            result[$"{module}: the other AIM reads it"] = Outputs(api.Advance(id, [new(Text, 2, "k")]));
+            api.StopFlow(id);
         }
 
         // TWO MODULES, ONE LOCATION: what one writes the other reads, with no rules.
@@ -63,11 +63,11 @@ public class StorageTests
             var location = Location();
             using var a = Api();
             using var b = Api();
-            a.StartFlow("1TST-SHA-V1.0-I01"); a.SharedStorageInit("1TST-SHA-V1.0-I01", location);
-            b.StartFlow("1TST-SHB-V1.0-I01"); b.SharedStorageInit("1TST-SHB-V1.0-I01", location);
-            result["TST-SHA writes"] = Outputs(a.Advance("1TST-SHA-V1.0-I01", [new(Text, 1, "shared: s=shared; readers=1TST-SHA-V1.0-I01")]));
-            result["TST-SHB reads it"] = Outputs(b.Advance("1TST-SHB-V1.0-I01", [new(Text, 1, "shared: s")]));
-            a.StopFlow("1TST-SHA-V1.0-I01"); b.StopFlow("1TST-SHB-V1.0-I01");
+            a.StartFlow("1TST-SHA-V1.0-I01", out var sha); a.SharedStorageInit(sha, location);
+            b.StartFlow("1TST-SHB-V1.0-I01", out var shb); b.SharedStorageInit(shb, location);
+            result["TST-SHA writes"] = Outputs(a.Advance(sha, [new(Text, 1, "shared: s=shared; readers=1TST-SHA-V1.0-I01")]));
+            result["TST-SHB reads it"] = Outputs(b.Advance(shb, [new(Text, 1, "shared: s")]));
+            a.StopFlow(sha); b.StopFlow(shb);
         }
 
         // THE RECORD: none, whether asked for or declared always on.
@@ -76,11 +76,11 @@ public class StorageTests
             using var api = Api();
             var name = $"1{module}-V1.0-I01";
             var location = Location();
-            api.StartFlow(name);
-            api.SharedStorageInit(name, location);
-            api.InputWrite(name, Text, 1, "a1", 2000);
-            var echoed = api.OutputRead(name, Text, 1, 2000);
-            api.StopFlow(name);
+            api.StartFlow(name, out var id);
+            api.SharedStorageInit(id, location);
+            api.InputWrite(id, Text, 1, "a1", 2000);
+            var echoed = api.OutputRead(id, Text, 1, 2000);
+            api.StopFlow(id);
             var files = Directory.Exists(location) ? Directory.EnumerateFiles(location, "*", SearchOption.AllDirectories).Count() : 0;
             result[$"{module}: an input, then its echo"] = $"{echoed.Error} '{echoed.Json}'; files at the Module's location: {files}";
         }
@@ -91,10 +91,10 @@ public class StorageTests
         {
             using var api = Api();
             const string esb = "1TST-ESB-V1.0-I01";
-            api.StartFlow(esb);
-            api.InputWrite(esb, "CAV-NSO-V2.0", 1, """{"Header":"CAV-NSO-V2.0","GNSSObjectID":"g1","GNSSData":[{"Data":"JEdQR0dB"}]}""", 2000);
-            var counts = api.OutputRead(esb, Text, 1, 2000);
-            api.StopFlow(esb);
+            api.StartFlow(esb, out var esbId);
+            api.InputWrite(esbId, "CAV-NSO-V2.0", 1, """{"Header":"CAV-NSO-V2.0","GNSSObjectID":"g1","GNSSData":[{"Data":"JEdQR0dB"}]}""", 2000);
+            var counts = api.OutputRead(esbId, Text, 1, 2000);
+            api.StopFlow(esbId);
             result["TST-ESB: a GNSS Object written"] = $"{counts.Error} '{counts.Json}'";
         }
 
@@ -118,7 +118,7 @@ public class StorageTests
     }
     private const string Swr = "1TST-SWR-V1.0-I01", Srd = "1TST-SRD-V1.0-I01", Ua = AIF.SharedStorage.RuledStore.UserAgent;
 
-    private static string Ua_Get(ControllerApi api, string module, string key)
+    private static string Ua_Get(ControllerApi api, int module, string key)
     {
         var storage = api.ModuleStorage(module)!;
         var outcome = storage.MPAI_AIFM_RuledStorage_Get(key, out var data);
@@ -132,9 +132,8 @@ public class StorageTests
     {
         var result = new Dictionary<string, string>();
         using var api = Api();
-        const string mps = "1TST-MPS-V1.0-I01";
         var location = Location();
-        api.StartFlow(mps);
+        api.StartFlow("1TST-MPS-V1.0-I01", out var mps);
         api.SharedStorageInit(mps, location);
         string Write(string text) => Outputs(api.Advance(mps, [new(Text, 1, text)]));
         string Read(string key) => Outputs(api.Advance(mps, [new(Text, 2, key)]));
@@ -169,7 +168,7 @@ public class StorageTests
         Write($"e=5; readers={Ua}; time=Module");
         Write($"f=6; readers={Ua}");
         api.StopFlow(mps);
-        api.StartFlow(mps);
+        api.StartFlow("1TST-MPS-V1.0-I01", out mps);
         api.SharedStorageInit(mps, location);
         result["after a new instance: e (Module), f (Scope)"] = Ua_Get(api, mps, "e") + " | " + Ua_Get(api, mps, "f");
         api.StopFlow(mps);
@@ -185,8 +184,7 @@ public class StorageTests
     {
         var result = new Dictionary<string, string>();
         using var api = Api();
-        const string mpc = "1TST-MPC-V1.0-I01";
-        api.StartFlow(mpc);
+        api.StartFlow("1TST-MPC-V1.0-I01", out var mpc);
         api.SharedStorageInit(mpc, Location());
         string Write(string text) => Outputs(api.Advance(mpc, [new(Text, 1, text)]));
         string Read(string key) => Outputs(api.Advance(mpc, [new(Text, 2, key)]));
@@ -210,7 +208,7 @@ public class StorageTests
         api.StopFlow(mpc);
 
         // A StorageControl that names an AIM not of the Module.
-        try { api.StartFlow("1TST-MPX-V1.0-I01"); result["TST-MPX"] = "started"; api.StopFlow("1TST-MPX-V1.0-I01"); }
+        try { api.StartFlow("1TST-MPX-V1.0-I01", out var mpx); result["TST-MPX"] = "started"; api.StopFlow(mpx); }
         catch (InvalidOperationException refused) { result["TST-MPX"] = "refused: " + refused.Message; }
 
         Expected.Match("storage-central.json", result);
@@ -225,12 +223,13 @@ public class StorageTests
         using var api = Api();
         const string sha = "1TST-SHA-V1.0-I01", shb = "1TST-SHB-V1.0-I01", mpc = "1TST-MPC-V1.0-I01", mps = "1TST-MPS-V1.0-I01";
         var location = Location();
-        foreach (var m in new[] { sha, shb }) { api.StartFlow(m); api.SharedStorageInit(m, location); }
-        string A(string text) => Outputs(api.Advance(sha, [new(Text, 1, "shared: " + text)]));
-        string B(string key) => Outputs(api.Advance(shb, [new(Text, 1, "shared: " + key)]));
+        api.StartFlow(sha, out var shaId); api.SharedStorageInit(shaId, location);
+        api.StartFlow(shb, out var shbId); api.SharedStorageInit(shbId, location);
+        string A(string text) => Outputs(api.Advance(shaId, [new(Text, 1, "shared: " + text)]));
+        string B(string key) => Outputs(api.Advance(shbId, [new(Text, 1, "shared: " + key)]));
         string Ua(string key)
         {
-            var outcome = api.SharedStorage(sha)!.MPAI_AIFM_RuledStorage_Get(key, out var data);
+            var outcome = api.SharedStorage(shaId)!.MPAI_AIFM_RuledStorage_Get(key, out var data);
             return outcome == AIF.SharedStorage.StorageOutcome.OK ? Encoding.UTF8.GetString(data) : outcome.ToString();
         }
 
@@ -243,23 +242,23 @@ public class StorageTests
         // AIM keeps the storage of the first (M3205 Section 8).
         using (var other = Api())
         {
-            other.StartFlow(mps); other.SharedStorageInit(mps, Location());
-            result["TST-MPS, elsewhere, reads s1"] = Outputs(other.Advance(mps, [new(Text, 2, "shared: s1")]));
-            other.StopFlow(mps);
+            other.StartFlow(mps, out var mpsId); other.SharedStorageInit(mpsId, Location());
+            result["TST-MPS, elsewhere, reads s1"] = Outputs(other.Advance(mpsId, [new(Text, 2, "shared: s1")]));
+            other.StopFlow(mpsId);
         }
 
         // A central control: the StorageControl of TST-MPC, named by the User Agent.
-        api.StartFlow(mpc);
-        result["TST-SHA named as central control (it has no StorageControl)"] = api.SharedStorageInit(sha, location, governs: true).ToString();
-        result["TST-MPC named as central control"] = api.SharedStorageInit(mpc, location, governs: true).ToString();
-        string Rule(string text) => Outputs(api.Advance(mpc, [new(Text, 3, "shared: " + text)]));
+        api.StartFlow(mpc, out var mpcId);
+        result["TST-SHA named as central control (it has no StorageControl)"] = api.SharedStorageInit(shaId, location, governs: true).ToString();
+        result["TST-MPC named as central control"] = api.SharedStorageInit(mpcId, location, governs: true).ToString();
+        string Rule(string text) => Outputs(api.Advance(mpcId, [new(Text, 3, "shared: " + text)]));
         result["s4, the plain call before any rule"] = A("s4=v4");
         result["the rule of Data"] = Rule($"category Data: writers {sha}; readers {shb},{sha}");
         result["s4 written, read by TST-SHB"] = A("s4=v4") + " | " + B("s4");
         result["s5, readers narrowed to TST-SHA: TST-SHB"] = A($"s5=v5; readers={sha}") + " | " + B("s5");
         result["s6, a reader beyond the rule (TST-MPS)"] = A($"s6=v6; readers={mps}");
         result["the central control reads s5"] = Rule("read s5");
-        foreach (var m in new[] { sha, shb, mpc }) api.StopFlow(m);
+        foreach (var m in new[] { shaId, shbId, mpcId }) api.StopFlow(m);
 
         Expected.Match("storage-shared.json", result);
     }

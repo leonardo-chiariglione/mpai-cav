@@ -97,7 +97,7 @@ public class VciTests
     {
         using var rig = new VciRig((_, _, _) => Task.FromResult(MoveViolin), prompt =>
             prompt.Contains("move the violin 1 metre to the left") ? "I moved the violin one metre to the left." : "By how many metres?");
-        Assert.Equal(AifError.OK, rig.Api.StartFlow(VciRig.Vci));
+        Assert.Equal(AifError.OK, rig.Start());
 
         // The application gives the Interface its Application Context (what it can be told to do and how), and then what the scene is, as the answer to a listing.
         Assert.Equal(AifError.OK, rig.Write("MMC-APC-V2.5", 1, File.ReadAllText(JsiRig.ContextFile)));
@@ -141,7 +141,7 @@ public class VciTests
     public void ARequestThatGivesNoCommandIsAnsweredAtOnceWithWhatIsMissing()
     {
         using var rig = new VciRig((_, _, _) => Task.FromResult(MoveViolin), _ => "By how many metres should I move the violin?");
-        Assert.Equal(AifError.OK, rig.Api.StartFlow(VciRig.Vci));
+        Assert.Equal(AifError.OK, rig.Start());
         Assert.Equal(AifError.OK, rig.Write(VciRig.Ucm, 1, JsiRig.Context(JsiRig.Scene()).ToJsonString()));
 
         rig.Say("move the violin a bit to the left");
@@ -161,7 +161,7 @@ public class VciTests
     public void WhatIsHeardLeavesAtTheHeardTextPortWhetherOrNotItBecomesACommand()
     {
         using var rig = new VciRig((_, _, _) => Task.FromResult(MoveViolin), _ => "ok");
-        rig.Api.StartFlow(VciRig.Vci);
+        rig.Start();
         rig.Say("what is the weather like");
         var heard = rig.Read(VciRig.Bto, 1);
         Assert.True(heard.Ok, heard.Error.ToString());

@@ -47,7 +47,9 @@ public sealed class WorkflowInterpreter
     // a label is false: it names the path that was not taken.
     private readonly HashSet<string> absent = new(StringComparer.OrdinalIgnoreCase);
 
-    private readonly HashSet<string> running = new(StringComparer.OrdinalIgnoreCase);
+    // The Module the workflow drives, by its name (to start it) and the MODULE_ID the Controller returned (every other call; Basic API 2.2, UA-3).
+    private readonly Dictionary<string, int> running = new(StringComparer.OrdinalIgnoreCase);
+    public int ModuleId => running.TryGetValue(Module, out var id) ? id : -1;
 
     // RECORDS PLAYED (M3219 3.5): the stream lines not yet started, the records
     // playing, and how each playing went.
@@ -103,7 +105,7 @@ public sealed class WorkflowInterpreter
             try { await WalkAsync(workflow.OnStop, CancellationToken.None); }
             catch (Exception ex) { say("on Stop: " + ex.Message); }
 
-            foreach (var module in running.ToList()) await StopModuleAsync(module);
+            foreach (var module in running.Keys.ToList()) await StopModuleAsync(module);
         }
     }
 
@@ -176,7 +178,7 @@ public sealed class WorkflowInterpreter
                 Until(clock, due, stop);
                 var json = WithPayloadsAsync(m).GetAwaiter().GetResult();
                 errors.Add((clock.Elapsed - due).TotalMilliseconds);
-                WriteOutcome(north.InputWriteAsync(Module, m.DataType, m.PortNumber, json, -1).GetAwaiter().GetResult(), stop);
+                WriteOutcome(north.InputWriteAsync(ModuleId, m.DataType, m.PortNumber, json, -1).GetAwaiter().GetResult(), stop);
             }
         }
         catch (OperationCanceledException) { }
@@ -216,7 +218,7 @@ public sealed class WorkflowInterpreter
                     {
                         await foreach (var (dataType, json) in device.ReadAsync(token))
                             if (into.TryGetValue(dataType, out var port))
-                                WriteOutcome(await north.InputWriteAsync(Module, dataType, port.PortNumber, json, -1), token);
+                                WriteOutcome(await north.InputWriteAsync(ModuleId, dataType, port.PortNumber, json, -1), token);
                     }
                     catch (OperationCanceledException) { }
                 }));
@@ -230,7 +232,7 @@ public sealed class WorkflowInterpreter
                     {
                         while (!token.IsCancellationRequested)
                         {
-                            var read = await north.OutputReadAsync(Module, port.DataType, port.PortNumber, 200);
+                            var read = await north.OutputReadAsync(ModuleId, port.DataType, port.PortNumber, 200);
                             // Once at its safe state, a device is given nothing more: the
                             // Module may still be commanding it.
                             if (read.Ok && read.Json is not null && Volatile.Read(ref safeStopped) == 0) await device.DeliverAsync(port.DataType, read.Json, token);
@@ -252,7 +254,7 @@ public sealed class WorkflowInterpreter
                 while (!token.IsCancellationRequested && safeStopped == 0)
                 {
                     await Task.Delay(500, token);
-                    var status = await north.StatusAsync(Module);
+                    var status = await north.StatusAsync(ModuleId);
                     if (!answered && !status.Ok) return;
                     answered = true;
                     // AN AIM THAT IS NOT ALIVE (Communication 3; Workflow Description): 'on Degraded:' runs, once each time an AIM leaves ALIVE.
@@ -305,7 +307,7 @@ public sealed class WorkflowInterpreter
         var root = System.Text.Json.Nodes.JsonNode.Parse(m.Json)!;
         foreach (var (recorded, bytes) in m.Payloads)
         {
-            var (error, reference) = await north.PayloadPutAsync(Module, m.DataType, m.PortNumber, bytes);
+            var (error, reference) = await north.PayloadPutAsync(ModuleId, m.DataType, m.PortNumber, bytes);
             Replace(root, recorded, error == AifError.OK ? reference : null, bytes);
         }
         return root.ToJsonString();
@@ -333,16 +335,16 @@ public sealed class WorkflowInterpreter
 
     private async Task StartModuleAsync(string module)
     {
-        var err = await north.StartFlowAsync(module);
+        var (err, moduleId) = await north.StartFlowAsync(module);
         if (err != AifError.OK)
             throw new InvalidOperationException($"the Controller would not start {module}: {err}.");
-        running.Add(module);
+        running[module] = moduleId;
         say($"[C] started {module}");
     }
 
     private async Task StopModuleAsync(string module)
     {
-        await north.StopFlowAsync(module);
+        if (running.TryGetValue(module, out var moduleId)) await north.StopFlowAsync(moduleId);
         running.Remove(module);
         say($"[C] stopped {module}");
     }
@@ -374,7 +376,7 @@ public sealed class WorkflowInterpreter
     private async Task GiveAsync(Step step, CancellationToken stop)
     {
         pending.TryGetValue(Module, out var inputs);
-        var result = await north.AdvanceAsync(Module, inputs ?? new List<ControllerApi.Datum>(),
+        var result = await north.AdvanceAsync(ModuleId, inputs ?? new List<ControllerApi.Datum>(),
                                               step.Ports.Select(p => (p.DataType, p.PortNumber)).ToList());
         pending.Remove(Module);
 
@@ -385,7 +387,7 @@ public sealed class WorkflowInterpreter
         {
             // A workflow that stopped its Module there has ended: nothing it asks
             // of the Module afterwards could be answered.
-            if (!running.Contains(Module))
+            if (!running.ContainsKey(Module))
                 throw new OperationCanceledException($"on Degraded stopped {Module}; the workflow ends.");
             if (!result.Ok) return;
         }
@@ -432,7 +434,7 @@ public sealed class WorkflowInterpreter
             case StepKind.ResumeModule:
             {
                 var pause = step.Kind == StepKind.PauseModule;
-                var done  = pause ? await north.PauseAsync(Module) : await north.ResumeAsync(Module);
+                var done  = pause ? await north.PauseAsync(ModuleId) : await north.ResumeAsync(ModuleId);
                 if (done != AifError.OK)
                     throw new NotSupportedException(
                         $"line {step.Line}: the Controller did not {(pause ? "pause" : "resume")} {Module} ({done}).");
@@ -458,7 +460,7 @@ public sealed class WorkflowInterpreter
             // it reported - in the variable Status.
             case StepKind.Status:
             {
-                var status = await north.StatusAsync(Module);
+                var status = await north.StatusAsync(ModuleId);
                 if (!status.Ok)
                     throw new NotSupportedException($"line {step.Line}: the Controller gave no status of {Module} ({status.Error}).");
                 variables["Status"] = StatusText(status);
@@ -469,7 +471,7 @@ public sealed class WorkflowInterpreter
             case StepKind.KeepStorage:
             {
                 var where = Fill(step.Text ?? "");
-                var done  = await north.SharedStorageInitAsync(Module, where);
+                var done  = await north.SharedStorageInitAsync(ModuleId, where);
                 if (done != AifError.OK)
                     throw new NotSupportedException($"line {step.Line}: the Controller did not keep the storage of {Module} in '{where}' ({done}).");
                 say($"[C] storage of {Module} in {where}");
@@ -482,7 +484,7 @@ public sealed class WorkflowInterpreter
                 var trusted = devices.Service(service)
                     ?? throw new NotSupportedException($"line {step.Line}: the User has not decided to trust a service called '{service}'.");
                 var name = step.Name is null ? trusted.As : Fill(step.Name);
-                var done = await north.ExternalJoinAsync(Module, trusted.Anchor, trusted.Rendezvous, step.Role, name);
+                var done = await north.ExternalJoinAsync(ModuleId, trusted.Anchor, trusted.Rendezvous, step.Role, name);
                 if (done != AifError.OK)
                     throw new NotSupportedException($"line {step.Line}: the Controller did not join the service '{service}' ({done}).");
                 say($"[C] {Module} joined the service '{service}'{(name is null ? "" : " as " + name)}");
@@ -491,7 +493,7 @@ public sealed class WorkflowInterpreter
 
             case StepKind.AdmitService:
             {
-                var done = await north.ExternalAuthorityAsync(Module, Fill(step.Text ?? ""));
+                var done = await north.ExternalAuthorityAsync(ModuleId, Fill(step.Text ?? ""));
                 if (done != AifError.OK)
                     throw new NotSupportedException($"line {step.Line}: the Controller was not made the Trust Authority of the External links of {Module} ({done}).");
                 say($"[C] {Module}: the Controller is the Trust Authority of its External links");
@@ -500,7 +502,7 @@ public sealed class WorkflowInterpreter
 
             case StepKind.LeaveService:
             {
-                var done = await north.ExternalLeaveAsync(Module);
+                var done = await north.ExternalLeaveAsync(ModuleId);
                 if (done != AifError.OK)
                     throw new NotSupportedException($"line {step.Line}: the Controller did not close the External links of {Module} ({done}).");
                 say($"[C] {Module}: External links closed");
@@ -509,7 +511,7 @@ public sealed class WorkflowInterpreter
 
             case StepKind.StopAim:
             {
-                var done = await north.StopAimAsync(Module, step.Variable!);
+                var done = await north.StopAimAsync(ModuleId, step.Variable!);
                 if (done != AifError.OK)
                     throw new NotSupportedException($"line {step.Line}: the Controller did not stop {step.Variable} ({done}).");
                 say($"[C] stopped AIM {step.Variable}");
@@ -655,7 +657,7 @@ public sealed class WorkflowInterpreter
             {
                 var words = Literal(step.Port!.DataType, Fill(step.Literal ?? ""));
                 say($"[C] say {step.Port.DataType}:{step.Port.PortNumber}");
-                var said = await north.AdvanceAsync(Module, new List<ControllerApi.Datum>
+                var said = await north.AdvanceAsync(ModuleId, new List<ControllerApi.Datum>
                     { new ControllerApi.Datum(step.Port.DataType, step.Port.PortNumber, words) },
                     step.Ports!.Select(p => (p.DataType, p.PortNumber)).ToList());
                 if (!said.Ok) throw new InvalidOperationException($"{Module} returned {said.Error}.");
@@ -833,7 +835,7 @@ public sealed class WorkflowInterpreter
     {
         if (current is null || current.OnDegraded.Count == 0 || Volatile.Read(ref handlingDegraded) == 1) return false;
 
-        var status = await north.StatusAsync(Module);
+        var status = await north.StatusAsync(ModuleId);
         var degraded = outcome != AifError.OK ||
                        (status.Ok && status.Aims.Any(a => a.Status != AimStatus.Alive));
         if (!degraded) return false;
@@ -866,7 +868,7 @@ public sealed class WorkflowInterpreter
     {
         try
         {
-            if (await DegradedAsync(outcome, token) && !running.Contains(Module))
+            if (await DegradedAsync(outcome, token) && !running.ContainsKey(Module))
             {
                 say($"on Degraded stopped {Module}; the workflow ends.");
                 walking?.Cancel();

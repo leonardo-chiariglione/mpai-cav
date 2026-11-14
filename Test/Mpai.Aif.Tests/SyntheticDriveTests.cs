@@ -110,28 +110,37 @@ public class SyntheticDriveTests
         var driveId = drive.WriteRecord(essStore.For(new StorageHolder(ess, RuledStore.Controller), "", ""), messages);
 
         using var api = new Mpai.Aif.Api.ControllerApi(StorageTests.Amds, Path.Combine(StorageTests.Amds, "no-settings.json"), new StorageAims());
-        api.StartFlow(esb);
-        api.SharedStorageInit(esb, location);
-        api.RecordStart(esb, out var received);
+        api.StartFlow(esb, out var esbId);
+        api.SharedStorageInit(esbId, location);
+        api.RecordStart(esbId, out var received);
 
-        var devices = new DeviceRegistry().RegisterRecord("drive", new StoredRecord(api.ModuleStorageAt(ess, location), driveId));
+        // The drive is read where it was written: the Private Storage of ESS at the location, as the User Agent reaches it (ESS is not started:
+        // the User Agent names no Module but the one it drives, UA-3).
+        var devices = new DeviceRegistry().RegisterRecord("drive", new StoredRecord(essStore.For(StorageHolder.UserAgent, "", ""), driveId));
         var interpreter = new WorkflowInterpreter(Mpai.Aif.Api.ControllerApiAsync.Async(api), devices);
-        await interpreter.RunAsync(new Mpai.Wdl.WorkflowReader().Read($$"""
+        // The workflow names the Module only to start it (UA-3): the Controller returns the MODULE_ID of TST-ESB, already running and recorded.
+        // The record is stopped and read while the workflow waits (it stops the Module when it ends), then the workflow is stopped.
+        using var stop = new CancellationTokenSource();
+        var run = interpreter.RunAsync(new Mpai.Wdl.WorkflowReader().Read($$"""
             workflow DRIVE over {{esb}}
             on Start:
+                ask Controller to start
                 stream Camera (OSD-BVO-V1.5) from record "drive"
                 stream Attitude (OSD-OSA-V1.5) from record "drive"
                 stream Gnss (CAV-NSO-V2.0) from record "drive"
-                wait 7s
-            """), CancellationToken.None);
+                wait 60s
+            """), stop.Token);
+        for (var waited = 0; waited < 60_000 && interpreter.Playbacks.Count == 0 && !run.IsCompleted; waited += 50) await Task.Delay(50);
         Thread.Sleep(200);
-        api.RecordStop(esb, out var totals);
+        api.RecordStop(esbId, out var totals);
 
-        var records = RecordTests.Records(api.ModuleStorage(esb)!, received!);
+        var records = RecordTests.Records(api.ModuleStorage(esbId)!, received!);
         // What was received, each payload the record keeps apart (a frame over 64 KB)
         // put back where the Object refers to it.
         var inputs = records.Where(r => (string)r["Direction"]! == "In").ToList();
-        var played0 = new StoredRecord(api.ModuleStorage(esb)!, received!).InputsAsync().Result;
+        var played0 = new StoredRecord(api.ModuleStorage(esbId)!, received!).InputsAsync().Result;
+        stop.Cancel();
+        try { await run; } catch (OperationCanceledException) { }
         foreach (var type in new[] { SyntheticDrive.Camera, SyntheticDrive.Attitude, SyntheticDrive.Gnss })
         {
             var sent = messages.Where(m => m.DataType == type).Select(m => m.Json).ToList();
@@ -154,7 +163,7 @@ public class SyntheticDriveTests
             WriteErrorMs = new { Median = played.MedianErrorMs, P95 = played.P95ErrorMs, Max = played.MaxErrorMs },
             ReceivedErrorMs = new { Median = errors[errors.Count / 2], P95 = errors[(int)(errors.Count * 0.95)], Max = errors[^1] }
         }, new JsonSerializerOptions { WriteIndented = true }));
-        api.StopFlow(esb);
+        api.StopFlow(esbId);
 
         Expected.Match("ess-playback.json", result);
     }

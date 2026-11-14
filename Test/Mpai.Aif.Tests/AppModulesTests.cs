@@ -41,20 +41,20 @@ public class AppModulesTests
     }
 
     // What each AIM of the Module says of itself: the reason a turn failed is here.
-    private static string Why(ControllerApi api, string module)
+    private static string Why(ControllerApi api, int id)
     {
-        var status = api.Status(module);
+        var status = api.Status(id);
         var sb = new StringBuilder();
         foreach (var a in status.Aims) sb.Append($"\n  {a.Aim}: {a.Status} {a.Reason} [{string.Join("; ", a.Reports)}]");
         return sb.ToString();
     }
 
-    // One turn: the Module answers, with speech, and says so or says why not.
-    private static ControllerApi.Result Turn(ControllerApi api, string module, params ControllerApi.Datum[] inputs)
+    // One turn: the Module is started (its MODULE_ID goes to the caller, who stops it), answers, with speech, and says so or says why not.
+    private static ControllerApi.Result Turn(ControllerApi api, string module, out int id, params ControllerApi.Datum[] inputs)
     {
-        Assert.Equal(AifError.OK, api.StartFlow(module));
-        var r = api.Advance(module, inputs);
-        Assert.True(r.Ok, $"{module}: {r.Error}{Why(api, module)}");
+        Assert.Equal(AifError.OK, api.StartFlow(module, out id));
+        var r = api.Advance(id, inputs);
+        Assert.True(r.Ok, $"{module}: {r.Error}{Why(api, id)}");
         return r;
     }
 
@@ -66,15 +66,16 @@ public class AppModulesTests
     {
         RequireModels();
         using var api = Controller();
+        int id = -1;
         try
         {
-            var r = Turn(api, AMQ, Picture("red.jpg"), Text(1, "What color is the picture?"), MachineId);
+            var r = Turn(api, AMQ, out id, Picture("red.jpg"), Text(1, "What color is the picture?"), MachineId);
             // AMQ (slide 3 of the MMC Reference Models) answers with a Portable Avatar that carries the answer as a Text Object; the colour of red.jpg is red.
             var pav = JsonNode.Parse(r.ByType("PAF-PAV-V1.6") ?? "{}") as JsonObject;
             var answer = pav?["TextObject"] is JsonObject txo ? MpaiJson.FromJson<BasicTextObject>(txo.ToJsonString()).GetText() : "";
-            Assert.True(answer.Contains("red", StringComparison.OrdinalIgnoreCase), $"{AMQ} answered \"{answer}\" to a question about a red picture{Why(api, AMQ)}");
+            Assert.True(answer.Contains("red", StringComparison.OrdinalIgnoreCase), $"{AMQ} answered \"{answer}\" to a question about a red picture{Why(api, id)}");
         }
-        finally { api.StopFlow(AMQ); }
+        finally { api.StopFlow(id); }
     }
 
     // THE APP, NOT ONLY THE MODULE: the workflow of the App (Apps/MMC/AMQ/MMC-AMQ.orch) run by the User Agent's
@@ -128,14 +129,15 @@ public class AppModulesTests
         RequireModels();
         var store = new AIF.Store.AmdStore(Repository.Amds); store.Scan();
         using var api = new ControllerApi(Repository.Amds, Path.Combine(Repository.Root, "AIMs", "aim-settings.json"), _ => new AmqProvider(store));
+        int id = -1;
         try
         {
-            var r = Turn(api, AMQ, Picture("red.jpg"), Text(1, "What color is the picture?"), MachineId);
+            var r = Turn(api, AMQ, out id, Picture("red.jpg"), Text(1, "What color is the picture?"), MachineId);
             var pav = r.ByType("PAF-PAV-V1.6");
             Assert.Contains("red", AvatarUtterance.TextOfPortableAvatar(pav) ?? "", StringComparison.OrdinalIgnoreCase);
             Assert.True(AvatarUtterance.FromPortableAvatar(pav) is { } utterance && utterance.MachineSpeechWav.Length > 0, "the Portable Avatar of AMQ carries no speech");
         }
-        finally { api.StopFlow(AMQ); }
+        finally { api.StopFlow(id); }
     }
     // THE STANDALONE PROGRAMS (Apps/MMC/*/Standalone) speak their guidance through Response and Scene Rendering, given the
     // Controller their window holds - the one the provider of that App gives, and nothing else. For each App's provider: a
@@ -152,14 +154,15 @@ public class AppModulesTests
             "ACR" => new AcrProvider(store), _ => new MacProvider(store)
         });
         const string rsr = "1PAF-RSR-V1.6-I01";
+        int id = -1;
         try
         {
-            Assert.Equal(AifError.OK, api.StartFlow(rsr));
-            var said = api.Advance(rsr, new[] { Text(1, "Please look at the camera."), Text(2, "Please look at the camera."), Avatar, MachineId });
-            Assert.True(said.Ok, $"{app}: {rsr}: {said.Error}{Why(api, rsr)}");
-            Assert.True(Spoke(said), $"{app}: {rsr} gave no speech{Why(api, rsr)}");
+            Assert.Equal(AifError.OK, api.StartFlow(rsr, out id));
+            var said = api.Advance(id, new[] { Text(1, "Please look at the camera."), Text(2, "Please look at the camera."), Avatar, MachineId });
+            Assert.True(said.Ok, $"{app}: {rsr}: {said.Error}{Why(api, id)}");
+            Assert.True(Spoke(said), $"{app}: {rsr} gave no speech{Why(api, id)}");
         }
-        finally { api.StopFlow(rsr); }
+        finally { api.StopFlow(id); }
     }
 
     // THE CONVERSATION MODULES, as their Apps send a turn (Apps/MMC/{MCA,MTS,AMC}): the person's speech or text, the
@@ -176,8 +179,9 @@ public class AppModulesTests
         RequireModels();
         const string MCA = "1MMC-MCA-V2.5-I01";
         using var api = Of(s => new McaProvider(s));
-        try { Assert.True(Spoke(Turn(api, MCA, Text(1, "Name one fruit. Answer in five words."), Avatar, MachineId)), $"{MCA} gave no speech{Why(api, MCA)}"); }
-        finally { api.StopFlow(MCA); }
+        int id = -1;
+        try { Assert.True(Spoke(Turn(api, MCA, out id, Text(1, "Name one fruit. Answer in five words."), Avatar, MachineId)), $"{MCA} gave no speech{Why(api, id)}"); }
+        finally { api.StopFlow(id); }
     }
 
     [SkippableFact]
@@ -186,8 +190,9 @@ public class AppModulesTests
         RequireModels();
         const string MCA = "1MMC-MCA-V2.5-I01";
         using var api = Of(s => new McaProvider(s));
-        try { Assert.True(Spoke(Turn(api, MCA, Speech("question.wav"), Avatar, MachineId)), $"{MCA} gave no speech{Why(api, MCA)}"); }
-        finally { api.StopFlow(MCA); }
+        int id = -1;
+        try { Assert.True(Spoke(Turn(api, MCA, out id, Speech("question.wav"), Avatar, MachineId)), $"{MCA} gave no speech{Why(api, id)}"); }
+        finally { api.StopFlow(id); }
     }
 
     [SkippableFact]
@@ -197,8 +202,9 @@ public class AppModulesTests
         const string MTS = "1MMC-MTS-V2.5-I01";
         using var api = Of(s => new MtsProvider(s));
         var languages = new ControllerApi.Datum("OSD-SEL-V1.5", 1, MpaiJson.ToJson(BasicSelectorObject.Languages("en", "fr")));
-        try { Assert.True(Spoke(Turn(api, MTS, languages, Text(1, "Good morning, how are you?"), Avatar, MachineId)), $"{MTS} gave no speech{Why(api, MTS)}"); }
-        finally { api.StopFlow(MTS); }
+        int id = -1;
+        try { Assert.True(Spoke(Turn(api, MTS, out id, languages, Text(1, "Good morning, how are you?"), Avatar, MachineId)), $"{MTS} gave no speech{Why(api, id)}"); }
+        finally { api.StopFlow(id); }
     }
 
     [SkippableFact]
@@ -207,8 +213,9 @@ public class AppModulesTests
         RequireModels();
         const string AMC = "1MMC-AMC-V2.5-I01";
         using var api = Of(s => new AmcProvider(s));
-        try { Assert.True(Spoke(Turn(api, AMC, Speech("question.wav"), Picture("red.jpg"), Avatar, MachineId)), $"{AMC} gave no speech{Why(api, AMC)}"); }
-        finally { api.StopFlow(AMC); }
+        int id = -1;
+        try { Assert.True(Spoke(Turn(api, AMC, out id, Speech("question.wav"), Picture("red.jpg"), Avatar, MachineId)), $"{AMC} gave no speech{Why(api, id)}"); }
+        finally { api.StopFlow(id); }
     }
 
     // THE MEMORY LOOP: the Module gives the Summary of the conversation with each turn (Edited Summary), the User Agent
@@ -220,17 +227,18 @@ public class AppModulesTests
         RequireModels();
         string module = $"1MMC-{app}-V2.5-I01";
         using var api = Of(s => app == "MCA" ? new McaProvider(s) : new AmcProvider(s));
+        int id = -1;
         try
         {
             var extra = app == "AMC" ? new[] { Picture("red.jpg") } : Array.Empty<ControllerApi.Datum>();
-            var first = Turn(api, module, new[] { Text(1, "My name is Marta. Say hello."), Avatar, MachineId }.Concat(extra).ToArray());
+            var first = Turn(api, module, out id, new[] { Text(1, "My name is Marta. Say hello."), Avatar, MachineId }.Concat(extra).ToArray());
             var summary = first.ByType("MMC-SUM-V2.5");
-            Assert.False(string.IsNullOrWhiteSpace(summary), $"{module} gave no Edited Summary{Why(api, module)}");
-            var second = api.Advance(module, new[] { Text(1, "Thank you."), Avatar, MachineId, new ControllerApi.Datum("MMC-SUM-V2.5", 1, summary!) }.Concat(extra).ToArray());
-            Assert.True(second.Ok, $"{module}: {second.Error}{Why(api, module)}");
-            Assert.True(Spoke(second), $"{module} gave no speech on the second turn{Why(api, module)}");
+            Assert.False(string.IsNullOrWhiteSpace(summary), $"{module} gave no Edited Summary{Why(api, id)}");
+            var second = api.Advance(id, new[] { Text(1, "Thank you."), Avatar, MachineId, new ControllerApi.Datum("MMC-SUM-V2.5", 1, summary!) }.Concat(extra).ToArray());
+            Assert.True(second.Ok, $"{module}: {second.Error}{Why(api, id)}");
+            Assert.True(Spoke(second), $"{module} gave no speech on the second turn{Why(api, id)}");
         }
-        finally { api.StopFlow(module); }
+        finally { api.StopFlow(id); }
     }
 
     // ---- the simulated inputs (the same Data Types and Ports a User Agent writes) ----

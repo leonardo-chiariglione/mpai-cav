@@ -244,13 +244,14 @@ public partial class RcaShell : ComponentBase
         try
         {
             var north = new RemoteControllerApiAsync(Http) { NewKey = () => Mas.WebCryptoKey.CreateAsync(Js), KeyFromSpki = spki => Mas.WebCryptoKey.FromSpkiAsync(Js, spki) };
-            if (await north.StartFlowAsync(MasModule) != AifError.OK) return;
-            var said = await north.AdvanceAsync(MasModule, new List<ControllerApi.Datum>
+            var (started, moduleId) = await north.StartFlowAsync(MasModule);
+            if (started != AifError.OK) return;
+            var said = await north.AdvanceAsync(moduleId, new List<ControllerApi.Datum>
             {
                 new ControllerApi.Datum("OSD-BTO-V1.5", 1, MpaiJson.ToJson(WordsIn(words, language))),
                 new ControllerApi.Datum("OSD-B3O-V1.5", 1, AvatarUtterance.AvatarDatum("cav-avatar.glb"))
             });
-            await north.StopFlowAsync(MasModule);
+            await north.StopFlowAsync(moduleId);
             if (!said.Ok || AvatarUtterance.FromPortableAvatar(said.ByType("PAF-PAV-V1.6")) is not { } utterance) return;
             var wav = utterance.MachineSpeechWav;
             await Js.InvokeVoidAsync("rca.present",
@@ -268,9 +269,10 @@ public partial class RcaShell : ComponentBase
         try
         {
             var north = new RemoteControllerApiAsync(Http) { NewKey = () => Mas.WebCryptoKey.CreateAsync(Js), KeyFromSpki = spki => Mas.WebCryptoKey.FromSpkiAsync(Js, spki) };
-            if (await north.StartFlowAsync(MasModule) != AifError.OK) return null;
-            var said = await north.AdvanceAsync(MasModule, new List<ControllerApi.Datum> { new ControllerApi.Datum("OSD-BSO-V1.5", 1, MpaiJson.ToJson(speech)) });
-            await north.StopFlowAsync(MasModule);
+            var (started, moduleId) = await north.StartFlowAsync(MasModule);
+            if (started != AifError.OK) return null;
+            var said = await north.AdvanceAsync(moduleId, new List<ControllerApi.Datum> { new ControllerApi.Datum("OSD-BSO-V1.5", 1, MpaiJson.ToJson(speech)) });
+            await north.StopFlowAsync(moduleId);
             if (!said.Ok || said.ByType("OSD-BTO-V1.5") is not { } json) return null;
             return MpaiJson.FromJson<BasicTextObject>(json)?.GetText();
         }

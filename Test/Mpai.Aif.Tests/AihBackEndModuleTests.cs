@@ -18,6 +18,7 @@ public class AihBackEndModuleTests : IDisposable
     private readonly string work = Path.Combine(Path.GetTempPath(), "aih-hbe-" + Guid.NewGuid().ToString("N"));
     private readonly AihApart apart;
     private ControllerApi api => apart.Api;
+    private readonly int moduleId;                                                     // the MODULE_ID the Controller returned when it started HBE
     private readonly HashChainBlockchain chain = new();
     private static readonly IReadOnlyDictionary<string, Json.Schema.JsonSchema> Schemas = AIF.Metadata.PublishedSchemas.At(Repository.Schemas);
 
@@ -27,22 +28,22 @@ public class AihBackEndModuleTests : IDisposable
         var settings = Path.Combine(work, "aim-settings.json");
         File.WriteAllText(settings, new JsonObject { ["1AIH-HDP-V1.1-I01"] = new JsonObject { ["Role"] = "BackEnd", ["BackEndId"] = "hbe-1" }, ["1AIH-ADT-V1.1-I01"] = new JsonObject { ["BackEndId"] = "hbe-1" } }.ToJsonString());
         apart = AihApart.Start(work, settings, Hbe, AihApart.BackEndAims);
-        Assert.Equal(AifError.OK, api.StartFlow(Hbe));
-        Assert.Equal(AifError.OK, api.SharedStorageInit(Hbe, Path.Combine(work, "secure-storage")));
+        Assert.Equal(AifError.OK, api.StartFlow(Hbe, out moduleId));
+        Assert.Equal(AifError.OK, api.SharedStorageInit(moduleId, Path.Combine(work, "secure-storage")));
     }
 
     public void Dispose() { apart.Dispose(); try { Directory.Delete(work, true); } catch { } }
 
-    private void Write(string type, int n, JsonNode json) => Assert.Equal(AifError.OK, api.InputWrite(Hbe, type, n, json.ToJsonString(), 10_000));
+    private void Write(string type, int n, JsonNode json) => Assert.Equal(AifError.OK, api.InputWrite(moduleId, type, n, json.ToJsonString(), 10_000));
 
     private JsonObject Read(string type, int n, int ms = 15_000)
     {
-        var read = api.OutputRead(Hbe, type, n, ms);
+        var read = api.OutputRead(moduleId, type, n, ms);
         Assert.True(read.Error == AifError.OK, $"nothing at {type}#{n}: {read.Error}");
         return JsonNode.Parse(read.Json!)!.AsObject();
     }
 
-    private bool Nothing(string type, int n, int ms = 800) => api.OutputRead(Hbe, type, n, ms).Error != AifError.OK;
+    private bool Nothing(string type, int n, int ms = 800) => api.OutputRead(moduleId, type, n, ms).Error != AifError.OK;
 
     internal static string Valid(string schema, JsonNode json)
     {
@@ -168,7 +169,7 @@ public class AihBackEndModuleTests : IDisposable
     [SkippableFact]
     public void DeIdentificationMakesACopyThatAuditingFindsLicensedOrNot()
     {
-        Assert.Equal(AifError.NoSuchPort, api.InputWrite(Hbe, AihJson.AihData, 1, "{}", 1000));                // the boundary carries no AIH Data
+        Assert.Equal(AifError.NoSuchPort, api.InputWrite(moduleId, AihJson.AihData, 1, "{}", 1000));                // the boundary carries no AIH Data
         var licensed = Register(AihSamples.RegisterRequest("user-1"), "Store", "DeIDAndAnonym", "Auditing");
         Uploaded("ahd-1", licensed, UploadData("ahd-1"));                                    // its Back End Licence states Pseudonymised: the Back End may de-identify
         var unlicensed = UploadData("ahd-2", "user-3");
@@ -200,7 +201,7 @@ public class AihBackEndModuleTests : IDisposable
             // Auditing asks one Licence Confirm per copy, to the Blockchain (the boundary Port of Auditing is LCF#1).
             for (var asked = 0; asked < 3; asked++)
             {
-                var read = api.OutputRead(Hbe, AihJson.LicenceConfirm, 1, asked == 0 ? 10_000 : 1_000);
+                var read = api.OutputRead(moduleId, AihJson.LicenceConfirm, 1, asked == 0 ? 10_000 : 1_000);
                 if (read.Error != AifError.OK) break;
                 var ask = JsonNode.Parse(read.Json!)!.AsObject();
                 var request = ask["LicenceConfirmData"]![0]!["Request"]!;

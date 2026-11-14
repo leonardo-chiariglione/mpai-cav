@@ -26,6 +26,7 @@ public sealed class MachineVoice : IDisposable
     private readonly Action<string, Exception> _record;
     private IControllerApi? _api;
     private bool _started;
+    private int _moduleId;                                     // the MODULE_ID the Controller returned when it started PAF-RSR
 
     public MachineVoice(AvatarUaHost avatar, string machineName, Func<IControllerApi> controller, Action<string, Exception> record)
     { _avatar = avatar; _machineName = machineName; _controller = controller; _record = record; }
@@ -37,9 +38,9 @@ public sealed class MachineVoice : IDisposable
             _api ??= _controller();
             if (!_started)
             {
-                var s = await Task.Run(() => _api!.StartFlow(RsrModule));
+                var (s, id) = await Task.Run(() => (_api!.StartFlow(RsrModule, out var started), started));
                 if (s != AifError.OK) { _record("say", new Exception("could not start " + RsrModule + ": " + s)); return; }
-                _started = true;
+                _moduleId = id; _started = true;
             }
             // PAF-RSR takes the Text Object twice (#1 to Text-To-Speech, #2 to Generative Face Description), the Avatar Model and the machine's ID.
             var text = MpaiJson.ToJson(BasicTextObject.FromText(words));
@@ -50,7 +51,7 @@ public sealed class MachineVoice : IDisposable
                 new("OSD-B3O-V1.5", 1, AvatarUtterance.AvatarDatum("cav-avatar.glb")),
                 new("string", 1, System.Text.Json.JsonSerializer.Serialize(_machineName))
             };
-            var r = await Task.Run(() => _api!.Advance(RsrModule, inputs));
+            var r = await Task.Run(() => _api!.Advance(_moduleId, inputs));
             if (!r.Ok) { _record("say", new Exception(r.Error.ToString())); return; }
             if (AvatarUtterance.FromPortableAvatar(r.ByType(PAV)) is not { } utterance) return;
             await PresentAsync(utterance);
@@ -67,9 +68,9 @@ public sealed class MachineVoice : IDisposable
             _api ??= _controller();
             if (!_started)
             {
-                var s = await Task.Run(() => _api!.StartFlow(RsrModule));
+                var (s, id) = await Task.Run(() => (_api!.StartFlow(RsrModule, out var started), started));
                 if (s != AifError.OK) { _record("synthesize", new Exception("could not start " + RsrModule + ": " + s)); return null; }
-                _started = true;
+                _moduleId = id; _started = true;
             }
             var text = MpaiJson.ToJson(BasicTextObject.FromText(words));
             var inputs = new List<ControllerApi.Datum>
@@ -78,7 +79,7 @@ public sealed class MachineVoice : IDisposable
                 new("OSD-B3O-V1.5", 1, AvatarUtterance.AvatarDatum("cav-avatar.glb")),
                 new("string", 1, System.Text.Json.JsonSerializer.Serialize(_machineName))
             };
-            var r = await Task.Run(() => _api!.Advance(RsrModule, inputs));
+            var r = await Task.Run(() => _api!.Advance(_moduleId, inputs));
             if (!r.Ok) { _record("synthesize", new Exception(r.Error.ToString())); return null; }
             return AvatarUtterance.FromPortableAvatar(r.ByType(PAV))?.MachineSpeechWav;
         }
@@ -90,7 +91,7 @@ public sealed class MachineVoice : IDisposable
 
     public void Dispose()
     {
-        try { if (_started) _api?.StopFlow(RsrModule); } catch { }
+        try { if (_started) _api?.StopFlow(_moduleId); } catch { }
         try { (_api as IDisposable)?.Dispose(); } catch { }
     }
 }

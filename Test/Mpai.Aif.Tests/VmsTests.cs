@@ -35,28 +35,28 @@ public class VmsTests
             ["response"] = Answer, ["emotion"] = "CALMNESS", ["attitude"] = "respectful", ["note"] = Note
         }.ToJsonString());
         using var api = new ControllerApi(Repository.Amds, Path.Combine(Repository.Amds, "no-settings.json"), store => new Provider(store, llm.Url));
-        Assert.Equal(AifError.OK, api.StartFlow(Vms));
+        Assert.Equal(AifError.OK, api.StartFlow(Vms, out var moduleId));
         try
         {
             // Alice types, happily; nobody speaks to the secretary.
-            Assert.Equal(AifError.OK, api.InputWrite(Vms, "PAF-PAV-V1.6", 1, Typed("Alice", "We should move the launch to May.", "HAPPINESS", "happy"), 5000));
-            Assert.Equal("Alice (happy): We should move the launch to May.", SummaryOf(api));
+            Assert.Equal(AifError.OK, api.InputWrite(moduleId, "PAF-PAV-V1.6", 1, Typed("Alice", "We should move the launch to May.", "HAPPINESS", "happy"), 5000));
+            Assert.Equal("Alice (happy): We should move the launch to May.", SummaryOf(api, moduleId));
 
             // Bob speaks, with no Personal Status in his Portable Avatar: the Summary goes on all the same (Personal Status is optional to Summary Creation).
-            Assert.Equal(AifError.OK, api.InputWrite(Vms, "PAF-PAV-V1.6", 1, Spoken("Bob"), 5000));
-            Assert.Equal("Alice (happy): We should move the launch to May.\nBob: I agree with Alice.", SummaryOf(api));
+            Assert.Equal(AifError.OK, api.InputWrite(moduleId, "PAF-PAV-V1.6", 1, Spoken("Bob"), 5000));
+            Assert.Equal("Alice (happy): We should move the launch to May.\nBob: I agree with Alice.", SummaryOf(api, moduleId));
 
             // Alice speaks to the secretary: it notes.
-            Assert.Equal(AifError.OK, api.InputWrite(Vms, "PAF-PAV-V1.6", 1, Typed("Alice", "Secretary, please note that the launch moves to May.", "CALMNESS", "calm"), 5000));
+            Assert.Equal(AifError.OK, api.InputWrite(moduleId, "PAF-PAV-V1.6", 1, Typed("Alice", "Secretary, please note that the launch moves to May.", "CALMNESS", "calm"), 5000));
             Assert.Equal("Alice (happy): We should move the launch to May.\nBob: I agree with Alice.\n" +
                          "Alice (calm): Secretary, please note that the launch moves to May.\n" +
-                         $"Secretary's note: {Note}", SummaryOf(api));
+                         $"Secretary's note: {Note}", SummaryOf(api, moduleId));
 
             // The language model was asked once, with the Summary as it then stood.
             Assert.Single(llm.Prompts);
             Assert.Contains("Bob: I agree with Alice.", llm.Prompts[0]);
         }
-        finally { api.StopFlow(Vms); }
+        finally { api.StopFlow(moduleId); }
     }
 
     // THE SECRETARY'S PORTABLE AVATAR. Portable Avatar Multiplexing (PAF-PMX-V1.6-I02) runs continuously on its own Ports and updates the avatar with whatever arrives, under the
@@ -70,16 +70,16 @@ public class VmsTests
             ["response"] = Answer, ["emotion"] = "CALMNESS", ["attitude"] = "respectful", ["note"] = Note
         }.ToJsonString());
         using var api = new ControllerApi(Repository.Amds, Path.Combine(Repository.Amds, "no-settings.json"), store => new Provider(store, llm.Url));
-        Assert.Equal(AifError.OK, api.StartFlow(Vms));
+        Assert.Equal(AifError.OK, api.StartFlow(Vms, out var moduleId));
         try
         {
-            Assert.Equal(AifError.OK, api.InputWrite(Vms, "string", 1, "\"Secretary\"", 5000));
-            Assert.Equal(AifError.OK, api.InputWrite(Vms, "PAF-PAV-V1.6", 1, Typed("Alice", "We should move the launch to May.", "HAPPINESS", "happy"), 5000));
-            Assert.DoesNotContain(Drain(api), u => u["SPOOrSPOID"] is not null);
+            Assert.Equal(AifError.OK, api.InputWrite(moduleId, "string", 1, "\"Secretary\"", 5000));
+            Assert.Equal(AifError.OK, api.InputWrite(moduleId, "PAF-PAV-V1.6", 1, Typed("Alice", "We should move the launch to May.", "HAPPINESS", "happy"), 5000));
+            Assert.DoesNotContain(Drain(api, moduleId), u => u["SPOOrSPOID"] is not null);
 
-            Assert.Equal(AifError.OK, api.InputWrite(Vms, "string", 1, "\"Secretary\"", 5000));
-            Assert.Equal(AifError.OK, api.InputWrite(Vms, "PAF-PAV-V1.6", 1, Typed("Alice", "Secretary, please note that the launch moves to May.", "CALMNESS", "calm"), 5000));
-            var updates = Drain(api);
+            Assert.Equal(AifError.OK, api.InputWrite(moduleId, "string", 1, "\"Secretary\"", 5000));
+            Assert.Equal(AifError.OK, api.InputWrite(moduleId, "PAF-PAV-V1.6", 1, Typed("Alice", "Secretary, please note that the launch moves to May.", "CALMNESS", "calm"), 5000));
+            var updates = Drain(api, moduleId);
             Assert.Contains(updates, u => u["SPOOrSPOID"] is not null);                                        // an update in which it speaks
             var pav = Folded(updates);                                                                         // the avatar as a receiver holds it after them
             Assert.Equal("PAF-PAV-V1.6", (string?)pav["Header"]);
@@ -90,7 +90,7 @@ public class VmsTests
             Assert.Equal("1PAF-GBD-V1.6-I01", (string?)pav["BodyDescriptorsObject"]!["StandIn"]);
             Assert.Equal("CALMNESS", (string?)pav["EntityState"]!["Emotion"]!["Category"]);
         }
-        finally { api.StopFlow(Vms); }
+        finally { api.StopFlow(moduleId); }
     }
     // THE APP (Apps/ABV/VMS): its own workflow, run by the User Agent's interpreter over the
     // Module, with the three devices it binds - a Participant that says what two
@@ -186,17 +186,17 @@ public class VmsTests
     }
 
     // The updates of the secretary's Portable Avatar there are to read.
-    private static List<JsonObject> Drain(ControllerApi api)
+    private static List<JsonObject> Drain(ControllerApi api, int moduleId)
     {
         var updates = new List<JsonObject>();
-        for (var read = api.OutputRead(Vms, "PAF-PAV-V1.6", 1, 10000); read.Error == AifError.OK; read = api.OutputRead(Vms, "PAF-PAV-V1.6", 1, 1000))
+        for (var read = api.OutputRead(moduleId, "PAF-PAV-V1.6", 1, 10000); read.Error == AifError.OK; read = api.OutputRead(moduleId, "PAF-PAV-V1.6", 1, 1000))
             updates.Add(JsonNode.Parse(read.Json!)!.AsObject());
         return updates;
     }
 
-    private static string SummaryOf(ControllerApi api)
+    private static string SummaryOf(ControllerApi api, int moduleId)
     {
-        var read = api.OutputRead(Vms, "MMC-SUM-V2.5", 1, 10000);
+        var read = api.OutputRead(moduleId, "MMC-SUM-V2.5", 1, 10000);
         Assert.Equal(AifError.OK, read.Error);
         return MpaiJson.FromJson<Summary>(read.Json!)!.Text();
     }

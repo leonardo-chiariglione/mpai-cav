@@ -109,8 +109,8 @@ public sealed class ModuleHost : IDisposable
             if (storage is not null)
             {
                 Directory.CreateDirectory(storage);
-                var started = api.StartFlow(module); if (started != AifError.OK) throw new InvalidOperationException($"The Controller would not start {module}: {started}.");
-                var kept = api.SharedStorageInit(module, storage); if (kept != AifError.OK) throw new InvalidOperationException($"The Controller would not keep the storage of {module} in {storage}: {kept}.");
+                var started = api.StartFlow(module, out var moduleId); if (started != AifError.OK) throw new InvalidOperationException($"The Controller would not start {module}: {started}.");
+                var kept = api.SharedStorageInit(moduleId, storage); if (kept != AifError.OK) throw new InvalidOperationException($"The Controller would not keep the storage of {module} in {storage}: {kept}.");
             }
             return new ModuleHost(module, api, process, work);
         }

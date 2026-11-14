@@ -19,21 +19,22 @@ public sealed class EssInTheLoop : IDisposable
 {
     public const string Ess = "1CAV-ESS-V2.0-I01";
     private readonly Mpai.Aif.Api.ControllerApi api;
+    private readonly int essId;                                                       // the MODULE_ID the Controller returned when it started the ESS
 
     public EssInTheLoop(string? settingsPath = null)
     {
         api = new Mpai.Aif.Api.ControllerApi(Repository.Amds, settingsPath ?? Path.Combine(Repository.Root, "AIMs", "aim-settings.json"), new EssProvider(Repository.Root));
-        var started = api.StartFlow(Ess);
+        var started = api.StartFlow(Ess, out essId);
         if (started != AifError.OK) throw new InvalidOperationException($"{Ess} did not start: {started}");
     }
 
-    public ControllerApiStatus Status => new(api.Status(Ess));
+    public ControllerApiStatus Status => new(api.Status(essId));
 
     // The Offline Map, whose origin anchors the ESS's frame (Spatial Attitude
     // Generation; M3237, Step 7).
     public void Know(string offlineMapObject)
     {
-        var written = api.InputWrite(Ess, "OSD-BOO-V1.5", 1, offlineMapObject, 5000);
+        var written = api.InputWrite(essId, "OSD-BOO-V1.5", 1, offlineMapObject, 5000);
         if (written != AifError.OK) throw new InvalidOperationException($"the Offline Map not written: {written}");
     }
 
@@ -41,25 +42,25 @@ public sealed class EssInTheLoop : IDisposable
     {
         foreach (var (dataType, json) in sensed.Messages)
         {
-            var written = api.InputWrite(Ess, dataType, 1, json, timeoutMs);
+            var written = api.InputWrite(essId, dataType, 1, json, timeoutMs);
             if (written != AifError.OK) throw new InvalidOperationException($"{dataType} not written: {written}");
         }
         JsonNode? descriptors = null;
         while (descriptors is null)
         {
-            var read = api.OutputRead(Ess, "CAV-BED-V2.0", 1, timeoutMs);
+            var read = api.OutputRead(essId, "CAV-BED-V2.0", 1, timeoutMs);
             if (read.Error != AifError.OK) throw new InvalidOperationException($"no Basic Environment Descriptors for {sensed.FrameMs}: {read.Error}");
             var json = JsonNode.Parse(read.Json!)!;
             if ((long)(double)json["BasicEnvironmentDescriptorsTime"]!["SimpleTimeData"]![0]!["StartTime"]! == sensed.FrameMs) descriptors = json;
         }
         var alerts = new List<JsonNode>();
-        while (api.OutputRead(Ess, "CAV-ALT-V2.0", 1, 0) is { Error: AifError.OK, Json: { } a }) alerts.Add(JsonNode.Parse(a)!);
+        while (api.OutputRead(essId, "CAV-ALT-V2.0", 1, 0) is { Error: AifError.OK, Json: { } a }) alerts.Add(JsonNode.Parse(a)!);
         return (descriptors, alerts);
     }
 
     public void Dispose()
     {
-        api.StopFlow(Ess);
+        api.StopFlow(essId);
         api.Dispose();
     }
 }
@@ -73,6 +74,7 @@ public sealed class CavInTheLoop : IDisposable
     public const string Ams = "1CAV-AMS-V2.0-I01";
     private readonly EssInTheLoop? ess;
     private readonly Mpai.Aif.Api.ControllerApi api;
+    private readonly int amsId;                                                       // the MODULE_ID the Controller returned when it started the AMS
     private readonly string location = Path.Combine(Path.GetTempPath(), "mpai-p8s8-" + Guid.NewGuid().ToString("N"));
 
     public CavInTheLoop(Simulation sim, string destination) : this(sim.Map, destination) { }
@@ -85,17 +87,17 @@ public sealed class CavInTheLoop : IDisposable
         var settings = settingsPath ?? Path.Combine(Repository.Root, "AIMs", "aim-settings.json");
         if (withEss) ess = new EssInTheLoop(settingsPath);
         api = new Mpai.Aif.Api.ControllerApi(Repository.Amds, settings, new AmsProvider());
-        var started = api.StartFlow(Ams);
+        var started = api.StartFlow(Ams, out amsId);
         if (started != AifError.OK) throw new InvalidOperationException($"{Ams} did not start: {started}");
-        api.SharedStorageInit(Ams, location);
-        api.InputWrite(Ams, AmsTypes.Map, 1, map.ToOfflineMapObject(0), 5000);
-        api.InputWrite(Ams, AmsTypes.Hci, 1, AmsStage1Tests.Destination(destination), 5000);
+        api.SharedStorageInit(amsId, location);
+        api.InputWrite(amsId, AmsTypes.Map, 1, map.ToOfflineMapObject(0), 5000);
+        api.InputWrite(amsId, AmsTypes.Hci, 1, AmsStage1Tests.Destination(destination), 5000);
     }
 
     // What another CAV reports (an Ego-Remote AMS Message): to the Full Environment Description of the AMS.
     public void Hear(string era, int timeoutMs = 5000)
     {
-        if (api.InputWrite(Ams, FullEnvironmentDescription.Remote, 1, era, timeoutMs) is var result && result != AifError.OK)
+        if (api.InputWrite(amsId, FullEnvironmentDescription.Remote, 1, era, timeoutMs) is var result && result != AifError.OK)
             throw new InvalidOperationException($"the Ego-Remote AMS Message was not accepted: {result}");
     }
 
@@ -107,7 +109,7 @@ public sealed class CavInTheLoop : IDisposable
             ["Header"] = "CAV-AMM-V2.0", ["AMSMASMessageID"] = "AMM-road",
             ["MASMessage"] = new JsonObject { ["RoadState"] = new JsonObject { ["Header"] = "CAV-RDS-V2.0", ["SurfaceCondition"] = new JsonObject { ["FrictionCoefficientEstimate"] = friction } } }
         };
-        if (api.InputWrite(Ams, "CAV-AMM-V2.0", 1, message.ToJsonString(), timeoutMs) is var result && result != AifError.OK)
+        if (api.InputWrite(amsId, "CAV-AMM-V2.0", 1, message.ToJsonString(), timeoutMs) is var result && result != AifError.OK)
             throw new InvalidOperationException($"the Road State was not accepted: {result}");
     }
 
@@ -127,22 +129,22 @@ public sealed class CavInTheLoop : IDisposable
     public (List<JsonNode> Alerts, JsonNode? Command, double LatencyMs, JsonNode? Bed) StepOnBed(JsonNode bed, List<JsonNode> alerts, long frameMs, int timeoutMs = 5000)
     {
         var clock = System.Diagnostics.Stopwatch.StartNew();
-        foreach (var alert in alerts) api.InputWrite(Ams, AmsTypes.Alert, 1, alert.ToJsonString(), timeoutMs);
-        api.InputWrite(Ams, AmsTypes.Bed, 1, bed!.ToJsonString(), timeoutMs);
+        foreach (var alert in alerts) api.InputWrite(amsId, AmsTypes.Alert, 1, alert.ToJsonString(), timeoutMs);
+        api.InputWrite(amsId, AmsTypes.Bed, 1, bed!.ToJsonString(), timeoutMs);
         JsonNode? command = null;
-        while (command is null && api.OutputRead(Ams, AmsTypes.Message, 1, timeoutMs) is { Error: AifError.OK, Json: { } json })
+        while (command is null && api.OutputRead(amsId, AmsTypes.Message, 1, timeoutMs) is { Error: AifError.OK, Json: { } json })
         {
             var message = JsonNode.Parse(json)!;
             if (AmsTypes.Ms(message["AMSMASMessageTime"]) == frameMs) command = message;   // an older one is passed over
         }
         var latency = clock.Elapsed.TotalMilliseconds;
-        while (api.OutputRead(Ams, AmsTypes.Data, 1, 0) is { Error: AifError.OK }) { }           // the AMS Data, not used here
+        while (api.OutputRead(amsId, AmsTypes.Data, 1, 0) is { Error: AifError.OK }) { }           // the AMS Data, not used here
         return (alerts, command, latency, bed);
     }
 
     public void Dispose()
     {
-        api.StopFlow(Ams);
+        api.StopFlow(amsId);
         api.Dispose();
         ess?.Dispose();
         try { Directory.Delete(location, recursive: true); } catch { }
@@ -535,28 +537,30 @@ public class AmsStage1Tests
         using var api = new Mpai.Aif.Api.ControllerApi(Repository.Amds, Path.Combine(Repository.Root, "AIMs", "aim-settings.json"), new AmsProvider());
         var location = Path.Combine(Path.GetTempPath(), "mpai-p8s7-" + Guid.NewGuid().ToString("N"));
         var result = new Dictionary<string, string>();
+        var amsId = -1;
         try
         {
-            api.StartFlow(ams);
-            api.SharedStorageInit(ams, location);
-            var recordId = api.RecordId(ams);
+            api.StartFlow(ams, out amsId);
+            api.SharedStorageInit(amsId, location);
+            var recordId = api.RecordId(amsId);
             result["the AMS recorded without being asked"] = recordId is null ? "no" : "yes";
 
             var sim = OpenScenario();
-            api.InputWrite(ams, AmsTypes.Map, 1, sim.Map.ToOfflineMapObject(0), 2000);
-            api.InputWrite(ams, AmsTypes.Hci, 1, Destination("W21"), 2000);
+            api.InputWrite(amsId, AmsTypes.Map, 1, sim.Map.ToOfflineMapObject(0), 2000);
+            api.InputWrite(amsId, AmsTypes.Hci, 1, Destination("W21"), 2000);
             var messages = new List<JsonNode>();
             var data = new List<JsonNode>();
             for (var i = 0; i < 40; i++)
             {
                 var sensed = sim.Sense(camera: false);
-                api.InputWrite(ams, AmsTypes.Bed, 1, TruthBed.Of(sim, sensed), 2000);
-                if (api.OutputRead(ams, AmsTypes.Message, 1, 500) is { Ok: true, Json: { } m }) messages.Add(JsonNode.Parse(m)!);
-                while (api.OutputRead(ams, AmsTypes.Data, 1, messages.Count > data.Count ? 500 : 0) is { Ok: true, Json: { } d }) data.Add(JsonNode.Parse(d)!);
+                api.InputWrite(amsId, AmsTypes.Bed, 1, TruthBed.Of(sim, sensed), 2000);
+                if (api.OutputRead(amsId, AmsTypes.Message, 1, 500) is { Ok: true, Json: { } m }) messages.Add(JsonNode.Parse(m)!);
+                while (api.OutputRead(amsId, AmsTypes.Data, 1, messages.Count > data.Count ? 500 : 0) is { Ok: true, Json: { } d }) data.Add(JsonNode.Parse(d)!);
                 sim.Advance(KeepTheLimit(sim));
             }
-            api.RecordStop(ams, out _);
-            api.StopFlow(ams);
+            api.RecordStop(amsId, out _);
+            var storage = api.ModuleStorageAt(amsId, location);                                     // while its MODULE_ID still names the Module
+            api.StopFlow(amsId);
 
             // The AMS Data: one for each AMS-MAS Message, valid, carrying what 3.8 says.
             var schema = AIF.Metadata.PublishedSchemas.At(Repository.Schemas)[Path.GetFullPath(Path.Combine(Repository.Schemas, "CAV2", "V2.0", "data", "AMSData.json"))];
@@ -569,7 +573,6 @@ public class AmsStage1Tests
                 data.Count > 0 && data.All(d => d["RouteID"] is not null && d["Path"] is not null && d["Trajectory"] is not null && d["FED"] is not null) ? "yes" : "no";
 
             // The decisions, in the Shared Storage, each with the FED it was taken on.
-            var storage = api.ModuleStorageAt(ams, location);
             var shared = AIF.SharedStorage.RuledStore.SharedAt(location, () => DateTimeOffset.UtcNow).For(AIF.SharedStorage.StorageHolder.UserAgent, "", "session");
             var keys = shared.MPAI_AIFM_RuledStorage_List(null, AmsData.Prefix + "decisions/");
             var kinds = keys.Select(k => k[(k.LastIndexOf('/') + 1)..]).Select(k => k[(k.IndexOf('-') + 1)..]).ToHashSet();
@@ -591,7 +594,7 @@ public class AmsStage1Tests
         }
         finally
         {
-            try { api.StopFlow(ams); } catch { }
+            try { api.StopFlow(amsId); } catch { }
             try { Directory.Delete(location, recursive: true); } catch { }
         }
         Expected.Match("ams-stage1-amm.json", result);

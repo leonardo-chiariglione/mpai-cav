@@ -73,10 +73,13 @@ public class HciSpeechTests
         public Cabin()
         {
             api = new ControllerApi(Repository.Amds, Path.Combine(Repository.Root, "AIMs", "aim-settings.json"), store => new HciProvider(store, Repository.Root));
-            var started = api.StartFlow(Hci);
+            var started = api.StartFlow(Hci, out moduleId);
             if (started != AifError.OK) throw new InvalidOperationException($"{Hci} did not start: {started}");
-            api.SharedStorageInit(Hci, location);
+            api.SharedStorageInit(moduleId, location);
         }
+
+        // The MODULE_ID the Controller returned when it started HCI.
+        private readonly int moduleId;
 
         public (string? Recognised, string? Reply, BasicSpeechObject? Speech, JsonNode? Sent) Turn(string said, params ControllerApi.Datum[] inputs)
         {
@@ -86,9 +89,9 @@ public class HciSpeechTests
                 : inputs.ToList();
             all.Add(TestAvatar.Datum);   // the Avatar the reply animates
             var clock = System.Diagnostics.Stopwatch.StartNew();
-            var r = api.Advance(Hci, all);
+            var r = api.Advance(moduleId, all);
             Seconds.Add(clock.Elapsed.TotalSeconds);
-            if (r.Error != AifError.OK) throw new InvalidOperationException($"{said}: {r.Error} {JsonSerializer.Serialize(api.Status(Hci).Aims)}");
+            if (r.Error != AifError.OK) throw new InvalidOperationException($"{said}: {r.Error} {JsonSerializer.Serialize(api.Status(moduleId).Aims)}");
             var recognised = r.ByType("OSD-BTO-V1.5", 2) is { } t2 ? MpaiJson.FromJson<BasicTextObject>(t2)?.GetText() : null;
             var reply = r.ByType("OSD-BTO-V1.5", 1) is { } t1 ? MpaiJson.FromJson<BasicTextObject>(t1)?.GetText() : null;
             var speech = TestAvatar.Speech(r);
@@ -115,7 +118,7 @@ public class HciSpeechTests
 
         public void Dispose()
         {
-            api.StopFlow(Hci);
+            api.StopFlow(moduleId);
             api.Dispose();
             try { Directory.Delete(location, recursive: true); } catch { }
         }

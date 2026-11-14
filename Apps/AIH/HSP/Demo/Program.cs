@@ -60,10 +60,10 @@ internal static class Program
                 Console.WriteLine(ex.ToString());
                 // What each Controller's Module says of its AIMs: their status and their reports.
                 foreach (var (name, controller) in Controllers)
-                    foreach (var module in new[] { Hfe, "1AIH-HBE-V1.1-" + I })
+                    foreach (var module in controller.ModuleIds)
                     {
                         var st = controller.Status(module);
-                        if (st.Error != AifError.NotStarted) Console.WriteLine($"  [{name}] {module}: {st.Error}{(st.Stopped ? ", stopped" : "")}");
+                        if (st.Error != AifError.NotStarted) Console.WriteLine($"  [{name}] Module {module}: {st.Error}{(st.Stopped ? ", stopped" : "")}");
                         foreach (var a in st.Aims) Console.WriteLine($"  [{name}] {a.Aim}: {a.Status} {a.Reason} {string.Join(" | ", a.Reports.TakeLast(4))}");
                     }
             }

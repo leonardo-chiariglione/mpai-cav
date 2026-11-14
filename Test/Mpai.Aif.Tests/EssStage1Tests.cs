@@ -407,27 +407,33 @@ public class EssStage1Tests
         var driveId = drive.WriteRecord(store.For(new AIF.SharedStorage.StorageHolder(ess, AIF.SharedStorage.RuledStore.Controller), "", ""), messages);
 
         using var api = new Mpai.Aif.Api.ControllerApi(Repository.Amds, Path.Combine(Repository.Root, "AIMs", "aim-settings.json"), new EssProvider(Repository.Root));
-        Assert.Equal(AifError.OK, api.StartFlow(ess));
-        api.SharedStorageInit(ess, location);
-        Assert.Equal(AifError.OK, api.RecordStart(ess, out var recordId));
+        Assert.Equal(AifError.OK, api.StartFlow(ess, out var essId));
+        api.SharedStorageInit(essId, location);
+        Assert.Equal(AifError.OK, api.RecordStart(essId, out var recordId));
 
-        var devices = new Mpai.Ua.DeviceRegistry().RegisterRecord("drive", new Mpai.Ua.StoredRecord(api.ModuleStorageAt(ess, location), driveId));
+        var devices = new Mpai.Ua.DeviceRegistry().RegisterRecord("drive", new Mpai.Ua.StoredRecord(api.ModuleStorageAt(essId, location), driveId));
         var interpreter = new Mpai.Ua.WorkflowInterpreter(Mpai.Aif.Api.ControllerApiAsync.Async(api), devices);
+        // The workflow names the Module only to start it (UA-3): the Controller returns the MODULE_ID of ESS, already running and recorded.
+        // The record is stopped and read once the drive has played, while the workflow waits (it stops the Module when it ends); then the workflow is stopped.
+        using var stop = new CancellationTokenSource();
         var run = interpreter.RunAsync(new Mpai.Wdl.WorkflowReader().Read($$"""
             workflow DRIVE over {{ess}}
             on Start:
+                ask Controller to start
                 stream Camera (OSD-BVO-V1.5) from record "drive"
                 stream Attitude (OSD-OSA-V1.5) from record "drive"
                 stream Gnss (CAV-NSO-V2.0) from record "drive"
                 wait {{(int)drive.Duration.TotalSeconds * 2 + 2}}s
-            """), CancellationToken.None);
+            """), stop.Token);
         await Task.Delay(TimeSpan.FromSeconds(19));
-        var status = api.Status(ess);
-        await run;
+        var status = api.Status(essId);
+        while (interpreter.Playbacks.Count == 0 && !run.IsCompleted) await Task.Delay(50);
         Thread.Sleep(500);
-        api.RecordStop(ess, out _);
-        var records = RecordTests.Records(api.ModuleStorage(ess)!, recordId!);
-        api.StopFlow(ess);
+        api.RecordStop(essId, out _);
+        var records = RecordTests.Records(api.ModuleStorage(essId)!, recordId!);
+        stop.Cancel();
+        try { await run; } catch (OperationCanceledException) { }
+        api.StopFlow(essId);
         return (records, status, interpreter.Playbacks.Single());
     }
 }

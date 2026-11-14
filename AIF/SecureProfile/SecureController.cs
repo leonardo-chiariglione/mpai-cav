@@ -143,11 +143,18 @@ public sealed class SecureController : IFrameLink, IDisposable
     // A REQUEST OF THE CONTROLLER API, executed on the Controller.
     private JsonObject Execute(JsonObject r)
     {
-        var module = (string?)r["Module"] ?? "";
+        // Only StartFlow names the Module; every other request addresses it by the MODULE_ID StartFlow returned (Basic API 2.2).
+        var module = (int?)r["ModuleId"] ?? -1;
         static JsonObject E(AifError e) => new() { ["Error"] = e.ToString() };
         switch ((string?)r["Call"])
         {
-            case "StartFlow": return E(controller.StartFlow(module));
+            case "StartFlow":
+            {
+                var started = controller.StartFlow((string?)r["Module"] ?? "", out var moduleId);
+                var reply = E(started);
+                if (started == AifError.OK) reply["ModuleId"] = moduleId;
+                return reply;
+            }
             case "StopFlow": controller.StopFlow(module); return E(AifError.OK);
             case "Pause": return E(controller.Pause(module));
             case "Resume": return E(controller.Resume(module));

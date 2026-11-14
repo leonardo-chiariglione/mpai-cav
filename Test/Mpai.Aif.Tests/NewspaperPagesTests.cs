@@ -48,10 +48,10 @@ public class NewspaperPagesTests
 
         var store = new AIF.Store.AmdStore(Repository.Amds); store.Scan();
         using var api = new ControllerApi(Repository.Amds, Path.Combine(Repository.Root, "AIMs", "aim-settings.json"), _ => new CompositeProvider(new NprProvider(store)));
-        Assert.Equal(AifError.OK, api.StartFlow(NPR));
+        Assert.Equal(AifError.OK, api.StartFlow(NPR, out var moduleId));
         try
         {
-            var r = api.Advance(NPR, new[]
+            var r = api.Advance(moduleId, new[]
             {
                 new ControllerApi.Datum("OSD-BVO-V1.5", 1, MpaiJson.ToJson(BasicVisualObject.FromFile(Path.GetFileName(image), File.ReadAllBytes(image), "Picture"))),
                 new ControllerApi.Datum("OSD-PNT-V1.5", 1, $"{{\"Header\":\"OSD-PNT-V1.5\",\"Coordinates\":{{\"X\":{point[0]},\"Y\":{point[1]}}}}}"),
@@ -71,6 +71,6 @@ public class NewspaperPagesTests
                 $"{page} column {column + 1}: {precision:P0} of its {read.Length} words are the column's.\nANSWER: {answer}\nTRUTH:  {truth}");
             Assert.Equal(language, AvatarUtterance.LanguageOfPortableAvatar(r.ByType("PAF-PAV-V1.6")));   // the language is stamped on the text
         }
-        finally { api.StopFlow(NPR); }
+        finally { api.StopFlow(moduleId); }
     }
 }

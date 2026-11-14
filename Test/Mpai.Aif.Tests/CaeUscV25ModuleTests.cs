@@ -16,6 +16,7 @@ namespace Mpai.Aif.Tests;
 public class CaeUscV25ModuleTests : IDisposable
 {
     private const string Srs = "1CAE-SRS-V2.5-I01";
+    private readonly int moduleId;                                                     // the MODULE_ID the Controller returned when it started the Module
     private static readonly string[] Aims = ["1CAE-SMC-V2.5-I01", "1MMC-TTS-V2.5-I01", "1CAE-SRA-V2.5-I01"];
     private readonly string work = Path.Combine(Path.GetTempPath(), "cae-usc-" + Guid.NewGuid().ToString("N"));
     private readonly HostProcess process;
@@ -37,12 +38,12 @@ public class CaeUscV25ModuleTests : IDisposable
         api = new ControllerApi(amds, settings, _ => new CompositeProvider());
         api.Controller.AimHostKey = HostProcess.Key;
         foreach (var aim in Aims) api.Controller.AimHosts[aim] = process.Address;
-        Assert.Equal(AifError.OK, api.StartFlow(Srs));
+        Assert.Equal(AifError.OK, api.StartFlow(Srs, out moduleId));
     }
 
     public void Dispose() { api.Dispose(); process.Dispose(); try { Directory.Delete(work, true); } catch { } }
 
-    private void Write(string type, int n, string json) => Assert.Equal(AifError.OK, api.InputWrite(Srs, type, n, json, 10_000));
+    private void Write(string type, int n, string json) => Assert.Equal(AifError.OK, api.InputWrite(moduleId, type, n, json, 10_000));
 
     private static Audio Tone(double seconds, double level = 8000, double hertz = 220)
     {
@@ -86,7 +87,7 @@ public class CaeUscV25ModuleTests : IDisposable
         Write("OSD-BSO-V1.5", 2, SpeechObject.Make("damaged", Tone(3, 9000)));
         Write("CAE-DLS-V2.5", 1, DamagedList((0.5, 1.0), (2.0, 2.5)));
 
-        var read = api.OutputRead(Srs, "OSD-BSO-V1.5", 1, 20_000);
+        var read = api.OutputRead(moduleId, "OSD-BSO-V1.5", 1, 20_000);
         Assert.True(read.Error == AifError.OK, $"nothing at the Restored Segment: {read.Error}");
         var restored = SpeechObject.Read(read.Json!).Single();
         Assert.Equal(16000, restored.Rate);

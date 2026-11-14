@@ -255,18 +255,18 @@ public class TmaEndToEndTests : IDisposable
         var log = new ConcurrentQueue<(string Aim, string Port, string Json)>();
         using var gallery = new GalleryHolder(Gallery());
         using var api = new ControllerApi(_folder, settings, store => new Provider(store, gallery.Value, log));
-        Assert.Equal(AifError.OK, api.StartFlow(Module));
+        Assert.Equal(AifError.OK, api.StartFlow(Module, out var moduleId));
         var clock = System.Diagnostics.Stopwatch.StartNew();
 
-        Assert.Equal(AifError.OK, api.InputWrite(Module, "OSD-TXO-V1.5", 1, new JsonObject { ["Header"] = "OSD-TXO-V1.5", ["TextObjectID"] = "aux", ["BasicTextObjects"] = new JsonArray(Mpai.Core.BasicTextObject.FromText(AuxiliaryText()).ToNode()) }.ToJsonString(), 5000));
-        Assert.Equal(AifError.OK, api.InputWrite(Module, "OSD-BVO-V1.5", 1, Video(turns, seconds).ToJsonString(), 60000));
-        Assert.Equal(AifError.OK, api.InputWrite(Module, "OSD-BSO-V1.5", 1, SpeechObject(Wav(audio)).ToJsonString(), 60000));
+        Assert.Equal(AifError.OK, api.InputWrite(moduleId, "OSD-TXO-V1.5", 1, new JsonObject { ["Header"] = "OSD-TXO-V1.5", ["TextObjectID"] = "aux", ["BasicTextObjects"] = new JsonArray(Mpai.Core.BasicTextObject.FromText(AuxiliaryText()).ToNode()) }.ToJsonString(), 5000));
+        Assert.Equal(AifError.OK, api.InputWrite(moduleId, "OSD-BVO-V1.5", 1, Video(turns, seconds).ToJsonString(), 60000));
+        Assert.Equal(AifError.OK, api.InputWrite(moduleId, "OSD-BSO-V1.5", 1, SpeechObject(Wav(audio)).ToJsonString(), 60000));
 
         // The Event Descriptors grow as the scenes arrive: the last is the whole.
         JsonObject? last = null;
         for (var i = 0; i < 200; i++)
         {
-            var read = api.OutputRead(Module, "OSD-MEV-V1.5", 1, i == 0 ? 600_000 : 120_000);
+            var read = api.OutputRead(moduleId, "OSD-MEV-V1.5", 1, i == 0 ? 600_000 : 120_000);
             if (read.Json is null) break;
             last = JsonNode.Parse(read.Json)!.AsObject();
         }

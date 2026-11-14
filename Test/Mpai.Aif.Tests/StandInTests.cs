@@ -31,9 +31,9 @@ public class StandInTests
         foreach (var (module, inputs) in Cases)
         {
             using var api = new ControllerApi(Repository.Amds, Path.Combine(Repository.Amds, "no-settings.json"), store => new StandIns(store));
-            api.StartFlow(module);
-            var run = api.Advance(module, inputs.Select(i => new ControllerApi.Datum(i.DataType, i.Number, i.Json)));
-            api.StopFlow(module);
+            api.StartFlow(module, out var moduleId);
+            var run = api.Advance(moduleId, inputs.Select(i => new ControllerApi.Datum(i.DataType, i.Number, i.Json)));
+            api.StopFlow(moduleId);
             var key = $"{module} given {string.Join(", ", inputs.Select(i => $"{i.DataType}#{i.Number}"))}";
             result[key] = "same: " + run.Error + ": " + string.Join("; ", run.Outputs.OrderBy(o => o.DataType).ThenBy(o => o.PortNumber)
                                                                           .Select(o => $"{o.DataType}#{o.PortNumber} {o.Json}"));

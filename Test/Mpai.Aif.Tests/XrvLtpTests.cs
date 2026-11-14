@@ -113,6 +113,7 @@ public class XrvLtpTests
     {
         private readonly string work = Path.Combine(Path.GetTempPath(), "xrv-ltp-" + Guid.NewGuid().ToString("N"));
         public ControllerApi Api { get; }
+        public int ModuleId { get; }                                                                       // the MODULE_ID the Controller returned when it started LTP
         // UNDER TRUST (AIF V3.0 Zero Trust and Profiles; review finding X2, 2026-11-14): the Controller is the verifier, and the Store has approved the fingerprint of
         // the package of each XRV AIM - its binary and the libraries it loads, Mpai.Xrv.Common among them (MPAI Store 4). Each AIM is measured before it runs;
         // one whose package is not what the Store approved refuses the Module. measuredFrom: where the Controller finds the binaries to measure (by default where they run).
@@ -122,7 +123,7 @@ public class XrvLtpTests
             var settings = Path.Combine(work, "aim-settings.json"); File.WriteAllText(settings, "{}");
             Api = new ControllerApi(Approved(work), settings, new Measured(new XrvProvider(), measuredFrom));
             Api.Controller.Trust = new AIF.Trust.TrustDomain("xrv-controller");
-            var started = Api.StartFlow(Ltp);
+            var started = Api.StartFlow(Ltp, out var moduleId);
             if (started != AifError.OK)
             {
                 var why = $"{Ltp} did not start: {started}. {Api.StartRefusal}";
@@ -130,6 +131,7 @@ public class XrvLtpTests
                 try { Directory.Delete(work, true); } catch { }
                 throw new InvalidOperationException(why);
             }
+            ModuleId = moduleId;
         }
 
         // The L3s, and the Store's approval of the package of each XRV AIM, as built.
@@ -161,14 +163,14 @@ public class XrvLtpTests
             public IAimProcessor Create(string aimName, IReadOnlyDictionary<string, string> settings, AIF.SharedStorage.ISharedStorage? storage, AIF.SharedStorage.ISharedStorage? privateStorage,
                 AIF.SharedStorage.IRuledStorage? moduleStorage, IAccessReader? access) => ((IAimProvider)inner).Create(aimName, settings, storage, privateStorage, moduleStorage, access);
         }
-        public void Write(string dataType, string json) => Assert.Equal(AifError.OK, Api.InputWrite(Ltp, dataType, 1, json, 10_000));
+        public void Write(string dataType, string json) => Assert.Equal(AifError.OK, Api.InputWrite(ModuleId, dataType, 1, json, 10_000));
         public JsonObject? Read(string dataType, int timeoutMs = 10_000)
         {
-            var r = Api.OutputRead(Ltp, dataType, 1, timeoutMs);
+            var r = Api.OutputRead(ModuleId, dataType, 1, timeoutMs);
             return r.Error == AifError.OK ? JsonNode.Parse(r.Json!)!.AsObject() : null;
         }
-        public string Why() => string.Join("; ", Api.Status(Ltp).Aims.Select(a => a.Aim + " " + a.Status + " " + a.Reason + " " + string.Join("/", a.Reports)));
-        public void Dispose() { try { Api.StopFlow(Ltp); } catch { } Api.Dispose(); try { Directory.Delete(work, true); } catch { } }
+        public string Why() => string.Join("; ", Api.Status(ModuleId).Aims.Select(a => a.Aim + " " + a.Status + " " + a.Reason + " " + string.Join("/", a.Reports)));
+        public void Dispose() { try { Api.StopFlow(ModuleId); } catch { } Api.Dispose(); try { Directory.Delete(work, true); } catch { } }
     }
 
     private static IEnumerable<string> ReCommands(JsonObject rdo) => rdo["REDataOut"]!["ControlObjects"]!.AsArray().Select(c => c!["ControlObject"]!["ControllerID"] + "=" + JsonNode.Parse(c!["ControlObject"]!["ControlData"]!.GetValue<string>())!["Value"]);
@@ -201,23 +203,23 @@ public class XrvLtpTests
         var said = new List<string>();
         var settings = Path.Combine(store.Root, "aim-settings.json"); File.WriteAllText(settings, "{}");
         using var api = new ControllerApi(amds, settings, s => new PackageAimProvider(s, Path.Combine(store.Root, "cache"), line => { lock (said) said.Add(line); }, new AIF.Store.HttpAimSource(store.Url)));
-        Assert.True(api.StartFlow(module) == AifError.OK, $"{module}: {api.StartRefusal} :: {string.Join(" / ", said)}");
+        Assert.True(api.StartFlow(module, out var moduleId) == AifError.OK, $"{module}: {api.StartRefusal} :: {string.Join(" / ", said)}");
         try
         {
             foreach (var (type, name) in new[] { (Types.ScriptVenueAssociations, "ScriptVenueAssociations.json"), (Types.REVenueSpecification, "REVenueSpecification.json"),
                                                  (Types.VEVenueSpecification, "VEVenueSpecification.json"), (Types.ActionTable, "ActionTable.json"), (Types.Script, "Script.json") })
-                Assert.Equal(AifError.OK, api.InputWrite(module, type, 1, XrvShow.Text(name), 10_000));
-            Assert.Equal(AifError.OK, api.InputWrite(module, EndAimProcessor.RDI, 1, AnnaOnStage, 10_000));
-            var up = api.OutputRead(module, RegAimProcessor.RDO, 1, 30_000);                // the first: seven packages, each loaded and its schemas built for the first time
-            Assert.True(up.Error == AifError.OK, $"no RE Data Out for C1: {up.Error} :: " + string.Join("; ", api.Status(module).Aims.Select(a => a.Aim + " " + a.Status + " " + a.Reason + " " + string.Join("/", a.Reports))));
+                Assert.Equal(AifError.OK, api.InputWrite(moduleId, type, 1, XrvShow.Text(name), 10_000));
+            Assert.Equal(AifError.OK, api.InputWrite(moduleId, EndAimProcessor.RDI, 1, AnnaOnStage, 10_000));
+            var up = api.OutputRead(moduleId, RegAimProcessor.RDO, 1, 30_000);                // the first: seven packages, each loaded and its schemas built for the first time
+            Assert.True(up.Error == AifError.OK, $"no RE Data Out for C1: {up.Error} :: " + string.Join("; ", api.Status(moduleId).Aims.Select(a => a.Aim + " " + a.Status + " " + a.Reason + " " + string.Join("/", a.Reports))));
             Assert.Equal(["FX1=255", "FX2=255"], ReCommands(JsonNode.Parse(up.Json!)!.AsObject()));
-            Assert.Equal(AifError.OK, api.InputWrite(module, EndAimProcessor.VDI, 1, Guest1Arrives, 10_000));
-            var on = api.OutputRead(module, VegAimProcessor.VDO, 1, 10_000);
+            Assert.Equal(AifError.OK, api.InputWrite(moduleId, EndAimProcessor.VDI, 1, Guest1Arrives, 10_000));
+            var on = api.OutputRead(moduleId, VegAimProcessor.VDO, 1, 10_000);
             Assert.True(on.Error == AifError.OK, $"no VE Data Out for C2: {on.Error}");
             Assert.Equal(["VLamp1=1.0"], VeCommands(JsonNode.Parse(on.Json!)!.AsObject()));
             Assert.True(said.Count(l => l.Contains("from the package")) == leaves.Length, "the AIMs did not all come from packages: " + string.Join(" / ", said));
         }
-        finally { api.StopFlow(module); }
+        finally { api.StopFlow(moduleId); }
     }
 
     // A LIBRARY OF THE PACKAGE CHANGED (review findings X2 and X3): Mpai.Xrv.Common - which most of Performance, Participant and Object Status Interpretation is -

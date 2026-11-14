@@ -128,42 +128,50 @@ public sealed class SecureControllerClient : IControllerApi
         return Enum.TryParse<AifError>((string?)reply["Error"], out var e) ? e : AifError.Failed;
     }
 
-    private static JsonObject R(string call, string module) => new() { ["Call"] = call, ["Module"] = module };
+    // A request on a started Module carries its MODULE_ID (Basic API 2.2); only StartFlow names the Module, and its reply carries the MODULE_ID.
+    private static JsonObject R(string call, int moduleId) => new() { ["Call"] = call, ["ModuleId"] = moduleId };
 
-    public AifError StartFlow(string moduleName) => ErrorOf(R("StartFlow", moduleName));
-    public void StopFlow(string moduleName) => ErrorOf(R("StopFlow", moduleName));
-    public AifError Pause(string moduleName) => ErrorOf(R("Pause", moduleName));
-    public AifError Resume(string moduleName) => ErrorOf(R("Resume", moduleName));
-    public AifError StopAim(string moduleName, string aimName) { var r = R("StopAim", moduleName); r["Aim"] = aimName; return ErrorOf(r); }
-    public AifError SharedStorageInit(string moduleName, string location) { var r = R("SharedStorageInit", moduleName); r["Location"] = location; return ErrorOf(r); }
-
-    public AifError InputWrite(string moduleName, string dataType, int portNumber, string json, int timeoutMs = -1)
+    public AifError StartFlow(string moduleName, out int moduleId)
     {
-        var r = R("InputWrite", moduleName);
+        moduleId = -1;
+        if (Call(new JsonObject { ["Call"] = "StartFlow", ["Module"] = moduleName }) is not { } reply) return Initialized ? AifError.NotTrusted : AifError.NotInitialized;
+        var error = Enum.TryParse<AifError>((string?)reply["Error"], out var e) ? e : AifError.Failed;
+        if (error == AifError.OK) moduleId = (int?)reply["ModuleId"] ?? -1;
+        return error;
+    }
+    public void StopFlow(int moduleId) => ErrorOf(R("StopFlow", moduleId));
+    public AifError Pause(int moduleId) => ErrorOf(R("Pause", moduleId));
+    public AifError Resume(int moduleId) => ErrorOf(R("Resume", moduleId));
+    public AifError StopAim(int moduleId, string aimName) { var r = R("StopAim", moduleId); r["Aim"] = aimName; return ErrorOf(r); }
+    public AifError SharedStorageInit(int moduleId, string location) { var r = R("SharedStorageInit", moduleId); r["Location"] = location; return ErrorOf(r); }
+
+    public AifError InputWrite(int moduleId, string dataType, int portNumber, string json, int timeoutMs = -1)
+    {
+        var r = R("InputWrite", moduleId);
         r["DataType"] = dataType; r["PortNumber"] = portNumber; r["Json"] = json; r["TimeoutMs"] = timeoutMs;
         return ErrorOf(r);
     }
 
-    public ControllerApi.Read OutputRead(string moduleName, string dataType, int portNumber, int timeoutMs = -1)
+    public ControllerApi.Read OutputRead(int moduleId, string dataType, int portNumber, int timeoutMs = -1)
     {
-        var r = R("OutputRead", moduleName);
+        var r = R("OutputRead", moduleId);
         r["DataType"] = dataType; r["PortNumber"] = portNumber; r["TimeoutMs"] = timeoutMs;
         if (Call(r) is not { } reply) return new ControllerApi.Read(Initialized ? AifError.NotTrusted : AifError.NotInitialized, null);
         return new ControllerApi.Read(Enum.Parse<AifError>((string)reply["Error"]!), (string?)reply["Json"]);
     }
 
-    public ControllerApi.Result Advance(string moduleName, IEnumerable<ControllerApi.Datum> inputs)
+    public ControllerApi.Result Advance(int moduleId, IEnumerable<ControllerApi.Datum> inputs)
     {
-        var r = R("Advance", moduleName);
+        var r = R("Advance", moduleId);
         r["Inputs"] = SecureController.Data(inputs);
         if (Call(r) is not { } reply) return new ControllerApi.Result(Initialized ? AifError.NotTrusted : AifError.NotInitialized, []);
         var outputs = (reply["Outputs"] as JsonArray ?? []).Select(o => new ControllerApi.Datum((string)o!["DataType"]!, (int)o["PortNumber"]!, (string)o["Json"]!)).ToList();
         return new ControllerApi.Result(Enum.Parse<AifError>((string)reply["Error"]!), outputs);
     }
 
-    public ControllerApi.ModuleStatus Status(string moduleName)
+    public ControllerApi.ModuleStatus Status(int moduleId)
     {
-        if (Call(R("Status", moduleName)) is not { } reply) return new ControllerApi.ModuleStatus(Initialized ? AifError.NotTrusted : AifError.NotInitialized, []);
+        if (Call(R("Status", moduleId)) is not { } reply) return new ControllerApi.ModuleStatus(Initialized ? AifError.NotTrusted : AifError.NotInitialized, []);
         var aims = (reply["Aims"] as JsonArray ?? []).Select(a => new AimReport((string)a!["Aim"]!, Enum.Parse<AimStatus>((string)a["Status"]!), (string?)a["Reason"] ?? "",
                                                                                 (a["Reports"] as JsonArray ?? []).Select(x => (string)x!).ToList())).ToList();
         return new ControllerApi.ModuleStatus(Enum.Parse<AifError>((string)reply["Error"]!), aims)
@@ -173,47 +181,47 @@ public sealed class SecureControllerClient : IControllerApi
         };
     }
 
-    public AifError SharedStorageStore(string moduleName, string key, byte[] data, string category = "Data")
+    public AifError SharedStorageStore(int moduleId, string key, byte[] data, string category = "Data")
     {
-        var r = R("SharedStorageStore", moduleName);
+        var r = R("SharedStorageStore", moduleId);
         r["Key"] = key; r["Data"] = Convert.ToBase64String(data); r["Category"] = category;
         return ErrorOf(r);
     }
 
-    public AifError SharedStorageRead(string moduleName, string key, out byte[] data)
+    public AifError SharedStorageRead(int moduleId, string key, out byte[] data)
     {
         data = [];
-        var r = R("SharedStorageRead", moduleName);
+        var r = R("SharedStorageRead", moduleId);
         r["Key"] = key;
         if (Call(r) is not { } reply) return Initialized ? AifError.NotTrusted : AifError.NotInitialized;
         data = Convert.FromBase64String((string?)reply["Data"] ?? "");
         return Enum.Parse<AifError>((string)reply["Error"]!);
     }
 
-    public AifError SharedStorageDelete(string moduleName, string key) { var r = R("SharedStorageDelete", moduleName); r["Key"] = key; return ErrorOf(r); }
+    public AifError SharedStorageDelete(int moduleId, string key) { var r = R("SharedStorageDelete", moduleId); r["Key"] = key; return ErrorOf(r); }
 
-    public IReadOnlyList<string> SharedStorageList(string moduleName, string prefix = "")
+    public IReadOnlyList<string> SharedStorageList(int moduleId, string prefix = "")
     {
-        var r = R("SharedStorageList", moduleName);
+        var r = R("SharedStorageList", moduleId);
         r["Prefix"] = prefix;
         return Call(r) is { } reply ? (reply["Keys"] as JsonArray ?? []).Select(k => (string)k!).ToList() : [];
     }
 
-    public AifError ExternalAuthority(string moduleName, string policy, string host = "127.0.0.1", int port = 0)
+    public AifError ExternalAuthority(int moduleId, string policy, string host = "127.0.0.1", int port = 0)
     {
-        var r = R("ExternalAuthority", moduleName);
+        var r = R("ExternalAuthority", moduleId);
         r["Policy"] = policy; r["Host"] = host; r["Port"] = port;
         return ErrorOf(r);
     }
 
-    public AifError ExternalJoin(string moduleName, string authority, string? rendezvous, string? role = null, string? controllerId = null)
+    public AifError ExternalJoin(int moduleId, string authority, string? rendezvous, string? role = null, string? controllerId = null)
     {
-        var r = R("ExternalJoin", moduleName);
+        var r = R("ExternalJoin", moduleId);
         r["Authority"] = authority; r["Rendezvous"] = rendezvous; r["Role"] = role; r["ControllerId"] = controllerId;
         return ErrorOf(r);
     }
 
-    public AifError ExternalLeave(string moduleName) => ErrorOf(R("ExternalLeave", moduleName));
-    public string? ExternalAnchor(string moduleName) => (string?)Call(R("ExternalAnchor", moduleName))?["Value"];
-    public string? ExternalRendezvous(string moduleName) => (string?)Call(R("ExternalRendezvous", moduleName))?["Value"];
+    public AifError ExternalLeave(int moduleId) => ErrorOf(R("ExternalLeave", moduleId));
+    public string? ExternalAnchor(int moduleId) => (string?)Call(R("ExternalAnchor", moduleId))?["Value"];
+    public string? ExternalRendezvous(int moduleId) => (string?)Call(R("ExternalRendezvous", moduleId))?["Value"];
 }

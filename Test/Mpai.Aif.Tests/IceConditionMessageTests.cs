@@ -21,7 +21,7 @@ public sealed class IceConditionMessageTests
         var sensed = sim.Sense(camera: false);
         mas.Sense(sensed, []);
 
-        var read = mas.Api.OutputRead(MasInTheLoop.Mas, MasTypes.Message, 2, 5000);
+        var read = mas.Api.OutputRead(mas.ModuleId, MasTypes.Message, 2, 5000);
         Assert.Equal(AifError.OK, read.Error);
         var message = JsonNode.Parse(read.Json!)!;
         Assert.Equal(MasTypes.Message, (string?)message["Header"]);
@@ -33,6 +33,6 @@ public sealed class IceConditionMessageTests
         // nothing changes while the road stays as it is: no second message for the next attitudes
         sim.Advance();
         mas.Sense(sim.Sense(camera: false), []);
-        Assert.NotEqual(AifError.OK, mas.Api.OutputRead(MasInTheLoop.Mas, MasTypes.Message, 2, 300).Error);
+        Assert.NotEqual(AifError.OK, mas.Api.OutputRead(mas.ModuleId, MasTypes.Message, 2, 300).Error);
     }
 }

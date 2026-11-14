@@ -23,6 +23,7 @@ public class CaeUscV25SmeAesTests
         private readonly HostProcess process;
         public readonly ControllerApi Api;
         public readonly string Module;
+        public readonly int ModuleId;                                                  // the MODULE_ID the Controller returned when it started the Module
 
         public ModuleRig(string module, string[] aims)
         {
@@ -40,10 +41,10 @@ public class CaeUscV25SmeAesTests
             Api = new ControllerApi(amds, settings, _ => new CompositeProvider());
             Api.Controller.AimHostKey = HostProcess.Key;
             foreach (var aim in aims) Api.Controller.AimHosts[aim] = process.Address;
-            Assert.Equal(AifError.OK, Api.StartFlow(module));
+            Assert.Equal(AifError.OK, Api.StartFlow(module, out ModuleId));
         }
 
-        public void Write(string type, int n, string json) => Assert.Equal(AifError.OK, Api.InputWrite(Module, type, n, json, 10_000));
+        public void Write(string type, int n, string json) => Assert.Equal(AifError.OK, Api.InputWrite(ModuleId, type, n, json, 10_000));
         public void Dispose() { Api.Dispose(); process.Dispose(); try { Directory.Delete(work, true); } catch { } }
     }
 
@@ -65,7 +66,7 @@ public class CaeUscV25SmeAesTests
         rig.Write("OSD-BSO-V1.5", 1, SpeechObject.Make("model", Syllables(300, 5, 16000)));        // the model utterance
         rig.Write("OSD-BSO-V1.5", 2, SpeechObject.Make("neutral", neutral));                       // the emotionless speech
 
-        var read = rig.Api.OutputRead(rig.Module, "OSD-BSO-V1.5", 1, 20_000);
+        var read = rig.Api.OutputRead(rig.ModuleId, "OSD-BSO-V1.5", 1, 20_000);
         Assert.True(read.Error == AifError.OK, $"nothing at Speech with Emotion: {read.Error}");
         var f = Prosody.Measure(SpeechObject.Read(read.Json!).Single());
         Assert.InRange(f.MeanF0Hz, 285, 315);                                                       // the pitch of the model utterance
@@ -83,7 +84,7 @@ public class CaeUscV25SmeAesTests
         rig.Write("OSD-BSO-V1.5", 1, SpeechObject.Make("neutral-features", neutral));              // the emotionless speech, for its features
         rig.Write("OSD-BSO-V1.5", 2, SpeechObject.Make("neutral", neutral));                       // and for the neural insertion
 
-        var read = rig.Api.OutputRead(rig.Module, "OSD-BSO-V1.5", 1, 20_000);
+        var read = rig.Api.OutputRead(rig.ModuleId, "OSD-BSO-V1.5", 1, 20_000);
         Assert.True(read.Error == AifError.OK, $"nothing at Speech with Emotion: {read.Error}");
         var f = Prosody.Measure(SpeechObject.Read(read.Json!).Single());
         Assert.InRange(f.MeanF0Hz, 170, 190);                                                       // sadness: the pitch x 0.90

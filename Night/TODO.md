@@ -14,7 +14,7 @@ Claude never deletes a request. A request that needs a decision from you is mark
 
 ## Requests
 
-ORDER FOR THE NIGHT OF 2026-11-13/14 (author): N-21 first (run AihFirstSliceTests, then AihDemo --secure), then N-23 (the Secure mode of FlDemo), then N-22 (the federated round on the NIH chest X-rays), then N-20 (CAV: no emergency braking for lane changes made up by sensor noise), then any other request from the top as usual.
+ORDER FOR THE NIGHT OF 2026-11-14/15 (author): N-24 first (the whole test run after X7, the Controller API addressing a Module by its MODULE_ID), then any other request from the top as usual.
 
 ### N-1 Federated learning demo, step 1: training in the End User's Health Front End
 Status: done
@@ -369,3 +369,8 @@ DEFECT FOUND AND FIXED: FlDemo (Basic) FAILED before any change of mine: "NOT_TR
 Choices I made: (1) the altered Front End is Chiara's own, restarted with altered code for one extra update in round 2 (so the three honest updates of every round are the same as in Basic); (2) the watermark key is a persistent RawData 512-bit key of the Back End's Security API, exported only into memory to make the Key at WEX's Input Port (WEX needs the Key at its Port; the key is never in the code or a file in clear); (3) the vault encrypts the values, not the keys (names) of the values; (4) "approved code" = the AIF assemblies + Mpai.Aih.Hfl.dll (the trainer); (5) enrolment of the Front Ends by the Back End is done directly (no registration protocol); (6) a challenge is used once and bound to a request identifier; (7) the Back End's seed trainer storage is sealed too.
 Not the same as Basic: the quality gate. In this --secure run rounds 3 and 4 were refused by the gate; in the Basic run of tonight round 4 was ACCEPTED (75% vs 75%): the runs are not deterministic (random starting weights), so 'the gate refuses round 4' is not guaranteed in either mode.
 Questions: none blocking. Is the altered-code scene as wanted (one extra refused update) or should the altered Front End miss the round instead?
+
+### N-24 Whole test run after X7 (the Controller API addresses a Module by its MODULE_ID), 2026-11-14
+Status: todo
+Request: X7 of the XRV-LTP vs AIF V3.0 review (author: "Full change", 2026-11-14): every call of the Controller API after Start addresses the Module by the MODULE_ID StartFlow returned (Basic API 2.2, UA-3); Advance no longer starts and stops a Module that is not running; the remote clients, the Secure Controller client and its frames, the workflow interpreter, the User Agents, the MAS and ASM services and all the tests were changed. By day only the Fast group was run. Tonight: the whole suite (Fast, Slow, Models), and for each failure say whether it failed the same way in the full run of the night of 2026-11-13/14 (Night\logs-2026-11-14\full-suite.txt: 44 failures of 1257) or is new; a new one that comes from X7 (a test or an App that still relies on Advance starting the Module, a frame of the Secure Controller, a MODULE_ID not kept) is fixed if the fix is in a test, else written down with the reason.
+Needs: Ollama and the models, the TPM simulator in WSL (Secure Profile tests).

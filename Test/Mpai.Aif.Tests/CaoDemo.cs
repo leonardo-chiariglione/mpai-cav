@@ -170,7 +170,7 @@ public class CaoDemo
             var trust = new AIF.Controller.CityTrust(turin, turin.Admit(id));
             var discovery = new AIF.Channels.UdpDiscovery(port);
             discoveries.Add(discovery);
-            var hub = cav.Api.StartExternal(CaoInTheLoop.Cao, new AIF.Channels.ExternalHub.Options
+            var hub = cav.Api.StartExternal(cav.ModuleId, new AIF.Channels.ExternalHub.Options
             {
                 ControllerId = id, ModuleType = "CAV-CAO-V2.0", Discovery = discovery, Admission = trust.Admission,
                 InRange = _ => Math.Abs(simA.EgoS - simB.EgoS) <= 300

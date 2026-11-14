@@ -18,6 +18,7 @@ namespace Mpai.Aif.Tests;
 public class CaeUscV25ArpModuleTests : IDisposable
 {
     private const string Arp = "1CAE-ARP-V2.5-I01";
+    private readonly int moduleId;                                                     // the MODULE_ID the Controller returned when it started the Module
     private static readonly string[] Aims = ["1CAE-AAP-V2.5-I01", "1CAE-VAP-V2.5-I01", "1CAE-TIC-V2.5-I01", "1CAE-TAR-V2.5-I01", "1CAE-PAP-V2.5-I01"];
     private const int Rate = 16000;
     private readonly string work = Path.Combine(Path.GetTempPath(), "cae-arp-" + Guid.NewGuid().ToString("N"));
@@ -39,7 +40,7 @@ public class CaeUscV25ArpModuleTests : IDisposable
         api = new ControllerApi(amds, settings, _ => new CompositeProvider());
         api.Controller.AimHostKey = HostProcess.Key;
         foreach (var aim in Aims) api.Controller.AimHosts[aim] = process.Address;
-        Assert.Equal(AifError.OK, api.StartFlow(Arp));
+        Assert.Equal(AifError.OK, api.StartFlow(Arp, out moduleId));
     }
 
     public void Dispose() { api.Dispose(); process.Dispose(); try { Directory.Delete(work, true); } catch { } }
@@ -74,7 +75,7 @@ public class CaeUscV25ArpModuleTests : IDisposable
         var clock = Stopwatch.StartNew(); string? last = null;
         while (clock.Elapsed.TotalSeconds < seconds)
         {
-            var read = api.OutputRead(Arp, type, number, 3_000);
+            var read = api.OutputRead(moduleId, type, number, 3_000);
             if (read.Error != AifError.OK) continue;
             last = read.Json!;
             if (found(last)) return last;
@@ -88,8 +89,8 @@ public class CaeUscV25ArpModuleTests : IDisposable
         var tape = IrregularTape();
         var film = new VideoFrames(32, 24, 10, Enumerable.Range(0, 100).Select(t => Frame(t >= 30 && t < 36 ? 200 : t >= 70 ? 60 : 120, t)).ToArray());      // a splice at 2.9-3.7 s, a new tape at 6.9 s
         var av = BasicMultimodalObject.Make("av", new Audio(tape.Samples[(int)(2.5 * Rate)..], Rate), film);                                                  // the film starts 2.5 s into the recording
-        Assert.Equal(AifError.OK, api.InputWrite(Arp, "OSD-BAO-V1.5", 1, AudioObject.Make("pres", tape), 20_000));
-        Assert.Equal(AifError.OK, api.InputWrite(Arp, "OSD-BMO-V1.5", 1, av, 20_000));
+        Assert.Equal(AifError.OK, api.InputWrite(moduleId, "OSD-BAO-V1.5", 1, AudioObject.Make("pres", tape), 20_000));
+        Assert.Equal(AifError.OK, api.InputWrite(moduleId, "OSD-BMO-V1.5", 1, av, 20_000));
 
         // The Preservation Master: it settles when it holds the irregularities the analyses agree on (the dropout, the splice, the click and the change of tape, with the step in level).
         static bool Complete(string json)

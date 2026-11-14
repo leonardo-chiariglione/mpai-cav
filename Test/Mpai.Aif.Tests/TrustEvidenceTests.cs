@@ -155,13 +155,14 @@ public class TrustEvidenceTests
         // The measured SHA-256 of a binary changes with each build: not recorded.
         static string Masked(string? why) => Regex.Replace(why ?? "", @"SHA-256 [0-9A-F]{16}\.\.\.", "SHA-256 <as measured>");
         AifError outcome;
-        try { outcome = api.StartFlow(name); }
+        int id;
+        try { outcome = api.StartFlow(name, out id); }
         catch (InvalidOperationException refused) { return "refused: " + Masked(refused.Message); }
         if (outcome == AifError.NotTrusted) return "NOT_TRUSTED: " + Masked(api.Controller.LastRefusal);
         if (outcome != AifError.OK) return outcome.ToString();
         instance = api.Controller.InstanceName(name);
-        var run = api.Advance(name, [new ControllerApi.Datum(RemoteTests.Text, "x")]);
-        api.StopFlow(name);
+        var run = api.Advance(id, [new ControllerApi.Datum(RemoteTests.Text, "x")]);
+        api.StopFlow(id);
         return $"started; an exchange: {run.Error}";
     }
 
