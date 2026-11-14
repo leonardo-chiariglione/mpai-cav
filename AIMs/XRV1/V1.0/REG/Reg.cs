@@ -92,7 +92,8 @@ public sealed class RegAimProcessor : IAimProcessor, IAimRunner
             }
         }
 
-        var inputs = new[] { (Types.BasicTextObject, 1), (Types.ActionTable, 1), (Types.REVenueSpecification, 1), (EndShd, 1), (Types.ParticipantData, 1), (Types.Script, 1), (Types.ScriptVenueAssociations, 1) };
+        // what sets up the show first (SelectAsync gives the first Port with a Message): a Cue or Show Descriptors waiting with it are taken after it
+        var inputs = new[] { (Types.ActionTable, 1), (Types.REVenueSpecification, 1), (Types.ParticipantData, 1), (Types.Script, 1), (Types.ScriptVenueAssociations, 1), (Types.BasicTextObject, 1), (EndShd, 1) };
         while (await ports.SelectAsync(-1, inputs) is { } port)
         {
             if (await ports.ReadAsync(port.DataType, port.PortNumber, 0) is not { } message) continue;

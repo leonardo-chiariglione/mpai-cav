@@ -53,7 +53,9 @@ public sealed class AcgAimProcessor : IAimProcessor, IAimRunner
 
         await Write(engine.Start());
 
-        var inputs = new List<(string, int)>(statuses) { (Types.ParticipantData, 1), (Types.ScriptVenueAssociations, 1), (Types.Script, 1), (Types.ActionTable, 1) };
+        // what sets up the show first: where it and a Status both wait, the Status is taken with the Script and the Action Table it needs (SelectAsync gives the first Port with a Message)
+        var inputs = new List<(string, int)> { (Types.ParticipantData, 1), (Types.ScriptVenueAssociations, 1), (Types.Script, 1), (Types.ActionTable, 1) };
+        inputs.AddRange(statuses);
         while (await ports.SelectAsync(-1, inputs.ToArray()) is { } port)
         {
             if (await ports.ReadAsync(port.DataType, port.PortNumber, 0) is not { } message) continue;

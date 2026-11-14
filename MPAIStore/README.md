@@ -8,6 +8,8 @@ L3s, at submission and at execution; it holds no code. The code is kept by the s
 |---|---|
 | `L3s/AMQ` | the L3s of Answer to Multimodal Question for the Store: `1MMC-AMQ-V2.5-I02`, the Composite AIM (no code: it names its sub-AIMs), and the four leaf AIMs `1MMC-ASR-V2.5-I03`, `1MMC-TIQ-V2.5-I03`, `1MMC-TTS-V2.5-I03`, `1PAF-PMX-V1.6-I03`, whose `ImplementationURI` is the address of their package |
 | `L3s/make-amq-l3s.py` | makes them from the -I01 L3s of `AIMs/AMDs`, given the address of the packages |
+| `L3s/XRV` | the L3s of the Live Theatrical Performance (XRV-LTP V1.0) for the Store: `1XRV-LTP-V1.0-I02`, the Composite AIM, and the seven leaf AIMs `1XRV-{ACG,END,OSI,PFI,PTI,REG,VEG}-V1.0-I02`, whose `ImplementationURI` is the address of their package in the release `xrv-v1.0`; each package carries the plug-in of its AIM (`<Aim>Plugin`, an `IAimPlugin`) |
+| `L3s/make-xrv-l3s.py` | makes them from the -I01 L3s of `AIMs/AMDs`, given the address of the packages |
 | `Packages` | the packages of the AIMs, as built (not kept in git): one zip per AIM and platform, `<ImplementationID>-win-x64.zip` |
 
 **Making the packages:**
@@ -22,12 +24,15 @@ python MPAIStore/L3s/make-amq-l3s.py https://github.com/leonardo-chiariglione/pa
 ```
 The L3s made here name `MPAIStore/Packages` on this machine, to try them before publishing.
 
+For XRV: `-Amds MPAIStore/L3s/XRV` (every leaf), then `python MPAIStore/L3s/make-xrv-l3s.py https://github.com/leonardo-chiariglione/packages/releases/download/xrv-v1.0`.
+
 **Trying them:** `Test/Mpai.Aif.Tests/AmqFromPackagesTests.cs` gives the Controller only these five L3s; it fetches the packages one by one, loads the AIMs and runs AMQ.
+`XrvLtpTests.TheMiniShowRunsFromThePackagesTheStoreApproved` submits the eight XRV L3s to a running Store, then gives the Controller only them: it fetches each package, has the Store verify it, loads its plug-in and runs the mini show.
 
 **The hashes, from the Implementer to the Controller:**
 1. The Implementer submits the L3s to the Store (`Store/Service/Submit-L3s.ps1`). For each leaf AIM the Store reaches the package its `ImplementationURI` names - a `.zip`
-   in its packages folder, or at an http(s) address - measures `BinaryName`.dll inside it, records the SHA-256 as approved, and keeps no code.
+   in its packages folder, or at an http(s) address - measures the package (`BinaryName`.dll and the libraries of the package it loads, not those of MPAI-AIF: MPAI Store 4),
+   records that fingerprint as approved, and keeps no code.
 2. The Controller (the AIF Service, configured with `StoreUrl` and `L3Source` `Store`, see `AIF/mas-server.store.example.json`) takes the L3s from the Store, fetches each package,
-   measures the same binary and puts the SHA-256 to the Store (`MPAI_AIFS_VerifyImplementation`). Only `Same` loads the package; `Different`, not recorded, or a Store that does not answer refuses the AIM.
-3. `Test/Mpai.Aif.Tests/PackageFingerprintTests.cs` does both with a Store running: the packages as submitted are approved; one with a byte added to its binary is refused.
-The other files of a package (the libraries it brings) are not measured.
+   measures it the same way and puts the fingerprint to the Store (`MPAI_AIFS_VerifyImplementation`). Only `Same` loads the package; `Different`, not recorded, or a Store that does not answer refuses the AIM.
+3. `Test/Mpai.Aif.Tests/PackageFingerprintTests.cs` does both with a Store running: the packages as submitted are approved; one with a byte added to its binary, or to a library it loads, is refused.

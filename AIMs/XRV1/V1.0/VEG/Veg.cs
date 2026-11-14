@@ -74,7 +74,8 @@ public sealed class VegAimProcessor : IAimProcessor, IAimRunner
             await ports.WriteAsync(VDO, 1, output.ToJsonString(), -1);
         }
 
-        var inputs = new[] { (Types.BasicTextObject, 1), (Types.ActionTable, 1), (Types.VEVenueSpecification, 1), ("XRV-SHD-V1.0", 1), (Types.ParticipantData, 1), (Types.Script, 1), (Types.ScriptVenueAssociations, 1) };
+        // what sets up the show first (SelectAsync gives the first Port with a Message): a Cue or Show Descriptors waiting with it are taken after it
+        var inputs = new[] { (Types.ActionTable, 1), (Types.VEVenueSpecification, 1), (Types.ParticipantData, 1), (Types.Script, 1), (Types.ScriptVenueAssociations, 1), (Types.BasicTextObject, 1), ("XRV-SHD-V1.0", 1) };
         while (await ports.SelectAsync(-1, inputs) is { } port)
         {
             if (await ports.ReadAsync(port.DataType, port.PortNumber, 0) is not { } message) continue;

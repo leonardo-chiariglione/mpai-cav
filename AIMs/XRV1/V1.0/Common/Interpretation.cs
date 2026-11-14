@@ -128,10 +128,11 @@ public abstract class StatusInterpretationAim : IAimProcessor, IAimRunner
         var latest = new Dictionary<bool, DescriptorsObject>();
         long count = 0;
 
+        // what sets up the show first (SelectAsync gives the first Port with a Message): Descriptors or a Cue waiting with it are taken after it
         var inputs = new[]
         {
-            (Info(true).DescriptorsHeader, 1), (Info(false).DescriptorsHeader, 1), (Types.BasicTextObject, 1), (Types.Script, 1),
-            (Types.ActionTable, 1), (Types.ScriptVenueAssociations, 1), (Types.ParticipantData, 1)
+            (Types.Script, 1), (Types.ActionTable, 1), (Types.ScriptVenueAssociations, 1), (Types.ParticipantData, 1),
+            (Info(true).DescriptorsHeader, 1), (Info(false).DescriptorsHeader, 1), (Types.BasicTextObject, 1)
         };
 
         async Task Evaluate(bool re, bool fromDescriptors)

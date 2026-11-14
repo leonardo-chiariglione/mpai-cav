@@ -76,15 +76,20 @@ public sealed class PackageAimProvider : IAimProvider
         // standard AIM name (MMC-EDP-V2.5); the Controller runs Instances
         // (1MMC-EDP-V2.5-I01) and would not find it. Until the plug-in contract
         // carries the Instance identifier, the provider supplies it.
-        return string.Equals(processor.InstanceId, aimName, StringComparison.Ordinal)
-            ? processor
+        return string.Equals(processor.InstanceId, aimName, StringComparison.Ordinal) ? processor
+            : processor is IAimRunner runner ? new RunnerAsInstance(aimName, processor, runner)                 // an AIM that executes continuously stays one
             : new AsInstance(aimName, processor);
     }
 
-    private sealed class AsInstance(string instanceId, IAimProcessor inner) : IAimProcessor
+    private class AsInstance(string instanceId, IAimProcessor inner) : IAimProcessor
     {
         public string InstanceId => instanceId;
         public System.Threading.Tasks.Task<Message> ProcessAsync(Message message) => inner.ProcessAsync(message);
+    }
+
+    private sealed class RunnerAsInstance(string instanceId, IAimProcessor inner, IAimRunner runner) : AsInstance(instanceId, inner), IAimRunner
+    {
+        public System.Threading.Tasks.Task RunAsync(IAimPorts ports, AimContext context) => runner.RunAsync(ports, context);
     }
 
     // 1MMC-TIQ-V2.5-I01 is an implementation of MMC-TIQ-V2.5, which is what a
@@ -216,8 +221,13 @@ public sealed class PackageAimProvider : IAimProvider
         private readonly AssemblyDependencyResolver resolver;
         public PackageContext(string assemblyPath) : base(isCollectible: false) => resolver = new AssemblyDependencyResolver(assemblyPath);
 
+        // WHAT RUNS IS WHAT WAS MEASURED (MPAI Store 4; Zero Trust and Profiles 5): an assembly the package has is loaded from the package - the fingerprint the Store
+        // approved covers it - except MPAI-AIF itself (AIF.*), which the Controller gives every package, so that the types the Controller and the AIM share are one.
+        // Only what the package does not have (the .NET runtime) comes from the program.
         protected override Assembly? Load(AssemblyName name)
         {
+            if (name.Name is { } n && !n.StartsWith(ImplementationFingerprints.FrameworkPrefix, StringComparison.Ordinal) && resolver.ResolveAssemblyToPath(name) is { } own)
+                return LoadFromAssemblyPath(own);
             try
             {
                 var shared = Default.LoadFromAssemblyName(name);
