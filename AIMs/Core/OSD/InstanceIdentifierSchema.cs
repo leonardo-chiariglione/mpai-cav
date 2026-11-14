@@ -30,7 +30,9 @@ public sealed class InstanceIdentifier
     public string MInstanceID { get; init; } = "";
     public string? UEnvironmentID { get; init; }
 
-    // Primary instance identifier - equivalent to the first element's label.
+    // Primary instance identifier - equivalent to the first element's label. In JSON "InstanceIdentifier", as the schema requires (a C# member cannot
+    // bear the name of its class, hence the underscore here); written "InstanceIdentifier_" before 2026-11-14, which the schema refused.
+    [System.Text.Json.Serialization.JsonPropertyName("InstanceIdentifier")]
     public string InstanceIdentifier_ { get; init; } = "";
 
     public SimpleTime? InstanceTime { get; init; }
