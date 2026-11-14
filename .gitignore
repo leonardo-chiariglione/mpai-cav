@@ -118,3 +118,6 @@ Test/Data/Music/dataset/
 Test/Data/ChestXray/
 Test/Data/Fl/txv/
 Test/Data/Fl/chex-densenet121-features.onnx*
+
+# OSD-TMA test video (AMI Meeting Corpus, CC BY 4.0, 30.9 MB): kept out of git; Test/Data/TMA/README.md says where it comes from and how it was made
+Test/Data/TMA/*.mp4
