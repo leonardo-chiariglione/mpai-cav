@@ -20,6 +20,8 @@
     <ProjectReference Include="..\..\..\..\AIMs\NNW\V2.0\NoConstraint\Mpai.Nnw.NoConstraint.csproj" />
     <ProjectReference Include="..\..\..\..\AIF\Controller\AIF.Controller.csproj" />
     <ProjectReference Include="..\..\..\..\AIF\Metadata\AIF.Metadata.csproj" />
+    <!-- the Secure mode (option secure): a root of trust and a Security API for each party (FlSecure.cs) -->
+    <ProjectReference Include="..\Mpai.Aih.Hsp.csproj" />
   </ItemGroup>
 
 </Project>

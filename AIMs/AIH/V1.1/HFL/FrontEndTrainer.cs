@@ -32,31 +32,44 @@ public sealed class FrontEndTrainer : IDisposable
 
     private readonly byte[] _baseNetwork;
     private readonly ISharedStorage _vault;
+    private readonly int _inputLength;                                                 // 0: an image of ImageSide x ImageSide; otherwise a vector of features of that length
     private int _version;
 
     public int FeatureCount { get; }
     public int Cases => _vault.MPAI_AIFM_SharedStorage_List(CasePrefix).Count;
     public int Version => _version;
 
-    public FrontEndTrainer(string networkPath, ISharedStorage endUserStorage)
+    public FrontEndTrainer(string networkPath, ISharedStorage endUserStorage) : this(networkPath, endUserStorage, 0) { }
+
+    // A trainer whose cases are VECTORS of inputLength values (N-22: the features a frozen chest network gives for an image, cached; the network trained here is
+    // a head on them). The vectors are used as they are (not standardised).
+    public FrontEndTrainer(string networkPath, ISharedStorage endUserStorage, int inputLength)
     {
         _baseNetwork = System.IO.File.ReadAllBytes(networkPath);
-        FeatureCount = new Network(_baseNetwork, ImageSide).FeatureCount;
+        _inputLength = inputLength;
+        FeatureCount = NewNetwork(_baseNetwork).FeatureCount;
         _vault = endUserStorage;
         _version = _vault.MPAI_AIFM_SharedStorage_List(ModelPrefix).Count;
+    }
+
+    public int InputLength => _inputLength > 0 ? _inputLength : ImageSide * ImageSide;
+
+    private Network NewNetwork(byte[] onnx) => _inputLength > 0 ? new Network(onnx, _inputLength, 1, 1) : new Network(onnx, ImageSide);
+
+    // What the network is given: an image standardised; a vector as it is.
+    private float[] Prepare(float[] input)
+    {
+        if (input.Length != InputLength) throw new ArgumentException($"an input holds {InputLength} values, not {input.Length}.");
+        return _inputLength > 0 ? input : Standardise(input);
     }
 
     public void Dispose() { }
 
     // The network the trainer was made with, on one image (ImageSide x ImageSide, grey, 0..1).
-    public float[] Features(float[] image)
-    {
-        if (image.Length != ImageSide * ImageSide) throw new ArgumentException($"an image holds {ImageSide * ImageSide} values.");
-        return new Network(_baseNetwork, ImageSide).Features(Standardise(image));
-    }
+    public float[] Features(float[] image) => NewNetwork(_baseNetwork).Features(Prepare(image));
 
     // The network of a model: its own (third Data item) or, for a final layer alone, the trainer's.
-    private Network NetworkFor(JsonObject? model) => new(NetworkOf(model ?? new JsonObject()) ?? _baseNetwork, ImageSide);
+    private Network NetworkFor(JsonObject? model) => NewNetwork(NetworkOf(model ?? new JsonObject()) ?? _baseNetwork);
 
     // Keeps a past case of the End User (the image and its label) in the End User's storage.
     public void KeepCase(string caseId, float[] image, bool finding)
@@ -74,7 +87,7 @@ public sealed class FrontEndTrainer : IDisposable
             var b = _vault.MPAI_AIFM_SharedStorage_Get(k);
             var image = new float[(b.Length - 1) / 4];
             Buffer.BlockCopy(b, 1, image, 0, b.Length - 1);
-            return (Standardise(image), (float)b[0]);
+            return (Prepare(image), (float)b[0]);
         }).ToList();
 
     // Trains the model given (null: a final layer from zero, on the trainer's network) on the End User's own cases; keeps the new version; returns it.
@@ -122,11 +135,18 @@ public sealed class FrontEndTrainer : IDisposable
         double right = 0, loss = 0; var n = 0;
         foreach (var (image, finding) in cases)
         {
-            var p = Sigmoid(Dot(w, net.Features(Standardise(image))));
+            var p = Sigmoid(Dot(w, net.Features(Prepare(image))));
             if ((p >= 0.5) == finding) right++;
             loss -= Math.Log(Math.Max(1e-7, finding ? p : 1 - p)); n++;
         }
         return (right / n, loss / n);
+    }
+
+    // The probability of a finding the model gives for each input.
+    public double[] Probabilities(JsonObject model, IEnumerable<float[]> inputs)
+    {
+        var w = Weights(model); var net = NetworkFor(model);
+        return inputs.Select(x => Sigmoid(Dot(w, net.Features(Prepare(x))))).ToArray();
     }
 
     public static float[] Weights(JsonObject model)
@@ -180,7 +200,7 @@ public sealed class FrontEndTrainer : IDisposable
     private Hold Held(Network net, Func<byte[], byte[]> mark)
     {
         var before = net.Weights();
-        var after = new Network(mark(net.ToOnnx()), ImageSide).Weights();
+        var after = NewNetwork(mark(net.ToOnnx())).Weights();
         var parameters = net.Parameters().ToList();
         var held = new List<(int P, int I, float V)>();
         for (int p = 0, at = 0; p < parameters.Count; at += parameters[p].Values.Length, p++)

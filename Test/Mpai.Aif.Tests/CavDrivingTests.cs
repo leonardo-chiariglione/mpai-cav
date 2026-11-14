@@ -128,11 +128,52 @@ public class CavDrivingTests
         map.Add(new Lane { Id = "R", Centre = Polyline.Straight(new(0, 0), new(1000, 0)), SpeedLimit = 25 });
         map.Add(new Lane { Id = "L", Centre = Polyline.Straight(new(0, 3.5), new(1000, 3.5)), SpeedLimit = 25 });
         map.SideBySide("L", "R");
-        var cutter = User(1, RoadUserKind.Car, new Vec2(80, 3.0), new Vec2(18, -0.9), "L", 80, d: -0.5, lateral: -0.9);
+        // (N-20) the movement across the lane is a steady one, as step 1 describes it (SteadyLateralSpeed)
+        var cutter = User(1, RoadUserKind.Car, new Vec2(80, 3.0), new Vec2(18, -0.9), "L", 80, d: -0.5, lateral: -0.9) with { SteadyLateralSpeed = -0.9 };
         var p = new MotionPredictor(map).Predict(SceneOf(map, new Vec2(60, 0), 0, 22, "R", [cutter])).Single(x => x.RoadUserId == 1);
         var change = Assert.Single(p.Hypotheses, h => h.Label == "changes lane to the right");
         Assert.True(change.Probability >= 0.3, $"p {change.Probability:F2}");
         Assert.InRange(change.At(3).Position.Y, -0.5, 0.5);            // in the CAV's lane in 3 s
+    }
+
+    // N-20: a sideways speed that is not steady (what the noise of the sensor makes) gives no lane change; the indicator alone does.
+    [Fact]
+    public void Step2_NoLaneChangeFromASidewaysSpeedThatIsNotSteadyButOneFromTheIndicator()
+    {
+        var map = new RoadMap();
+        map.Add(new Lane { Id = "R", Centre = Polyline.Straight(new(0, 0), new(1000, 0)), SpeedLimit = 25 });
+        map.Add(new Lane { Id = "L", Centre = Polyline.Straight(new(0, 3.5), new(1000, 3.5)), SpeedLimit = 25 });
+        map.SideBySide("L", "R");
+        var drifting = User(1, RoadUserKind.Car, new Vec2(80, 3.3), new Vec2(12, -0.6), "L", 80, d: -0.2, lateral: -0.6);   // SteadyLateralSpeed 0
+        var p = new MotionPredictor(map).Predict(SceneOf(map, new Vec2(60, 0), 0, 13, "R", [drifting])).Single(x => x.RoadUserId == 1);
+        Assert.DoesNotContain(p.Hypotheses, h => h.Label.StartsWith("changes lane", StringComparison.Ordinal));
+        var indicating = User(1, RoadUserKind.Car, new Vec2(80, 3.5), new Vec2(12, 0), "L", 80, indicator: -1);
+        var q = new MotionPredictor(map).Predict(SceneOf(map, new Vec2(60, 0), 0, 13, "R", [indicating])).Single(x => x.RoadUserId == 1);
+        Assert.Contains(q.Hypotheses, h => h.Label == "changes lane to the right");
+    }
+
+    // N-20: step 1 gives a steady sideways speed for a real drift across the lane, and none for the noise of the sensor (0.15 m) alone.
+    [Fact]
+    public void Step1_TheSteadySidewaysSpeedIsThatOfARealDriftNotOfTheNoise()
+    {
+        var map = new RoadMap();
+        map.Add(new Lane { Id = "R", Centre = Polyline.Straight(new(0, 0), new(1000, 0)), SpeedLimit = 25 });
+        map.Add(new Lane { Id = "L", Centre = Polyline.Straight(new(0, 3.5), new(1000, 3.5)), SpeedLimit = 25 });
+        map.SideBySide("L", "R");
+        var seen = new Dictionary<string, (double, double)> { ["R"] = (0, 1000), ["L"] = (0, 1000) };
+        double Steady(Func<double, double> y, int seed)
+        {
+            var describer = new SceneDescriber(map); var rng = new Random(seed); double worst = 0;
+            for (var t = 0.0; t <= 6.0 + 1e-9; t += 0.1)
+            {
+                var pos = new Vec2(100 + 12 * t + Sensor.Gauss(rng) * 0.15, y(t) + Sensor.Gauss(rng) * 0.15);
+                var scene = describer.Describe(new SensorFrame(t, new Vec2(60 + 13 * t, 0), 0, 13, [new Detection(RoadUserKind.Car, pos, 0, 4.5, 1.8)], seen));
+                worst = Math.Max(worst, Math.Abs(scene.RoadUsers.Single().SteadyLateralSpeed));
+            }
+            return worst;
+        }
+        for (var seed = 1; seed <= 20; seed++) Assert.Equal(0, Steady(_ => 3.5, seed));                 // noise only: never a steady sideways speed
+        Assert.True(Steady(t => t < 2 ? 3.5 : Math.Max(0, 3.5 - 1.0 * (t - 2)), 7) > 0.6);              // a drift of 1 m/s: seen
     }
 
     [Fact]

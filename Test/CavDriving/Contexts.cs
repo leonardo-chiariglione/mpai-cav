@@ -146,6 +146,26 @@ public static class Contexts
                 Parameters = new() { ["closed from x"] = 300, ["closed to x"] = 360, ["traffic spacing m (0 = none)"] = spacing, ["traffic speed m/s"] = 12 },
             };
         }
+        // N-20: a car that REALLY changes lane in front of the CAV, from the left lane into the CAV's (right) lane: 22 m ahead of it at the
+        // start and 3 m/s slower, the lane change from 2.5 s (then about 10 m between them) in 2.5 s - with the indicator (on 1.5 s before)
+        // and without it. The CAV must still brake for it.
+        foreach (var indicator in new[] { true, false })
+        {
+            var map = TwoLanes(1000, 13.9);
+            var r = map.Lanes["R"].Centre; var l = map.Lanes["L"].Centre;
+            var agents = new List<Agent>();
+            int id = 1;
+            for (double x = 300; x < 360; x += 10)
+                agents.Add(new Agent { Id = id++, Kind = RoadUserKind.Obstacle, Path = r, S = x + 5, Length = 9.5, Width = 1.6, Parked = true });
+            agents.Add(new Agent { Id = id++, Kind = RoadUserKind.Car, Path = l, S = 100 + 4.55 + 22, V = 10, DesiredSpeed = 10,
+                                   LaneChange = (2.5, r, 2.5), LaneChangeWithoutIndicator = !indicator, IndicatorLead = indicator ? 1.5 : 0 });
+            yield return new Scenario
+            {
+                Context = "5-lane-closed-by-roadworks", Variant = indicator ? "car-changes-lane-ahead-indicator" : "car-changes-lane-ahead-no-indicator", Map = map, Agents = agents,
+                StartLane = "R", StartS = 100, StartSpeed = 13, DestLane = "R", DestS = 700, MaxTime = 120,
+                Parameters = new() { ["closed from x"] = 300, ["closed to x"] = 360, ["car ahead m (at the start)"] = 22, ["car speed m/s"] = 10, ["lane change at s"] = 2.5, ["lane change s"] = 2.5, ["indicator"] = indicator },
+            };
+        }
     }
 
     // ---------- 6. an oncoming car turning left across the CAV's way at a junction ----------

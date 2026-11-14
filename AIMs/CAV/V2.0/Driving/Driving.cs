@@ -5,7 +5,10 @@ namespace Mpai.Cav.Driving;
 // otherwise stop. A choice is allowed only if, after holding it for a moment, the CAV can still brake to a stop without coming
 // near any road user in any of its likely hypotheses, nor any assumed road user - so a way to stop safely always exists.
 // Pedestrians and cyclists first: they are given a wider margin and more time around them.
-// If no choice is allowed, the CAV brakes as hard as it can: it stops.
+// If no choice is allowed, the CAV brakes as hard as it can: it stops - unless (N-20) what makes every choice unsafe is only a
+// POSSIBILITY: a hypothesis of a vehicle below LowProbability that is not its most likely one. Then the choices are looked at again
+// without those, and if one is allowed the CAV takes it but slows down gently (at least GentleBraking): the emergency stop stays for
+// what is really there. Never relaxed: the hypotheses of pedestrians and cyclists, the assumed road users, and 'brakes hard'.
 public sealed record PathOption(string Label, Polyline Path, string? TargetLane, double Cost, double SpeedCap)
 {
     public double MustReach { get; init; }      // a pass: the distance along the way where the CAV is back in its lane
@@ -28,6 +31,8 @@ public sealed class Driver
     private PathOption? _lastChosen;
     private bool _egoGivesWay, _entering;
     private string? _egoLaneId;
+    private string? _headingTo;                                // N-20: the lane the CAV last chose to be in (its own, or the one it changes to)
+    public double LaneCommitment { get; init; } = 6.0;         // N-20: score kept for finishing in that lane (no flipping between lanes)
 
     public double EgoLength { get; init; } = 4.6;
     public double EgoWidth { get; init; } = 1.9;
@@ -44,6 +49,8 @@ public sealed class Driver
     public double LoneStandstillGap { get; init; } = 6.0;    // and this far from one stopped alone (it may have to go round it)
     private HashSet<int> _lone = [];
     public double MinProbability { get; init; } = 0.1;       // hypotheses below it are not respected (the most likely always is)
+    public double LowProbability { get; init; } = 0.3;       // N-20: below it a vehicle's hypothesis (not its most likely) is a possibility: gentle slowing, no emergency stop
+    public double GentleBraking { get; init; } = 2.0;        // m/s2, the slowing for a possibility
     public double TimeGap { get; init; } = 1.0;              // the CAV does not go where a moving road user was or will be within this time
     public double GiveWayGap { get; init; } = 2.0;           // the same where the CAV gives way
     public double DetectionDelay { get; init; } = 0.5;       // s the scene description takes to show that a vehicle brakes hard
@@ -87,9 +94,13 @@ public sealed class Driver
         // For each way, the highest acceleration (not above the one it wants) that keeps a safe stop.
         var results = new List<(PathOption O, double A, double Desired, double Progress, string? Limit)>();
         var alternatives = new List<string>();
+        var dropBack = DropBack(scene, options, relevant);
         foreach (var o in options)
         {
             double vDes = DesiredSpeed(o, ego.Speed);
+            if (o.Label == "keep lane" && dropBack is { } db) { vDes = Math.Min(vDes, db.Speed); alternatives.Add(db.Why); }
+            // N-20: into a lane with traffic the CAV follows the vehicle ahead in it: it does not plan to go faster than that one
+            if (o.TargetLane is not null && LeaderSpeed(scene, o) is double vl) vDes = Math.Min(vDes, vl + 0.5);
             double desired = Math.Clamp(1.2 * (vDes - ego.Speed), -ComfortBraking, MaxAcceleration);
             string? limit = null; double? chosen = null;
             foreach (var a in Accelerations().Where(a => a <= desired + 1e-9).OrderByDescending(a => a).Prepend(desired))
@@ -119,12 +130,42 @@ public sealed class Driver
         }
         if (results.Count == 0)
         {
+            var conflict = FirstConflict(options, ego.Speed, relevant) ?? "?";
+            // N-20: is it only a possibility? The ways again, without the vehicles' hypotheses of low probability.
+            var likely = Likely(relevant);
+            var allowed = new List<(PathOption O, double A, double Desired)>();
+            foreach (var o in options)
+            {
+                double vDes = DesiredSpeed(o, ego.Speed);
+                double desired = Math.Clamp(1.2 * (vDes - ego.Speed), -ComfortBraking, MaxAcceleration);
+                foreach (var a in Accelerations().Where(a => a <= desired + 1e-9).OrderByDescending(a => a).Prepend(desired))
+                {
+                    checkedCount++;
+                    if (Conflict(o.Path, ego.Speed, a, likely, vDes, ego.Position, ego.Heading, o.MustReach) is not null) continue;
+                    allowed.Add((o, a, desired));
+                    break;
+                }
+            }
+            // the way the CAV is on is preferred (no new manoeuvre for a doubt); otherwise the one with the highest acceleration
+            var onWay = _lastOption ?? "keep lane";
+            var gentle = allowed.Where(x => x.O.Label == onWay).Select(x => ((PathOption O, double A, double Desired)?)x).FirstOrDefault()
+                         ?? (allowed.Count > 0 ? allowed.MaxBy(x => x.A) : null);
+            if (gentle is { } g)
+            {
+                _lastOption = g.O.Label; _lastChosen = g.O;
+                double acc = Math.Min(g.A, -GentleBraking);
+                alternatives.Add($"{g.O.Label}: allowed without the possibilities of low probability (under {LowProbability:F2}): slowing gently at {acc:F1}");
+                return new Decision(scene.Time, g.O.Label, acc, g.Desired, false, "slowing gently for a possibility: " + conflict, checkedCount, DesiredSpeed(g.O, ego.Speed), g.O) { Alternatives = alternatives };
+            }
             // brake on the way the CAV is on (not steering back into what it was going round)
-            var current = options.FirstOrDefault(o => o.Label == _lastOption) ?? _lastChosen ?? options.FirstOrDefault();
-            return Stop(scene, "no collision-free motion: " + (FirstConflict(options, ego.Speed, relevant) ?? "?"), current) with { Alternatives = alternatives };
+            var currentWay = options.FirstOrDefault(o => o.Label == _lastOption) ?? _lastChosen ?? options.FirstOrDefault();
+            return Stop(scene, "no collision-free motion: " + conflict, currentWay) with { Alternatives = alternatives };
         }
 
-        var best = results.MaxBy(r => r.Progress + (r.O.Label == _committed ? 6 : 0) + (r.O.Label == "keep lane" ? 0.5 : 0));
+        string DestOf(PathOption o) => o.TargetLane ?? ego.LaneId!;
+        var best = results.MaxBy(r => r.Progress + (r.O.Label == _committed ? 6 : 0) + (r.O.Label == "keep lane" ? 0.5 : 0)
+                                      + (_headingTo is not null && DestOf(r.O) == _headingTo ? LaneCommitment : 0));
+        _headingTo = DestOf(best.O);
         _committed = best.O.Label == "keep lane" ? null : best.O.Label;
         _lastOption = best.O.Label; _lastChosen = best.O;
         string reason = best.Limit is null ? (best.A < -0.01 ? "slowing to the speed it wants" : "free") : "held back by " + best.Limit;
@@ -150,6 +191,58 @@ public sealed class Driver
             return !(behind && sameLane && !u.Vulnerable);
         }).ToList();
     }
+
+    // N-20: DROPPING BACK TO MERGE. The CAV's lane is blocked ahead (an obstacle, or a vehicle stopped alone, within 150 m) and the
+    // lane change beside is not allowed now because of vehicles moving in that lane alongside: the CAV keeps its lane at 2 m/s below
+    // the slowest of them, so that it falls behind one and a gap opens (staying level with the stream, it never finds one). Until
+    // 2026-11-13 the CAV merged in the roadworks run only because the false lane changes of N-20 made it slow down by chance.
+    private (double Speed, string Why)? DropBack(Scene scene, List<PathOption> options, List<Prediction> relevant)
+    {
+        var ego = scene.Ego;
+        var keep = options.FirstOrDefault(o => o.Label == "keep lane");
+        if (keep is null) return null;
+        double? blockedAt = null;
+        foreach (var u in scene.RoadUsers)
+        {
+            if (!u.Stationary || u.Vulnerable || !(u.Kind == RoadUserKind.Obstacle || _lone.Contains(u.Id))) continue;
+            var (su, du) = keep.Path.Project(u.Position);
+            if (su > 0 && su < 150 && Math.Abs(du) < (u.Width + EgoWidth) / 2 + 0.3) blockedAt = Math.Min(blockedAt ?? double.MaxValue, su);
+        }
+        if (blockedAt is null) return null;
+        foreach (var o in options.Where(o => o.TargetLane is not null))
+        {
+            if (Conflict(o.Path, ego.Speed, 0, relevant, DesiredSpeed(o, ego.Speed), ego.Position, ego.Heading) is null) continue;   // it may change lane now
+            var beside = scene.RoadUsers.Where(u => !u.Stationary && !u.Vulnerable && u.LaneId == o.TargetLane)
+                                        .Where(u => o.Path.Project(u.Position) is var (su, du) && Math.Abs(su) < 25 && Math.Abs(du) < 2.5).ToList();
+            if (beside.Count == 0) continue;
+            double v = Math.Max(0, beside.Min(u => u.Speed) - 2.0);
+            return (v, $"dropping back to merge: its lane is blocked {blockedAt:F0} m ahead, {o.Label} not allowed now; keeps its lane at {v:F1} m/s, 2 below the vehicles beside");
+        }
+        return null;
+    }
+
+    // The speed of the nearest vehicle ahead on a way (going the same way), if there is one within 60 m.
+    private double? LeaderSpeed(Scene scene, PathOption o)
+    {
+        double? best = null, speed = null;
+        foreach (var u in scene.RoadUsers)
+        {
+            if (u.Vulnerable || u.Stationary) continue;
+            var (su, du) = o.Path.Project(u.Position);
+            if (su <= 0 || su > 60 || Math.Abs(du) > (u.Width + EgoWidth) / 2 + 0.3) continue;
+            if (u.Velocity.Dot(Vec2.FromHeading(o.Path.HeadingAt(su))) < 0) continue;
+            if (best is null || su < best) { best = su; speed = u.Speed; }
+        }
+        return speed;
+    }
+
+    // N-20: the predictions without the possibilities - a vehicle's hypotheses below LowProbability that are not its most likely one.
+    // Pedestrians, cyclists and assumed road users are kept whole; 'brakes hard' is kept (the distance kept to a vehicle ahead).
+    private List<Prediction> Likely(List<Prediction> predictions) =>
+        predictions.Select(p => p.Assumed || IsVulnerable(p.Kind) ? p : p with
+        {
+            Hypotheses = p.Hypotheses.Where(h => h.Probability >= LowProbability || ReferenceEquals(h, p.MostLikely) || h.Label == MotionPredictor.BrakesHard).ToList()
+        }).ToList();
 
     private string? FirstConflict(List<PathOption> options, double v, List<Prediction> relevant) =>
         options.Select(o => Conflict(o.Path, v, -6, relevant, 0, null, 0)).FirstOrDefault(c => c is not null);
@@ -196,7 +289,14 @@ public sealed class Driver
             // toward the route: the route goes through the lane beside after this one (or this lane is off the route)
             bool toward = _route.Contains(other) && (!_route.Contains(lane.Id) || _route.IndexOf(other) > _route.IndexOf(lane.Id));
             double cost = toward ? -15 : 4;
-            list.Add(new PathOption($"change lane to the {side} ({other})", Build(line, s1, d1, _ => 0, length), other, cost, Cap(chain, line, s1)));
+            double cap = Cap(chain, line, s1);
+            if (!_route.Contains(other) && _map.Lanes.TryGetValue(_destLane, out var dlo))
+            {
+                // N-20: a lane off the route must be left before the destination, as for 'keep lane' off the route: a dead end there
+                var (sDest, _) = line.Project(dlo.Centre.At(_destS));
+                cap = Math.Min(cap, Math.Sqrt(2 * 2.0 * Math.Max(0, sDest - s1 - 30)));
+            }
+            list.Add(new PathOption($"change lane to the {side} ({other})", Build(line, s1, d1, _ => 0, length), other, cost, cap));
         }
 
         // passing a slow or stopped road user ahead on the lane, on the lane to the left

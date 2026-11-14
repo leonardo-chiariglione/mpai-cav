@@ -25,6 +25,8 @@ public sealed class Agent
     public double BrakeDecel { get; init; } = 6;
     public double BrakeHold { get; init; } = double.MaxValue;   // seconds it stays stopped, then drives on
     public (double Time, Polyline NewPath, double Duration)? LaneChange { get; init; }
+    public bool LaneChangeWithoutIndicator { get; init; }        // N-20: the lane change is made with no indicator
+    public double IndicatorLead { get; init; }                  // N-20: seconds before the lane change the indicator goes on
     public Func<World, bool>? StartWhen { get; init; }          // a pedestrian waits for this, then walks
     public (double StopS, Vec2 Conflict, double GapTime)? GiveWay { get; init; }   // waits at StopS until the CAV is not within GapTime of Conflict
     public double FollowGap { get; init; } = 1.2;               // IDM time headway
@@ -49,10 +51,12 @@ public sealed class Agent
             if (S >= Path.Length) { V = 0; return; }
             S += V * dt; return;
         }
+        if (LaneChange is var (lt0, np0, _) && !LaneChangeWithoutIndicator && IndicatorLead > 0 && _lcStart < 0 && w.Time >= lt0 - IndicatorLead)
+            Indicator = Math.Sign(-np0.Project(Position).D);
         if (LaneChange is var (lt, np, dur) && w.Time >= lt && _lcStart < 0)
         {
             var p = Position; var (ns, nd) = np.Project(p);
-            Path = np; S = ns; _lcD0 = nd; D = nd; _lcStart = w.Time; Indicator = Math.Sign(-nd);
+            Path = np; S = ns; _lcD0 = nd; D = nd; _lcStart = w.Time; Indicator = LaneChangeWithoutIndicator ? 0 : Math.Sign(-nd);
             _lcDuration = dur;
         }
         if (_lcStart >= 0)

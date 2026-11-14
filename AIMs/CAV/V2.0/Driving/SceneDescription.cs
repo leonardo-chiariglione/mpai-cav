@@ -12,7 +12,7 @@ public sealed record SensorFrame(double Time, Vec2 EgoPosition, double EgoHeadin
 // STEP 1 - THE SCENE. A road user as the CAV describes it: what it is, where it is, how it moves, on which lane.
 public sealed record DescribedRoadUser(int Id, RoadUserKind Kind, Vec2 Position, Vec2 Velocity, double Heading, double Acceleration,
                                        double Length, double Width, string? LaneId, double S, double D, double LateralSpeed,
-                                       int Indicator, bool Stationary, double SeenFor)
+                                       int Indicator, bool Stationary, double SeenFor, double SteadyLateralSpeed = 0)
 {
     public double Speed => Velocity.Length;
     public bool Vulnerable => Kind is RoadUserKind.Pedestrian or RoadUserKind.Cyclist;
@@ -29,6 +29,15 @@ public sealed record Scene(double Time, EgoState Ego, IReadOnlyList<DescribedRoa
 // Builds the scene at each instant from the frames: keeps each road user apart over time (nearest detection of the same kind
 // within a gate), smooths its position and estimates its velocity and acceleration (an alpha-beta-gamma filter), places it
 // on the road map, and finds the hidden areas.
+// THE STEADY SIDEWAYS MOVEMENT (N-20): the offset across the lane of each measured position over the last SteadyWindow seconds,
+// fitted by a straight line; its slope is the SteadyLateralSpeed only where the window is covered (at least SteadyMinSpan s, at
+// least SteadyMinSamples sightings), the slope is at least SteadyMinSpeed and the road user moved at least SteadyMinShift across
+// the lane in that time; otherwise 0. With a position noise of 0.15 m a sighting, a straight line through 15 sightings over 1.5 s
+// has a slope error of about 0.09 m/s: 0.4 m/s is more than four times that. A real lane change (3.5 m in 3 s) passes it about
+// one second after it starts. Sooner, a lane change UNDER WAY is seen in the measured offsets: the mean of the last 5 sightings at
+// least SteadyMinOffset out of the middle of its lane, and at least SteadyMinOutward further out than the mean of the 5 before (a
+// lane change of 3 s is 0.5 m out after about 0.7 s; the mean of 5 sightings has a noise of about 0.07 m: a road user in the middle
+// of its lane would need seven times that). Its speed across the lane is then the difference of the two means over their time apart.
 public sealed class SceneDescriber(RoadMap map)
 {
     private sealed class Track
@@ -36,6 +45,7 @@ public sealed class SceneDescriber(RoadMap map)
         public int Id; public RoadUserKind Kind; public Vec2 P; public Vec2 V; public Vec2 A; public double Heading;
         public double Length, Width; public int Indicator; public double FirstSeen, LastSeen; public double LateralSpeed;
         public double? LastD; public string? LastLane; public int Updates; public Vec2 Measured;
+        public List<(double T, Vec2 P)> Seen = [];                                    // the measured positions of the last SteadyWindow s
     }
 
     private readonly List<Track> _tracks = [];
@@ -43,6 +53,13 @@ public sealed class SceneDescriber(RoadMap map)
     private double? _lastTime;
     public double Gate { get; init; } = 3.0;
     public double KeepUnseen { get; init; } = 1.0;    // seconds a road user no longer detected is still described (where predicted)
+    public double SteadyWindow { get; init; } = 1.5;
+    public double SteadyMinSpan { get; init; } = 1.2;
+    public int SteadyMinSamples { get; init; } = 10;
+    public double SteadyMinSpeed { get; init; } = 0.4;
+    public double SteadyMinShift { get; init; } = 0.5;
+    public double SteadyMinOffset { get; init; } = 0.5;
+    public double SteadyMinOutward { get; init; } = 0.15;
 
     public Scene Describe(SensorFrame f)
     {
@@ -79,6 +96,7 @@ public sealed class SceneDescriber(RoadMap map)
                 t.A = t.A + r * (2 * gamma / (dt * dt));
             }
             t.Updates++; t.Measured = d.Position;
+            t.Seen.Add((f.Time, d.Position)); t.Seen.RemoveAll(x => f.Time - x.T > SteadyWindow + 1e-6);
             var am = t.A.Length; if (am > 10) t.A = t.A * (10 / am);
             // a vehicle's heading is sensed (its box); a pedestrian's is that of its motion
             t.Heading = d.Kind == RoadUserKind.Pedestrian && t.V.Length > 0.3 ? t.V.Heading : d.Heading;
@@ -88,7 +106,7 @@ public sealed class SceneDescriber(RoadMap map)
         {
             if (usedD.Contains(i)) continue;
             var d = f.Detections[i];
-            _tracks.Add(new Track { Id = _next++, Kind = d.Kind, P = d.Position, Measured = d.Position, V = new(0, 0), A = new(0, 0), Heading = d.Heading, Length = d.Length, Width = d.Width, Indicator = d.Indicator, FirstSeen = f.Time, LastSeen = f.Time });
+            _tracks.Add(new Track { Id = _next++, Kind = d.Kind, P = d.Position, Measured = d.Position, V = new(0, 0), A = new(0, 0), Heading = d.Heading, Length = d.Length, Width = d.Width, Indicator = d.Indicator, FirstSeen = f.Time, LastSeen = f.Time, Seen = [(f.Time, d.Position)] });
         }
         _tracks.RemoveAll(t => f.Time - t.LastSeen > KeepUnseen);
 
@@ -107,8 +125,9 @@ public sealed class SceneDescriber(RoadMap map)
             t.LateralSpeed = m.Lane is not null && !stationary ? t.V.Dot(Vec2.FromHeading(m.Lane.Centre.HeadingAt(m.S)).Left) : 0;
             t.LastD = m.Lane is not null ? m.D : null; t.LastLane = m.Lane?.Id;
             double along = t.V.Length > 0.5 ? t.A.Dot(t.V.Unit) : 0;
+            double steady = m.Lane is not null && !stationary ? Steady(t, m.Lane) : 0;
             users.Add(new DescribedRoadUser(t.Id, t.Kind, t.P, stationary ? new(0, 0) : t.V, t.Heading, stationary ? 0 : along, t.Length, t.Width,
-                                            m.Lane?.Id, m.S, m.D, t.LateralSpeed, t.Indicator, stationary, f.Time - t.FirstSeen));
+                                            m.Lane?.Id, m.S, m.D, t.LateralSpeed, t.Indicator, stationary, f.Time - t.FirstSeen, steady));
         }
 
         // hidden areas: a stationary vehicle that is NOT on a lane (parked next to it) hides a strip of pavement and road
@@ -143,5 +162,29 @@ public sealed class SceneDescriber(RoadMap map)
         if (users.Any(u => u.Kind == RoadUserKind.Cyclist)) features.Add("cyclists");
 
         return new Scene(f.Time, ego, users, hidden, f.LaneVisibility, features);
+    }
+
+    // The slope (m/s, positive to the left) of the offsets across the lane of the measured positions, where it is a steady movement; else 0.
+    private double Steady(Track t, Lane lane)
+    {
+        if (t.Seen.Count < SteadyMinSamples) return 0;
+        // a lane change under way: the last 5 sightings against the 5 before
+        var ds = t.Seen.Select(x => lane.Centre.Project(x.P).D).ToList();
+        int k = ds.Count;
+        double recent = ds.Skip(k - 5).Average(), before = ds.Skip(k - 10).Take(5).Average();
+        double apart = t.Seen.Skip(k - 5).Average(x => x.T) - t.Seen.Skip(k - 10).Take(5).Average(x => x.T);
+        if (Math.Abs(recent) >= SteadyMinOffset && (recent - before) * Math.Sign(recent) >= SteadyMinOutward && apart > 1e-3) return (recent - before) / apart;
+        double t0 = t.Seen[0].T, span = t.Seen[^1].T - t0;
+        if (span < SteadyMinSpan) return 0;
+        double n = t.Seen.Count, st = 0, sd = 0, stt = 0, std = 0;
+        foreach (var (time, p) in t.Seen)
+        {
+            double x = time - t0, d = lane.Centre.Project(p).D;
+            st += x; sd += d; stt += x * x; std += x * d;
+        }
+        double den = n * stt - st * st;
+        if (den <= 1e-9) return 0;
+        double slope = (n * std - st * sd) / den;
+        return Math.Abs(slope) >= SteadyMinSpeed && Math.Abs(slope) * span >= SteadyMinShift ? slope : 0;
     }
 }

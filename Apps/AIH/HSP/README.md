@@ -38,6 +38,15 @@ In the Secure Profile, add `--secure`: the Secure Implementations (the L3s `1AIH
 ```
 dotnet Apps\AIH\HSP\Demo\bin\Debug\net10.0\AihDemo.dll --secure
 ```
+
+The narrated federated-learning demonstration (`FlDemo`, synthetic images, the federated-learning components called directly: no Controller, no Module) runs the same way; it needs `Test\Data\Fl\frozen-backbone.onnx`. With `--secure`, each party - the Back End and the three End Users' Front Ends - has a TPM 2.0 of its own (the WSL simulator, ports 2501, 2511, 2521 and 2531) and a Security API: the End User's vault is sealed, the Back End's watermark key is a key of its Security API, and each Front End signs the model it returns and gives its Attestation token over a challenge of the Back End, which refuses an update from code that is not approved or whose signature does not verify (`FlSecure.cs`; test `AihFlSecureTests`).
+
+```
+dotnet build Apps\AIH\HSP\FlDemo\FlDemo.csproj -nologo -v q
+dotnet Apps\AIH\HSP\FlDemo\bin\Debug\net10.0\AihFlDemo.dll
+dotnet Apps\AIH\HSP\FlDemo\bin\Debug\net10.0\AihFlDemo.dll --secure
+```
+
 The AIH tests: `dotnet test Test\Mpai.Aif.Tests --filter FullyQualifiedName~Aih`.
 
 ### On Linux

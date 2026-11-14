@@ -11,7 +11,8 @@ namespace Mpai.Aih.Hfl;
 // The network is an ONNX file. It is read here, run forward and backward, and written back into the same file (the weights in place, nothing else changes), so that
 // the model that travels is always an ONNX file that ONNX Runtime runs as it is. Only a chain of nodes is understood, each one taking the output of the one before,
 // and only the operators of the HSP demo network: Conv (one group), Relu, AveragePool (no padding), Flatten (axis 1), Gemm (transB = 1) and Mul by a constant.
-// A graph with anything else is refused when it is read. The input is one grey image, 1 x side x side.
+// A graph with anything else is refused when it is read. The input is one grey image, 1 x side x side, or (N-22, the head on the frozen features of a chest network)
+// a vector of features, given as channels x 1 x 1.
 public sealed class Network
 {
     private abstract class Layer
@@ -145,17 +146,21 @@ public sealed class Network
     private readonly List<Layer> _layers = new();
 
     public int ImageSide { get; }
+    public int InputSize { get; }
     public int FeatureCount => _layers[^1].OutSize;
     public int WeightCount => _tensors.Sum(t => t.Count);
 
-    public Network(byte[] onnx, int imageSide)
+    public Network(byte[] onnx, int imageSide) : this(onnx, 1, imageSide, imageSide) { }
+
+    // A network whose input is channels x height x width (a vector of n features: n x 1 x 1).
+    public Network(byte[] onnx, int channels, int height, int width)
     {
-        _file = (byte[])onnx.Clone(); ImageSide = imageSide;
+        _file = (byte[])onnx.Clone(); ImageSide = channels == 1 && height == width ? height : 0; InputSize = channels * height * width;
         _tensors = OnnxFloats.Weights(_file);
         foreach (var t in _tensors) { _values[t.Name] = OnnxFloats.Read(_file, new[] { t }); _grads[t.Name] = new float[t.Count]; }
         var (nodes, inputs, _) = OnnxFloats.Graph(_file);
         var constants = nodes.Where(n => n.Op == "Constant" && n.Tensors.ContainsKey("value")).ToDictionary(n => n.Outputs[0], n => n.Tensors["value"]);
-        int c = 1, h = imageSide, w = imageSide; var current = inputs.FirstOrDefault(i => !_values.ContainsKey(i)) ?? throw new FormatException("the network has no input.");
+        int c = channels, h = height, w = width; var current = inputs.FirstOrDefault(i => !_values.ContainsKey(i)) ?? throw new FormatException("the network has no input.");
         foreach (var n in nodes.Where(n => n.Op != "Constant"))
         {
             if (n.Inputs.Length == 0 || n.Inputs[0] != current) throw new NotSupportedException($"the network is not a chain: {n.Op} does not take '{current}'.");

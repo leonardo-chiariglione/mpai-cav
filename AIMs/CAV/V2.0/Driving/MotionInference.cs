@@ -111,12 +111,14 @@ public sealed class MotionPredictor(RoadMap map)
         }
         if (!u.Stationary)
         {
-            // a lane change: what the lateral speed or the indicator says
+            // a lane change: only where it is really seen (N-20) - a steady sideways movement (SteadyLateralSpeed, 0 where the
+            // movement is not steady: the noise of the sensor alone makes none) - or the indicator. Not from one noisy description.
             foreach (var (side, other) in new[] { (1, lane.Left), (-1, lane.Right) })
             {
                 if (other is null) continue;
-                double toward = side * u.LateralSpeed;
-                double w = Math.Clamp((toward - 0.15) / 0.5, 0, 1) * 0.8 + (u.Indicator == side ? 0.4 : 0);
+                double toward = side * u.SteadyLateralSpeed;
+                // the indicator alone makes the lane change likely (p about 0.37, above Driver.LowProbability)
+                double w = Math.Clamp((toward - 0.2) / 0.5, 0, 1) * 0.8 + (u.Indicator == side ? 0.6 : 0);
                 if (w <= 0) continue;
                 var line = RoadMap.Line(map.Chains(lane, u.S, Math.Max(v0, 8) * Horizon + 30)[0]);
                 hs.Add(AlongLine(u, line, u.S, u.D, side * lane.Width, v0, a0, w, side == 1 ? "changes lane to the left" : "changes lane to the right"));
