@@ -25,13 +25,16 @@ public static class ImplementationEvidence
         return measured.GetOrAdd((info.FullName, info.Length, info.LastWriteTimeUtc), _ => ImplementationFingerprints.Of(file));
     }
 
-    // The measurements of one AIM: its binary, where the provider says which it is,
+    // The fingerprint of an Implementation: of its package - the binary and the assemblies of the package it loads (MPAI Store 4; ImplementationFingerprints).
+    public static string MeasureImplementation(string binaryFile) => ImplementationFingerprints.OfImplementation(binaryFile);
+
+    // The measurements of one AIM: its binary - the package it is in -, where the provider says which it is,
     // and the models its settings name by "SHA256:<setting>".
     public static List<PtfEvidence.Item> Of(string? implementationFile, IReadOnlyDictionary<string, string> settings)
     {
         var items = new List<PtfEvidence.Item>();
         if (implementationFile is { Length: > 0 } && File.Exists(implementationFile))
-            items.Add(new PtfEvidence.Item(PtfEvidence.CodeHash, Path.GetFileNameWithoutExtension(implementationFile), Measure(implementationFile)));
+            items.Add(new PtfEvidence.Item(PtfEvidence.CodeHash, Path.GetFileNameWithoutExtension(implementationFile), MeasureImplementation(implementationFile)));
         foreach (var (key, _) in settings.Where(s => s.Key.StartsWith("SHA256:", StringComparison.Ordinal)))
         {
             var setting = key["SHA256:".Length..];

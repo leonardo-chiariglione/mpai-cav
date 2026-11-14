@@ -44,7 +44,7 @@ public class StoreHttpSimulationTests
         Assert.False(repository.Obtain(Aim, source));                                                  // what it holds it does not obtain again
 
         // It measured and asked: the Store says Same, and a different measurement Different. The Controller has no way to read the fingerprint.
-        var measured = AimRepository.Fingerprint(File.ReadAllBytes(dll));
+        var measured = ImplementationFingerprints.OfImplementation(dll);                                // the package: the binary and what it loads beside it
         Assert.Equal(VerifyResult.Same, source.Verify(Aim, Binary, measured));
         Assert.Equal(VerifyResult.Different, source.Verify(Aim, Binary, new string('0', 64)));
         Assert.Equal(VerifyResult.NotRecorded, source.Verify(Aim, "Another", measured));

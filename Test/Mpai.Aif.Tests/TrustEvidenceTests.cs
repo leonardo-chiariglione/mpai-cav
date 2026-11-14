@@ -34,7 +34,7 @@ public class TrustEvidenceTests
         if (approve)
         {
             var fingerprints = new ImplementationFingerprints(copy);
-            var real = ImplementationFingerprints.Of(TestBinary);
+            var real = ImplementationFingerprints.OfImplementation(TestBinary);
             foreach (var file in Directory.EnumerateFiles(copy, "*.json"))
             {
                 var aim = (string?)JsonNode.Parse(File.ReadAllText(file))?["Identifier"]?["AIMName"];
@@ -59,7 +59,7 @@ public class TrustEvidenceTests
         var approved = store.Approve("1TST-UPP-V1.0-I01", new Dictionary<string, string> { ["Mpai.Aif.Tests"] = TestBinary });
         result["an L3 approved with its binary"] = approved.IsValid ? "approved" + (approved.Warnings.Count > 0 ? "; " + string.Join("; ", approved.Warnings) : "") : string.Join("; ", approved.Errors);
         var recorded = new ImplementationFingerprints(folder).Approved("1TST-UPP-V1.0-I01", "Mpai.Aif.Tests");
-        result["the fingerprint recorded"] = recorded == ImplementationFingerprints.Of(TestBinary) ? "the binary's SHA-256" : recorded ?? "none";
+        result["the fingerprint recorded"] = recorded == ImplementationFingerprints.OfImplementation(TestBinary) ? "the binary's SHA-256" : recorded ?? "none";
 
         var without = store.Approve("1TST-SLP-V1.0-I01", new Dictionary<string, string>());
         result["an L3 approved without its binary"] = string.Join("; ", without.Warnings);
@@ -90,11 +90,11 @@ public class TrustEvidenceTests
             var evidence = aim.Evidence!;
             result[$"approved: {aim.Id[(instance!.Length + 1)..]}'s evidence"] =
                 $"{Violations("AttestationEvidence", evidence)}; signed by the Controller: {PtfSignature.Verify(evidence, trust.KeyFor)}; " +
-                string.Join(", ", PtfEvidence.Items(evidence).Select(i => $"{i.Type} {i.What} {(i.Hash == ImplementationFingerprints.Of(TestBinary) ? "(the binary's SHA-256)" : i.Hash[..12])}"));
+                string.Join(", ", PtfEvidence.Items(evidence).Select(i => $"{i.Type} {i.What} {(i.Hash == ImplementationFingerprints.OfImplementation(TestBinary) ? "(the binary's SHA-256)" : i.Hash[..12])}"));
         }
 
         result["not approved"] = Start(ApprovedCopy(approve: false), "TST-RXL", out _, out _);
-        result["one AIM approved with another fingerprint"] = Start(ApprovedCopy(fingerprintFor: aim => aim == "1TST-SLP-V1.0-I01" ? new string('0', 64) : ImplementationFingerprints.Of(TestBinary)), "TST-RXL", out _, out _);
+        result["one AIM approved with another fingerprint"] = Start(ApprovedCopy(fingerprintFor: aim => aim == "1TST-SLP-V1.0-I01" ? new string('0', 64) : ImplementationFingerprints.OfImplementation(TestBinary)), "TST-RXL", out _, out _);
         result["a provider that names another binary"] = Start(ApprovedCopy(), "TST-RXL", out _, out _, new NamingAnother());
         result["a provider that cannot say"] = Start(ApprovedCopy(), "TST-RXL", out _, out _, new CannotSay());
         result["without trust, not approved"] = Start(ApprovedCopy(approve: false), "TST-RXL", out _, out _, trusted: false);
@@ -132,7 +132,7 @@ public class TrustEvidenceTests
                 string.Join(", ", PtfEvidence.Items(aim.Evidence!).Select(i => $"{i.Type} {i.What}"));
         }
         result["one AIM on the host approved with another fingerprint"] = Start(
-            ApprovedCopy(fingerprintFor: aim => aim == "1TST-SLP-V1.0-I01" ? new string('0', 64) : ImplementationFingerprints.Of(TestBinary)),
+            ApprovedCopy(fingerprintFor: aim => aim == "1TST-SLP-V1.0-I01" ? new string('0', 64) : ImplementationFingerprints.OfImplementation(TestBinary)),
             "TST-RXC", out _, out _, host: hostProcess, placed: placed).Replace(hostProcess.Address, "<host>");
         Expected.Match("trust-evidence-host.json", result);
     }

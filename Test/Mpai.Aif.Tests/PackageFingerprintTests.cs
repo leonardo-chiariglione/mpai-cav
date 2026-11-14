@@ -58,7 +58,7 @@ public class PackageFingerprintTests
         foreach (var id in Leaves)
         {
             Assert.True(provider.CanCreate(id), $"{id}: {string.Join(" / ", said)}");
-            Assert.NotNull(provider.ImplementationOf(id));
+            Assert.True(provider.ImplementationOf(id) is not null, $"{id}: {string.Join(" / ", said)}");
         }
 
         // 3. ONE PACKAGE IS ALTERED after submission: a byte added to its binary, the zip put where the L3 of that AIM names it.
@@ -87,5 +87,43 @@ public class PackageFingerprintTests
         // 4. WITHOUT A STORE nothing is asked: the same altered package is taken, which is what the Service says when it prints that packages are not verified.
         var unchecked_ = new PackageAimProvider(Scanned(changed), Path.Combine(store.Root, "cache-unchecked"), _ => { });
         Assert.NotNull(unchecked_.ImplementationOf("1MMC-TTS-V2.5-I03"));
+    }
+
+    // THE FINGERPRINT OF AN IMPLEMENTATION IS THAT OF ITS PACKAGE (AIF V3.0, MPAI Store 4; Zero Trust and Profiles 5; 2026-11-13): the SHA-256 of the list of the
+    // files the Implementation loads - the binary its BinaryName names and the assemblies of the package it refers to, at any depth - not of the binary alone.
+    // Judged on XRV-LTP's Action Generation (Mpai.Xrv.Acg, most of whose code is in Mpai.Xrv.Common): a library it loads changed changes the fingerprint; the
+    // assemblies of MPAI-AIF, which the Controller gives every package, are not in it; a file nothing loads does not count; as a folder and as a .zip, one fingerprint.
+    [Fact]
+    public void ALibraryTheImplementationLoadsIsPartOfItsFingerprint()
+    {
+        var package = Path.Combine(Path.GetTempPath(), "mpai-package-" + Guid.NewGuid().ToString("N"));
+        var zipFile = package + ".zip";
+        try
+        {
+            Directory.CreateDirectory(package);
+            foreach (var dll in Directory.GetFiles(AppContext.BaseDirectory, "*.dll")) File.Copy(dll, Path.Combine(package, Path.GetFileName(dll)));
+            var binary = Path.Combine(package, "Mpai.Xrv.Acg.dll");
+            var names = ImplementationFingerprints.PackageFiles("Mpai.Xrv.Acg.dll", n => File.Exists(Path.Combine(package, n)) ? File.ReadAllBytes(Path.Combine(package, n)) : null)
+                                                  .Select(f => f.Path).ToList();
+            Assert.Contains("Mpai.Xrv.Acg.dll", names);
+            Assert.Contains("Mpai.Xrv.Common.dll", names);
+            Assert.DoesNotContain(names, n => n.StartsWith(ImplementationFingerprints.FrameworkPrefix, StringComparison.Ordinal));
+            Assert.Equal(names.OrderBy(n => n, StringComparer.Ordinal), names);
+
+            var before = ImplementationFingerprints.OfImplementation(binary);
+            Assert.NotEqual(ImplementationFingerprints.Of(binary), before);                                     // not the binary alone
+            File.WriteAllText(Path.Combine(package, "notes.txt"), "a file nothing loads");
+            Assert.Equal(before, ImplementationFingerprints.OfImplementation(binary));
+            ZipFile.CreateFromDirectory(package, zipFile);
+            using (var zip = File.OpenRead(zipFile)) Assert.Equal(before, ImplementationFingerprints.OfPackage(zip, "Mpai.Xrv.Acg"));
+
+            File.AppendAllText(Path.Combine(package, "Mpai.Xrv.Common.dll"), " ");                          // the library changed, the binary the same
+            Assert.NotEqual(before, ImplementationFingerprints.OfImplementation(binary));
+        }
+        finally
+        {
+            try { Directory.Delete(package, true); } catch { }
+            File.Delete(zipFile);
+        }
     }
 }

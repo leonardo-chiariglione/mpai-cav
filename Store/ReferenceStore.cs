@@ -24,7 +24,7 @@ public static class ReferenceStore
                 if (!item.TryGetProperty("BinaryName", out var name) || name.GetString() is not { Length: > 0 } binary) continue;
                 var path = Path.Combine(buildFolder, binary + ".dll");
                 if (!File.Exists(path)) continue;
-                fingerprints.Approve(aim, binary, ImplementationFingerprints.Of(path), at ?? DateTimeOffset.UtcNow);
+                fingerprints.Approve(aim, binary, ImplementationFingerprints.OfImplementation(path), at ?? DateTimeOffset.UtcNow);
                 count++;
             }
         }

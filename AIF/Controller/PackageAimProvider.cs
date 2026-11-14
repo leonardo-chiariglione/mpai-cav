@@ -130,7 +130,7 @@ public sealed class PackageAimProvider : IAimProvider
             // THE STORE SAYS WHETHER THIS IS THE BINARY IT APPROVED, before anything of the package is loaded.
             if (approvals is not null)
             {
-                var fingerprint = ImplementationFingerprints.Of(assemblyPath);
+                var fingerprint = ImplementationFingerprints.OfImplementation(assemblyPath);                 // the package: the binary and what it loads
                 var answer = approvals.Verify(aimName, binary, fingerprint);
                 if (answer != VerifyResult.Same)
                 {

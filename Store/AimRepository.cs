@@ -88,6 +88,9 @@ public sealed class AimRepository
     private void SaveStatusCheck(string aim, DateTimeOffset at) =>
         File.WriteAllText(StatusFileOf(aim), new JsonObject { ["Confirmed"] = at.ToString("O") }.ToJsonString());
     private string FilesOf(string aim) => Path.Combine(_folder, "implementations", aim);
+
+    // The libraries of a package obtained with its binary, until they are written beside it.
+    private readonly Dictionary<(string Aim, string Name), byte[]> packageLibraries = new();
     private string L3Of(string aim) => Path.Combine(_folder, aim + ".json");
 
     // Whether the Controller obtained the AIM (and holds it).
@@ -114,7 +117,8 @@ public sealed class AimRepository
         var path = Path.Combine(FilesOf(aim), name);
         var record = Holds(aim) ? JsonNode.Parse(File.ReadAllText(RecordOf(aim))) : null;
         var held = (string?)(record?["Held"] ?? record?["Approved"])?[name] ?? throw new InvalidOperationException($"NOT_TRUSTED: the Store confirmed no {name} for {aim}.");
-        if (!File.Exists(path) || Fingerprint(File.ReadAllBytes(path)) != held)
+        // measured as the Store measures it: the package - the binary and the libraries kept beside it (MPAI Store 4)
+        if (!File.Exists(path) || ImplementationFingerprints.OfImplementation(path) != held)
             throw new InvalidOperationException($"NOT_TRUSTED: {name} of {aim} is not the one the Store confirmed.");
         return path;
     }
@@ -225,6 +229,7 @@ public sealed class AimRepository
     {
         // The Implementations and models are where the L3 says: obtained from there, and measured against what the Store approved, before anything is kept.
         var files = new Dictionary<string, byte[]>();
+        var held = new Dictionary<string, string>();                                                   // the fingerprint of each package, as measured
         using (var l3 = JsonDocument.Parse(package.L3Json))
             if (l3.RootElement.TryGetProperty("Implementations", out var list) && list.ValueKind == JsonValueKind.Array)
                 foreach (var item in list.EnumerateArray())
@@ -234,17 +239,28 @@ public sealed class AimRepository
                     if (name is null || !package.Binaries.Contains(name)) continue;                           // what the Store has no fingerprint of is not obtained
                     var uri = item.TryGetProperty("ImplementationURI", out var u) ? u.GetString() : null;
                     byte[] bytes;
-                    try { bytes = Fetch(FileUri(uri ?? throw new InvalidOperationException("the L3 gives no ImplementationURI"), name)); }
+                    string binaryUri;
+                    try { binaryUri = FileUri(uri ?? throw new InvalidOperationException("the L3 gives no ImplementationURI"), name); bytes = Fetch(binaryUri); }
                     catch (Exception e) when (e is IOException or UnauthorizedAccessException or UriFormatException or HttpRequestException or InvalidOperationException)
                     { throw new InvalidOperationException($"{name} of {package.AimName} could not be obtained from {uri}: {e.Message}", e); }
+                    // THE FINGERPRINT OF THE PACKAGE (MPAI Store 4): the binary and the libraries it loads, obtained from where the binary is.
+                    var libraries = new Dictionary<string, byte[]>();
+                    var measured = ImplementationFingerprints.OfFiles(ImplementationFingerprints.PackageFiles(name + ".dll", n =>
+                    {
+                        if (n == name + ".dll") return bytes;
+                        var library = TryFetch(Sibling(binaryUri, n));
+                        if (library is not null) libraries[n] = library;
+                        return library;
+                    }));
                     // The Controller measured; the Store says whether that is what it approved. (A host measures and the Controller asks: verify is null there.)
-                    if (verify is not null && verify(name, Fingerprint(bytes)) != VerifyResult.Same)
+                    if (verify is not null && verify(name, measured) != VerifyResult.Same)
                         throw new InvalidOperationException($"NOT_TRUSTED: {name} of {package.AimName} is not what the Store approved (obtained from {uri}).");
                     files[name] = bytes;
+                    held[name] = measured;
+                    foreach (var (n, library) in libraries) packageLibraries[(package.AimName, n)] = library;     // kept beside the binary: the package, as measured
                 }
         if (fetch && package.Binaries.Except(files.Keys).Any())
             throw new InvalidOperationException($"{package.AimName}: the L3 does not say where {string.Join(", ", package.Binaries.Except(files.Keys))} can be obtained.");
-        var held = files.ToDictionary(f => f.Key, f => Fingerprint(f.Value));
 
         // The AIM Licence, when the AIM has an offer: it must come, and be good, for the Controller to keep the AIM (the right to keep it is one it grants).
         using (var l3 = JsonDocument.Parse(package.L3Json))
@@ -259,6 +275,11 @@ public sealed class AimRepository
         if (Directory.Exists(into)) Directory.Delete(into, true);
         Directory.CreateDirectory(into);
         foreach (var (name, bytes) in files) File.WriteAllBytes(Path.Combine(into, name), bytes);
+        foreach (var ((aim, name), bytes) in packageLibraries.Where(p => p.Key.Aim == package.AimName).ToList())
+        {
+            File.WriteAllBytes(Path.Combine(into, name), bytes);
+            packageLibraries.Remove((aim, name));
+        }
         File.WriteAllText(L3Of(package.AimName), package.L3Json);
         if (licence is not null) { File.WriteAllText(LicenceFileOf(package.AimName), licence); SaveStatusCheck(package.AimName, Clock()); }   // issued now: confirmed now
         else { foreach (var stale in new[] { LicenceFileOf(package.AimName), StatusFileOf(package.AimName) }) if (File.Exists(stale)) File.Delete(stale); }
@@ -281,6 +302,15 @@ public sealed class AimRepository
     }
 
     public static string Fingerprint(byte[] bytes) => Convert.ToHexString(SHA256.HashData(bytes));
+
+    // A file beside the binary of a package (a library it loads), or null where there is none.
+    private static string Sibling(string binaryUri, string file) => new Uri(new Uri(binaryUri), file).AbsoluteUri;
+
+    private byte[]? TryFetch(string uri)
+    {
+        try { return Fetch(uri); }
+        catch (Exception e) when (e is IOException or UnauthorizedAccessException or UriFormatException or HttpRequestException or InvalidOperationException) { return null; }
+    }
 
     // The version an L3 states for its Implementation.
     public static string VersionIn(JsonElement l3) =>

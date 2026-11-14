@@ -119,7 +119,7 @@ public sealed class PackageCheck
                     else
                     {
                         var file = File.Exists(single) ? single : Path.Combine(folder, binary + ".dll");
-                        if (File.Exists(file)) fingerprint = AIF.Store.ImplementationFingerprints.Of(file);
+                        if (File.Exists(file)) fingerprint = AIF.Store.ImplementationFingerprints.OfImplementation(file);
                     }
                 }
                 else if (u.Scheme is "http" or "https" && u.AbsolutePath.EndsWith(".zip", StringComparison.OrdinalIgnoreCase))

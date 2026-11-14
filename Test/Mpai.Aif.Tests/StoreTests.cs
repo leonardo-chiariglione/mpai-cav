@@ -215,8 +215,9 @@ public class StoreTests
         Assert.Equal(HttpStatusCode.Unauthorized, (await Submit(http, asr, me.Key)).Status);
         Assert.Equal(HttpStatusCode.Created, (await Submit(http, asr, null, Admin)).Status);
 
-        // The fingerprint of the binary in the package is recorded, as the SHA-256 of what is there ...
-        var fingerprint = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes("the binary of the Implementation")));
+        // The fingerprint of the package is recorded (MPAI Store 4: the list of the files the Implementation loads with their SHA-256; this binary is not an
+        // assembly, so the package is the one file) ...
+        var fingerprint = ImplementationFingerprints.OfFiles([("Mpai.Mmc.Asr.dll", Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes("the binary of the Implementation"))))]);
         var approved = JsonNode.Parse(File.ReadAllText(Path.Combine(store.StoreFolder, "approved", "1MMC-ASR-V2.5-I01.json")))!;
         Assert.Equal(fingerprint, (string?)approved["Implementations"]!["Mpai.Mmc.Asr"]!["Fingerprint"]);
 

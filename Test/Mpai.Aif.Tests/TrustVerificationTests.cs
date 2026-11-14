@@ -148,7 +148,7 @@ public class TrustVerificationTests
             File.Copy(file, Path.Combine(copy, Path.GetFileName(file)));
             var aim = Path.GetFileNameWithoutExtension(file);
             if (approvePackage || aim != "1TST-PKG-V1.0-I01")
-                fingerprints.Approve(aim, "Mpai.Aif.Tests", ImplementationFingerprints.Of(TestBinary), DateTimeOffset.UtcNow);
+                fingerprints.Approve(aim, "Mpai.Aif.Tests", ImplementationFingerprints.OfImplementation(TestBinary), DateTimeOffset.UtcNow);
         }
         return copy;
     }
@@ -209,7 +209,7 @@ public class TrustVerificationTests
                 _                   => ["1TST-UPP-V1.0-I01", "1TST-REV-V1.0-I01"]
             };
             var measured = new PtfEvidence.Item(PtfEvidence.CodeHash, Path.GetFileName(TestBinary),
-                presents == Presents.AnotherBinary ? new string('0', 64) : ImplementationFingerprints.Of(TestBinary));
+                presents == Presents.AnotherBinary ? new string('0', 64) : ImplementationFingerprints.OfImplementation(TestBinary));
             using var own = ECDsa.Create(ECCurve.NamedCurves.nistP256);
             var issuer = presents == Presents.WithItsOwnKey ? new PtfIssuer(packageInstanceId, own, packageInstanceId) : asIssuer;
             return aims.Select(aim =>

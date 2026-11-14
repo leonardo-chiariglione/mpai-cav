@@ -110,7 +110,7 @@ public sealed class MpaiStore
         var fingerprints = new ImplementationFingerprints(folder);
         var reported = new List<string>();
         foreach (var binary in named)
-            if (binaries.TryGetValue(binary, out var file)) fingerprints.Approve(aimName, binary, ImplementationFingerprints.Of(file), DateTimeOffset.UtcNow);
+            if (binaries.TryGetValue(binary, out var file)) fingerprints.Approve(aimName, binary, ImplementationFingerprints.OfImplementation(file), DateTimeOffset.UtcNow);
             else reported.Add($"{binary}: named by the L3, not submitted - no fingerprint recorded");
         if (named.Count == 0) reported.Add("the L3 names no binary");
         return StoreResult.Valid(identifier.ToString(), reported);
