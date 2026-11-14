@@ -500,12 +500,16 @@ public sealed partial class ContinuousExecutor
     {
         var aim = leaf.Instance;
         var ports = new Ports(this, leaf);
+        var supplied = false;
         while (!host.IsStopped && !host.IsDead(aim))
         {
             try
             {
                 if (host.Processor(aim) is IAimRunner runner)
                 {
+                    // EXE-6 (AIF V3.0 Execution 5): in continuous execution an AIM shall not run until its required inputs are supplied - an AIM that reads
+                    // its own Ports too. Once they were supplied it runs; started again after a failure, it does not wait for them again.
+                    if (!supplied && GateRequiredInputs) { await RequiredInputsAsync(leaf, ports); supplied = true; }
                     var context = await host.ContextAsync(aim);
                     using var watching = CancellationTokenSource.CreateLinkedTokenSource(host.Stopping);
                     var watch = WatchMaxAgeAsync(leaf, ports, watching.Token);
@@ -607,6 +611,23 @@ public sealed partial class ContinuousExecutor
                 silent = true;
                 if (!Degraded(leaf, $"its Port {port.DataType}#{NumberOf(leaf, port)} delivered nothing within its MaxAge of {port.MaxAge} ms")) return;
             }
+        }
+    }
+
+    // EXE-6 FOR AN AIM THAT READS ITS OWN PORTS, not yet on (2026-11-14): AIMs of other standards declare required inputs their Modules do not supply, and would not
+    // run. To be switched on once their Metadata says truthfully which inputs are optional.
+    private const bool GateRequiredInputs = false;
+
+    // Until a Message is pending on every required input Port connected in the Module (EXE-6): what an AIM that reads its own Ports waits for before it runs.
+    private async Task RequiredInputsAsync(DescriptorNode leaf, Ports ports)
+    {
+        var required = leaf.Ports.Where(p => p.Direction == "Input" && !p.IsOptional).Select(p => ports.ReadersOf(p)).Where(ends => ends.Count > 0).ToList();
+        while (true)
+        {
+            host.Stopping.ThrowIfCancellationRequested();
+            var empty = required.Where(ends => ends.All(e => e.Pending == 0)).ToList();
+            if (empty.Count == 0) return;
+            await Task.WhenAny(empty.SelectMany(ends => ends).Select(e => e.WaitAsync(host.Stopping)));
         }
     }
 

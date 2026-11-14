@@ -9,10 +9,10 @@
   "APIProfile":           "Basic",
   "Description":          "The Participant Status Interpretation (XRV-PTI) AIM interprets the RE Participant Descriptors and VE Participant Descriptors to produce the RE and VE Participant Status as required to determine if the Script's Cue Point Conditions of the current Cue Point ID are met.",
 
-  "ExternalPorts":        [{"Name": "REParticipantDescriptors", "Direction": "Input", "DataType": "XRV-RTD-V1.0", "Overflow": "DropOldest", "Technology": "Software", "Protocol": "", "IsRemote": false},
-                           {"Name": "VEParticipantDescriptors", "Direction": "Input", "DataType": "XRV-VTD-V1.0", "Overflow": "DropOldest", "Technology": "Software", "Protocol": "", "IsRemote": false},
+  "ExternalPorts":        [{"Name": "REParticipantDescriptors", "Direction": "Input", "DataType": "XRV-RTD-V1.0", "IsOptional": true, "Overflow": "DropOldest", "Technology": "Software", "Protocol": "", "IsRemote": false},
+                           {"Name": "VEParticipantDescriptors", "Direction": "Input", "DataType": "XRV-VTD-V1.0", "IsOptional": true, "Overflow": "DropOldest", "Technology": "Software", "Protocol": "", "IsRemote": false},
                            {"Name": "CuePointID",              "Direction": "Input", "DataType": "OSD-BTO-V1.5", "Depth": 1, "Overflow": "DropOldest", "Technology": "Software", "Protocol": "", "IsRemote": false},
-                           {"Name": "ParticipantData",         "Direction": "Input", "DataType": "XRV-PTD-V1.0", "Technology": "Software", "Protocol": "", "IsRemote": false},
+                           {"Name": "ParticipantData",         "Direction": "Input", "DataType": "XRV-PTD-V1.0", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
                            {"Name": "Script",                  "Direction": "Input", "DataType": "XRV-SCR-V1.0", "Technology": "Software", "Protocol": "", "IsRemote": false},
                            {"Name": "ActionTable",             "Direction": "Input", "DataType": "XRV-ATB-V1.0", "Technology": "Software", "Protocol": "", "IsRemote": false},
                            {"Name": "ScriptVenueAssociations", "Direction": "Input", "DataType": "XRV-SVA-V1.0", "Technology": "Software", "Protocol": "", "IsRemote": false},

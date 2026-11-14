@@ -334,7 +334,7 @@ public class XrvCueEngineTests
             XrvShow.RealCue("C3", XrvShow.Group([(StatusKind.REPerformance, XrvShow.Performers(true, "Dora"))], [], []))));
         var gate = new TaskCompletionSource();
         using var rig = new XrvModuleRig(gate.Task, only: XrvProvider.Pfi);
-        rig.Write("XRV-SCR-V1.0", script);
+        rig.Give(script);                                                                        // with the Action Table and the Associations, which PFI requires (EXE-6)
         foreach (var cue in new[] { "C1", "C2", "C3" }) rig.Write("OSD-BTO-V1.5", TextId.Make("c-" + cue, cue, "UE1").ToJson());
         rig.Write("XRV-RFD-V1.0", XrvShow.PerformanceDescriptors(true, "rfd-1", "Anna", "Bob"));
         gate.SetResult();
@@ -385,7 +385,7 @@ public class XrvCueEngineTests
             "Participant" => XrvShow.RealCue("C1", XrvShow.Group([(kind, XrvShow.Participants(true, "P1"))], [], [])),
             _ => XrvShow.RealCue("C1", XrvShow.Group([], [], []))
         }));
-        rig.Write("XRV-SCR-V1.0", script);
+        rig.Give(script);                                                                        // with the Action Table and the Associations, which the AIM requires (EXE-6)
         rig.Write("OSD-BTO-V1.5", TextId.Make("c", "C1", "UE1").ToJson());
         var descriptors = family switch
         {

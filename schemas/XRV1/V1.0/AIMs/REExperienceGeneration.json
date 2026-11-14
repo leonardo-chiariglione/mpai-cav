@@ -12,7 +12,7 @@
   "ExternalPorts":        [{"Name": "ShowDescriptors",         "Direction": "Input", "DataType": "XRV-SHD-V1.0", "Overflow": "DropOldest", "Technology": "Software", "Protocol": "", "IsRemote": false},
                            {"Name": "REActionIDs",             "Direction": "Input", "DataType": "OSD-BTO-V1.5", "Depth": 64, "Overflow": "Block", "Technology": "Software", "Protocol": "", "IsRemote": false, "PortNumber": 1},
                            {"Name": "REVenueSpecification",    "Direction": "Input", "DataType": "XRV-RVS-V1.0", "Technology": "Software", "Protocol": "", "IsRemote": false},
-                           {"Name": "ParticipantData",         "Direction": "Input", "DataType": "XRV-PTD-V1.0", "Technology": "Software", "Protocol": "", "IsRemote": false},
+                           {"Name": "ParticipantData",         "Direction": "Input", "DataType": "XRV-PTD-V1.0", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
                            {"Name": "Script",                  "Direction": "Input", "DataType": "XRV-SCR-V1.0", "Technology": "Software", "Protocol": "", "IsRemote": false},
                            {"Name": "ActionTable",             "Direction": "Input", "DataType": "XRV-ATB-V1.0", "Technology": "Software", "Protocol": "", "IsRemote": false},
                            {"Name": "ScriptVenueAssociations", "Direction": "Input", "DataType": "XRV-SVA-V1.0", "Technology": "Software", "Protocol": "", "IsRemote": false},

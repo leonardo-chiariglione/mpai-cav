@@ -36,7 +36,7 @@
                            {"Name": "REVenueSpecification",    "Direction": "Input", "DataType": "XRV-RVS-V1.0", "Technology": "Software", "Protocol": "", "IsRemote": false},
                            {"Name": "VEDataIn",                "Direction": "Input", "DataType": "XRV-VDI-V1.0", "Overflow": "DropOldest", "Technology": "Software", "Protocol": "", "IsRemote": false},
                            {"Name": "VEVenueSpecification",    "Direction": "Input", "DataType": "XRV-VVS-V1.0", "Technology": "Software", "Protocol": "", "IsRemote": false},
-                           {"Name": "ParticipantDataIn",       "Direction": "Input", "DataType": "XRV-PTD-V1.0", "Technology": "Software", "Protocol": "", "IsRemote": false},
+                           {"Name": "ParticipantDataIn",       "Direction": "Input", "DataType": "XRV-PTD-V1.0", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
                            {"Name": "Script",                  "Direction": "Input", "DataType": "XRV-SCR-V1.0", "Technology": "Software", "Protocol": "", "IsRemote": false},
                            {"Name": "ActionTable",             "Direction": "Input", "DataType": "XRV-ATB-V1.0", "Technology": "Software", "Protocol": "", "IsRemote": false},
                            {"Name": "ScriptVenueAssociations", "Direction": "Input", "DataType": "XRV-SVA-V1.0", "Technology": "Software", "Protocol": "", "IsRemote": false},

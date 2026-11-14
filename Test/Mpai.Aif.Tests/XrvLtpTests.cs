@@ -282,6 +282,7 @@ public class XrvLtpTests
         using var show = new Show();
         show.Write(Types.ActionTable, XrvShow.Text("ActionTable.json"));
         show.Write(Types.Script, XrvShow.Text("Script.json"));
+        show.Write(Types.ScriptVenueAssociations, XrvShow.Text("ScriptVenueAssociations.json"));     // Action Generation requires it (EXE-6)
         var data = XrvShow.Text("ParticipantData.json");
         show.Write(Types.ParticipantData, data);
         var back = show.Read(Types.ParticipantData);
